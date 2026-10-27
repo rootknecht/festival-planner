@@ -1,0 +1,121 @@
+/* Structure only. Every colour, font and radius comes from the active theme
+   file, which defines the custom properties used here. A new theme is one
+   file in css/themes/ — never a change to this file. */
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+body {
+  background: var(--fp-bg);
+  background-image: var(--fp-bg-image, none);
+  color: var(--fp-fg);
+  font-family: var(--fp-font-body);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+}
+
+.content {
+  padding: var(--fp-gap-l);
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+h1, h2, h3 {
+  font-family: var(--fp-font-display);
+  letter-spacing: var(--fp-display-tracking, 0);
+  margin: 0 0 var(--fp-gap-m);
+}
+
+.brand {
+  color: var(--fp-accent);
+  text-transform: var(--fp-brand-transform, none);
+}
+
+.card {
+  background: var(--fp-surface);
+  border: 1px solid var(--fp-border);
+  border-radius: var(--fp-radius);
+  padding: var(--fp-gap-l);
+  box-shadow: var(--fp-shadow);
+}
+
+.card--narrow {
+  max-width: 26rem;
+  margin: var(--fp-gap-xl) auto;
+}
+
+.stack { display: flex; flex-direction: column; gap: var(--fp-gap-s); }
+
+label { font-weight: 600; font-size: 0.9rem; }
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="date"],
+select,
+textarea {
+  width: 100%;
+  padding: 0.6rem 0.7rem;
+  background: var(--fp-input-bg);
+  color: var(--fp-fg);
+  border: 1px solid var(--fp-border);
+  border-radius: var(--fp-radius-s);
+  font: inherit;
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--fp-accent);
+  outline-offset: 2px;
+}
+
+.btn {
+  display: inline-block;
+  padding: 0.65rem 1.1rem;
+  border: 1px solid var(--fp-border);
+  border-radius: var(--fp-radius-s);
+  background: var(--fp-surface-2);
+  color: var(--fp-fg);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn--primary {
+  background: var(--fp-accent);
+  border-color: var(--fp-accent);
+  color: var(--fp-accent-fg);
+}
+
+.btn:hover { filter: brightness(1.12); }
+
+.alert {
+  padding: 0.7rem 0.9rem;
+  border-radius: var(--fp-radius-s);
+  border: 1px solid var(--fp-border);
+}
+
+.alert--error {
+  background: var(--fp-danger-bg);
+  border-color: var(--fp-danger);
+  color: var(--fp-danger-fg);
+}
+
+.hint { color: var(--fp-muted); font-size: 0.85rem; }
+
+@media (max-width: 640px) {
+  .content { padding: var(--fp-gap-m); }
+  .card--narrow { margin: var(--fp-gap-m) auto; }
+}

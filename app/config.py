@@ -55,6 +55,10 @@ class Settings(BaseSettings):
     # Web Push
     vapid_public_key: str = ""
     vapid_private_key: str = ""
+    # A PEM private key is multi-line and therefore cannot live in an env file
+    # at all: both shell `source` and systemd's EnvironmentFile are line-based
+    # and choke on "-----BEGIN PRIVATE KEY-----". Point at the file instead.
+    vapid_private_key_file: str = ""
     vapid_subject: str = ""
 
     default_language: str = "en"
@@ -76,6 +80,11 @@ class Settings(BaseSettings):
     @property
     def is_production(self) -> bool:
         return self.environment == "production"
+
+    @property
+    def vapid_private(self) -> str:
+        """The private key as pywebpush wants it: a PEM path or a raw key."""
+        return self.vapid_private_key_file or self.vapid_private_key
 
     @property
     def mail_enabled(self) -> bool:

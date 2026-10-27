@@ -32,7 +32,7 @@ GONE_STATUS = (404, 410)
 
 def enabled(settings: Settings | None = None) -> bool:
     settings = settings or get_settings()
-    return bool(settings.vapid_private_key and settings.vapid_public_key)
+    return bool(settings.vapid_private and settings.vapid_public_key)
 
 
 def subscriptions_for(db: DbSession, user_id: int) -> list[PushSubscription]:
@@ -49,7 +49,7 @@ def _deliver(subscription_info: dict, payload: str, settings: Settings) -> int |
         webpush(
             subscription_info=subscription_info,
             data=payload,
-            vapid_private_key=settings.vapid_private_key,
+            vapid_private_key=settings.vapid_private,
             vapid_claims={"sub": settings.vapid_subject or "mailto:admin@example.org"},
             timeout=10,
         )

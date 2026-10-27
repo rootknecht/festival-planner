@@ -316,3 +316,22 @@ def test_the_push_body_is_built_from_the_notification(factory, push_settings, mo
         )
     assert calls[0]["body"] == "Sabine placed you in the red van."
     assert calls[0]["url"] == "/festivals/7"
+
+
+def test_a_pem_key_file_enables_push_without_putting_the_key_in_the_env(tmp_path) -> None:
+    """A PEM is multi-line; env files are line-based. The file path is the key."""
+    pem = tmp_path / "vapid.pem"
+    pem.write_text("-----BEGIN PRIVATE KEY-----\nnot-real\n-----END PRIVATE KEY-----\n")
+    settings = Settings(
+        _env_file=None,
+        environment="test",
+        vapid_public_key="BPublicTestKey",
+        vapid_private_key_file=str(pem),
+    )
+    assert push.enabled(settings) is True
+    assert settings.vapid_private == str(pem)
+
+
+def test_push_stays_off_when_neither_key_form_is_configured() -> None:
+    settings = Settings(_env_file=None, environment="test", vapid_public_key="BPublicTestKey")
+    assert push.enabled(settings) is False

@@ -1,0 +1,102 @@
+{% extends "festival_base.html" %}
+{% block title %}{{ _("Who brings what") }} — {{ festival.name }}{% endblock %}
+{% block content %}
+
+{% if error %}<p class="alert alert--error" role="alert">{{ error }}</p>{% endif %}
+
+<section class="card">
+  <h2>{{ _("Who brings what") }}</h2>
+
+  {% if rows %}
+  <div class="tablewrap">
+    <table class="grid grid--matrix">
+      <thead>
+        <tr>
+          <th class="sticky-col">{{ _("Item") }}</th>
+          {% for participant in participants %}
+          <th class="{% if participant.is_placeholder %}is-placeholder{% endif %}">{{ participant.display_name }}</th>
+          {% endfor %}
+          <th>{{ _("Total") }}</th>
+          {% if membership.is_admin and not festival.is_archived %}<th></th>{% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <th class="sticky-col">
+            {{ row.label }}
+            {% if row.units %}<span class="hint">{{ row.units | join(" / ") }}</span>{% endif %}
+          </th>
+          {% for participant in participants %}
+          {% set cell = row.cells.get(participant.id) %}
+          <td>
+            {% if festival.is_archived %}
+            {{ cell.display if cell else "" }}
+            {% else %}
+            <form method="post" action="/festivals/{{ festival.id }}/bringlist/cells" class="cellform">
+              <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+              <input type="hidden" name="row_id" value="{{ row.id }}">
+              <input type="hidden" name="participant_id" value="{{ participant.id }}">
+              <input class="cellinput" name="amount" type="number" min="0" step="any" inputmode="decimal"
+                     value="{{ cell.amount | round(2) | int if cell and cell.amount == cell.amount | round(0) else (cell.amount if cell else '') }}"
+                     aria-label="{{ row.label }} — {{ participant.display_name }}">
+              {% if row.units %}
+              <select class="cellunit" name="unit" aria-label="{{ _('Unit') }}">
+                {% for unit in row.units %}
+                <option value="{{ unit }}" {% if cell and cell.unit == unit %}selected{% endif %}>{{ unit }}</option>
+                {% endfor %}
+              </select>
+              {% endif %}
+              <button class="cellsave" title="{{ _('Save') }}">&#10003;</button>
+            </form>
+            {% if cell and cell.updated_by_name %}
+            <span class="hint hint--tiny">{{ _("by") }} {{ cell.updated_by_name }}</span>
+            {% endif %}
+            {% endif %}
+          </td>
+          {% endfor %}
+          <td class="total">{{ row.total }}</td>
+          {% if membership.is_admin and not festival.is_archived %}
+          <td>
+            <form method="post" action="/festivals/{{ festival.id }}/bringlist/rows/{{ row.id }}/delete">
+              <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+              <button class="btn" title="{{ _('Delete row') }}">&#10005;</button>
+            </form>
+          </td>
+          {% endif %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="hint">{{ _("Nothing on the list yet. Add the first thing somebody has to bring.") }}</p>
+  {% endif %}
+</section>
+
+{% if not festival.is_archived %}
+<section class="card">
+  <h2>{{ _("Add a row") }}</h2>
+  <form method="post" action="/festivals/{{ festival.id }}/bringlist/rows" class="stack">
+    <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+    <label for="label">{{ _("What has to come along?") }}</label>
+    <input id="label" name="label" type="text" maxlength="120" required placeholder="{{ _('Pavilion, beer, camping table …') }}">
+    <label for="units">{{ _("Units (optional, comma separated)") }}</label>
+    <input id="units" name="units" type="text" maxlength="200" placeholder="{{ _('L, cans, crates') }}">
+    <p class="hint">{{ _("With units the total adds up per unit, for example “80 L + 120 cans”.") }}</p>
+    <button class="btn btn--primary">{{ _("Add row") }}</button>
+  </form>
+</section>
+{% endif %}
+
+{% if changes %}
+<section class="card">
+  <h2>{{ _("Recent changes") }}</h2>
+  <ul class="log">
+    {% for entry in changes %}
+    <li><strong>{{ entry.actor_name }}</strong> {{ entry.summary }}</li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+{% endblock %}

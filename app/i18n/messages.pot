@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Festival Planner VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-27 14:27+0100\n"
+"POT-Creation-Date: 2026-10-27 14:38+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,12 +18,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-#: app/routes/festivals.py:406 app/templates/festival_base.html:4
+#: app/routes/festivals.py:407 app/templates/festival_base.html:4
 msgid "Transport"
-msgstr ""
-
-#: app/routes/festivals.py:407 app/templates/festival_base.html:5
-msgid "Who brings what"
 msgstr ""
 
 #: app/routes/festivals.py:408 app/templates/festival_base.html:6
@@ -89,6 +85,11 @@ msgstr ""
 
 #: app/services/notification_text.py:54
 msgid "Something changed that involves you."
+msgstr ""
+
+#: app/templates/festival_base.html:5 app/templates/tools/bringlist.html:2
+#: app/templates/tools/bringlist.html:8
+msgid "Who brings what"
 msgstr ""
 
 #: app/templates/festival_base.html:22
@@ -180,7 +181,7 @@ msgstr ""
 msgid "Follow the festival's theme"
 msgstr ""
 
-#: app/templates/profile/index.html:33
+#: app/templates/profile/index.html:33 app/templates/tools/bringlist.html:50
 msgid "Save"
 msgstr ""
 
@@ -257,6 +258,62 @@ msgstr ""
 
 #: app/templates/profile/totp.html:19
 msgid "Cancel"
+msgstr ""
+
+#: app/templates/tools/bringlist.html:15
+msgid "Item"
+msgstr ""
+
+#: app/templates/tools/bringlist.html:19
+msgid "Total"
+msgstr ""
+
+#: app/templates/tools/bringlist.html:44
+msgid "Unit"
+msgstr ""
+
+#: app/templates/tools/bringlist.html:53
+msgid "by"
+msgstr ""
+
+#: app/templates/tools/bringlist.html:63
+msgid "Delete row"
+msgstr ""
+
+#: app/templates/tools/bringlist.html:73
+msgid "Nothing on the list yet. Add the first thing somebody has to bring."
+msgstr ""
+
+#: app/templates/tools/bringlist.html:79
+msgid "Add a row"
+msgstr ""
+
+#: app/templates/tools/bringlist.html:82
+msgid "What has to come along?"
+msgstr ""
+
+#: app/templates/tools/bringlist.html:83
+msgid "Pavilion, beer, camping table …"
+msgstr ""
+
+#: app/templates/tools/bringlist.html:84
+msgid "Units (optional, comma separated)"
+msgstr ""
+
+#: app/templates/tools/bringlist.html:85
+msgid "L, cans, crates"
+msgstr ""
+
+#: app/templates/tools/bringlist.html:86
+msgid "With units the total adds up per unit, for example “80 L + 120 cans”."
+msgstr ""
+
+#: app/templates/tools/bringlist.html:87
+msgid "Add row"
+msgstr ""
+
+#: app/templates/tools/bringlist.html:94
+msgid "Recent changes"
 msgstr ""
 
 #: app/templates/tools/placeholder.html:6

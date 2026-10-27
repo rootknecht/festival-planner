@@ -402,9 +402,9 @@ async def unarchive(
     return RedirectResponse(f"/festivals/{festival_id}", status_code=303)
 
 
+# "bringlist" is a real page now and is served by its own router.
 TOOL_LABELS = {
     "transport": N_("Transport"),
-    "bringlist": N_("Who brings what"),
     "chat": N_("Chat"),
     "polls": N_("Polls"),
     "forum": N_("Forum"),

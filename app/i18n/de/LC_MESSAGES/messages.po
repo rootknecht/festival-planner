@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Festival Planner VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-27 14:27+0100\n"
+"POT-Creation-Date: 2026-10-27 14:38+0100\n"
 "PO-Revision-Date: 2026-10-27 14:26+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: de\n"
@@ -19,13 +19,9 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-#: app/routes/festivals.py:406 app/templates/festival_base.html:4
+#: app/routes/festivals.py:407 app/templates/festival_base.html:4
 msgid "Transport"
 msgstr "Anfahrt"
-
-#: app/routes/festivals.py:407 app/templates/festival_base.html:5
-msgid "Who brings what"
-msgstr "Wer bringt was"
 
 #: app/routes/festivals.py:408 app/templates/festival_base.html:6
 msgid "Chat"
@@ -92,6 +88,11 @@ msgstr "Jemand"
 msgid "Something changed that involves you."
 msgstr "Es hat sich etwas geändert, das dich betrifft."
 
+#: app/templates/festival_base.html:5 app/templates/tools/bringlist.html:2
+#: app/templates/tools/bringlist.html:8
+msgid "Who brings what"
+msgstr "Wer bringt was"
+
 #: app/templates/festival_base.html:22
 msgid "Switch language"
 msgstr "Sprache wechseln"
@@ -125,7 +126,8 @@ msgstr "neu"
 msgid "This festival is archived — it can be read but not changed."
 msgstr ""
 "Dieses Festival ist archiviert – es kann gelesen, aber nicht geändert "
-"werden."
+"werden.Dieses Festival ist archiviert – es kann gelesen, aber nicht "
+"geändert werden."
 
 #: app/templates/festivals/dashboard.html:11
 msgid "Open for you"
@@ -183,7 +185,7 @@ msgstr "Design"
 msgid "Follow the festival's theme"
 msgstr "Design des Festivals übernehmen"
 
-#: app/templates/profile/index.html:33
+#: app/templates/profile/index.html:33 app/templates/tools/bringlist.html:50
 msgid "Save"
 msgstr "Speichern"
 
@@ -231,7 +233,8 @@ msgstr "Ausschalten"
 msgid "Optional. Adds a six-digit code from your phone to every sign-in."
 msgstr ""
 "Optional. Fügt jeder Anmeldung einen sechsstelligen Code von deinem Handy"
-" hinzu."
+" hinzu.Optional. Fügt jeder Anmeldung einen sechsstelligen Code von "
+"deinem Handy hinzu."
 
 #: app/templates/profile/index.html:64 app/templates/profile/totp.html:2
 #: app/templates/profile/totp.html:5
@@ -263,6 +266,64 @@ msgstr "Einschalten"
 #: app/templates/profile/totp.html:19
 msgid "Cancel"
 msgstr "Abbrechen"
+
+#: app/templates/tools/bringlist.html:15
+msgid "Item"
+msgstr "Sache"
+
+#: app/templates/tools/bringlist.html:19
+msgid "Total"
+msgstr "Summe"
+
+#: app/templates/tools/bringlist.html:44
+msgid "Unit"
+msgstr "Einheit"
+
+#: app/templates/tools/bringlist.html:53
+msgid "by"
+msgstr "von"
+
+#: app/templates/tools/bringlist.html:63
+msgid "Delete row"
+msgstr "Zeile löschen"
+
+#: app/templates/tools/bringlist.html:73
+msgid "Nothing on the list yet. Add the first thing somebody has to bring."
+msgstr "Noch nichts auf der Liste. Trag das Erste ein, das jemand mitbringen muss."
+
+#: app/templates/tools/bringlist.html:79
+msgid "Add a row"
+msgstr "Zeile hinzufügen"
+
+#: app/templates/tools/bringlist.html:82
+msgid "What has to come along?"
+msgstr "Was muss mit?"
+
+#: app/templates/tools/bringlist.html:83
+msgid "Pavilion, beer, camping table …"
+msgstr "Pavillon, Bier, Campingtisch …"
+
+#: app/templates/tools/bringlist.html:84
+msgid "Units (optional, comma separated)"
+msgstr "Einheiten (optional, mit Komma getrennt)"
+
+#: app/templates/tools/bringlist.html:85
+msgid "L, cans, crates"
+msgstr "L, Dosen, Kästen"
+
+#: app/templates/tools/bringlist.html:86
+msgid "With units the total adds up per unit, for example “80 L + 120 cans”."
+msgstr ""
+"Mit Einheiten summiert die Spalte je Einheit, zum Beispiel „80 L + 120 "
+"Dosen“."
+
+#: app/templates/tools/bringlist.html:87
+msgid "Add row"
+msgstr "Zeile hinzufügen"
+
+#: app/templates/tools/bringlist.html:94
+msgid "Recent changes"
+msgstr "Letzte Änderungen"
 
 #: app/templates/tools/placeholder.html:6
 msgid "This part is not built yet."

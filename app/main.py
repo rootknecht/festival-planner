@@ -15,6 +15,7 @@ from starlette.responses import Response
 from app import __version__
 from app.config import Settings, get_settings
 from app.routes import auth as auth_routes
+from app.routes import bringlist as bringlist_routes
 from app.routes import festivals as festival_routes
 from app.routes import invites as invite_routes
 from app.routes import password_reset as reset_routes
@@ -85,6 +86,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(reset_routes.router)
     app.include_router(invite_routes.router)
     app.include_router(profile_routes.router)
+    app.include_router(bringlist_routes.router)
     app.include_router(festival_routes.router)
 
     @app.exception_handler(HTTPException)

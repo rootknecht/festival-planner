@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <!-- Simple side views. One path each, coloured by currentColor so a car's
+       colour is a CSS variable and never a separate image. -->
+  <symbol id="hatchback" viewBox="0 0 64 32">
+    <path fill="currentColor" d="M6 24h52c2 0 3-1 3-3v-5c0-2-2-4-5-5l-9-2-7-5c-2-1-3-2-6-2H22c-3 0-5 1-7 3l-5 6-5 2c-2 1-3 2-3 4v4c0 2 1 3 4 3z"/>
+    <circle cx="18" cy="25" r="5" fill="#111"/><circle cx="46" cy="25" r="5" fill="#111"/>
+    <circle cx="18" cy="25" r="2" fill="#bbb"/><circle cx="46" cy="25" r="2" fill="#bbb"/>
+  </symbol>
+  <symbol id="estate" viewBox="0 0 64 32">
+    <path fill="currentColor" d="M3 24h58c2 0 2-1 2-3v-6c0-2-1-3-3-4l-8-2-6-5c-2-1-3-2-6-2H19c-3 0-5 1-6 3l-4 6-5 2c-2 1-3 2-3 4v4c0 2 1 3 2 3z"/>
+    <circle cx="17" cy="25" r="5" fill="#111"/><circle cx="48" cy="25" r="5" fill="#111"/>
+    <circle cx="17" cy="25" r="2" fill="#bbb"/><circle cx="48" cy="25" r="2" fill="#bbb"/>
+  </symbol>
+  <symbol id="van" viewBox="0 0 64 32">
+    <path fill="currentColor" d="M4 24h56c2 0 3-1 3-3V11c0-2-1-3-3-3H20c-3 0-4 1-6 3l-7 6-3 1c-2 1-3 2-3 3v1c0 2 1 2 3 2z"/>
+    <circle cx="18" cy="25" r="5" fill="#111"/><circle cx="48" cy="25" r="5" fill="#111"/>
+    <circle cx="18" cy="25" r="2" fill="#bbb"/><circle cx="48" cy="25" r="2" fill="#bbb"/>
+  </symbol>
+  <symbol id="bus" viewBox="0 0 64 32">
+    <path fill="currentColor" d="M3 24h58c1 0 2-1 2-2V8c0-2-1-3-3-3H5C3 5 2 6 2 8v14c0 1 0 2 1 2z"/>
+    <circle cx="15" cy="25" r="5" fill="#111"/><circle cx="49" cy="25" r="5" fill="#111"/>
+    <circle cx="15" cy="25" r="2" fill="#bbb"/><circle cx="49" cy="25" r="2" fill="#bbb"/>
+  </symbol>
+  <symbol id="camper" viewBox="0 0 64 32">
+    <path fill="currentColor" d="M3 24h58c1 0 2-1 2-2v-8c0-2-1-3-3-3h-9l-5-5c-1-1-2-2-4-2H6C4 4 3 5 3 7v17z"/>
+    <circle cx="17" cy="25" r="5" fill="#111"/><circle cx="48" cy="25" r="5" fill="#111"/>
+    <circle cx="17" cy="25" r="2" fill="#bbb"/><circle cx="48" cy="25" r="2" fill="#bbb"/>
+  </symbol>
+  <symbol id="motorbike" viewBox="0 0 64 32">
+    <path fill="currentColor" d="M14 25h8l8-10h10l4 10h6l-6-14c-1-2-2-3-4-3h-8l-3-4h-8v3h5l2 3H16c-3 0-5 2-5 5z"/>
+    <circle cx="14" cy="25" r="6" fill="none" stroke="#111" stroke-width="3"/>
+    <circle cx="50" cy="25" r="6" fill="none" stroke="#111" stroke-width="3"/>
+  </symbol>
+</svg>

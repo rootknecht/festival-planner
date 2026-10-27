@@ -155,3 +155,24 @@ body:has(.toolbar) .content { margin-left: 5.5rem; }
 .total { font-weight: 700; color: var(--fp-accent); }
 .hint--tiny { font-size: 0.7rem; }
 .log { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.25rem; font-size: 0.9rem; }
+
+/* Car sharing */
+.cars { display: grid; gap: var(--fp-gap-m); grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr)); }
+.car.is-over { outline: 2px dashed var(--fp-accent); outline-offset: 3px; }
+.car__icon { width: 4rem; height: 2rem; }
+.car--red .car__icon { color: #c81f2a; }
+.car--black .car__icon { color: #2b2b31; }
+.car--white .car__icon { color: #e6e6e6; }
+.car--blue .car__icon { color: #2a56c8; }
+.car--green .car__icon { color: #2f8f3c; }
+.car--yellow .car__icon { color: #d7b32a; }
+.car--orange .car__icon { color: #d9772a; }
+.car--purple .car__icon { color: #7a3ec8; }
+.name--draggable { cursor: grab; }
+.name--draggable.is-dragging { opacity: 0.45; }
+.name--driver { border-color: var(--fp-accent); }
+.name--free { opacity: 0.5; border-style: dashed; }
+.linkbtn { background: none; border: none; color: var(--fp-muted); cursor: pointer; font: inherit; padding: 0 0.15rem; }
+.linkbtn:hover { color: var(--fp-danger); }
+.map { height: 22rem; border-radius: var(--fp-radius-s); border: 1px solid var(--fp-border); }
+.leaflet-container { background: var(--fp-surface-2); }

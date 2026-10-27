@@ -1,0 +1,186 @@
+{% extends "festival_base.html" %}
+{% block title %}{{ _("Transport") }} — {{ festival.name }}{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="/static/vendor/leaflet/leaflet.css">
+{% endblock %}
+
+{% block content %}
+{% if error %}<p class="alert alert--error" role="alert">{{ error }}</p>{% endif %}
+
+<section class="card">
+  <h2>{{ _("Car-sharing") }}</h2>
+
+  {% if unassigned %}
+  <p class="hint">{{ _("Not in a car yet — drag a name onto a car, or use the buttons below it.") }}</p>
+  <ul class="names">
+    {% for participant in unassigned %}
+    <li class="name name--draggable{% if participant.is_placeholder %} name--placeholder{% endif %}"
+        data-participant-id="{{ participant.id }}">{{ participant.display_name }}</li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="hint">{{ _("Everybody has a seat.") }}</p>
+  {% endif %}
+</section>
+
+<div class="cars">
+{% for car in cars %}
+<section class="card car car--{{ car.color }}" data-drop-car="/festivals/{{ festival.id }}/transport/cars/{{ car.id }}/seats">
+  <div class="row row--between">
+    <div class="row">
+      <svg class="car__icon" viewBox="0 0 64 32" role="img" aria-label="{{ car.icon }}">
+        <use href="/static/icons/cars.svg#{{ car.icon }}"></use>
+      </svg>
+      <div>
+        <strong>{{ car.driver.display_name if car.driver else _("No driver yet") }}</strong>
+        <p class="hint">
+          {{ car.occupied }} / {{ car.seats_total }} {{ _("seats taken") }}
+          {% if car.free_seats %}· {{ car.free_seats }} {{ _("free") }}{% endif %}
+        </p>
+      </div>
+    </div>
+    {% if not festival.is_archived %}
+    <form method="post" action="/festivals/{{ festival.id }}/transport/cars/{{ car.id }}/delete">
+      <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+      <button class="btn" title="{{ _('Remove car') }}">&#10005;</button>
+    </form>
+    {% endif %}
+  </div>
+
+  <ul class="names">
+    {% if car.driver %}
+    <li class="name name--driver">
+      {{ car.driver.display_name }} · {{ _("driving") }}
+      {% if not festival.is_archived %}
+      <form method="post" class="inline" action="/festivals/{{ festival.id }}/transport/cars/{{ car.id }}/seats/remove">
+        <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+        <input type="hidden" name="participant_id" value="{{ car.driver.id }}">
+        <button class="linkbtn" title="{{ _('Take out') }}">&#10005;</button>
+      </form>
+      {% endif %}
+    </li>
+    {% endif %}
+    {% for seat in car.seats %}
+    <li class="name">
+      {{ seat.participant.display_name }}
+      {% if not festival.is_archived %}
+      <form method="post" class="inline" action="/festivals/{{ festival.id }}/transport/cars/{{ car.id }}/seats/remove">
+        <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+        <input type="hidden" name="participant_id" value="{{ seat.participant.id }}">
+        <button class="linkbtn" title="{{ _('Take out') }}">&#10005;</button>
+      </form>
+      {% endif %}
+    </li>
+    {% endfor %}
+    {% for _free in range(car.free_seats) %}
+    <li class="name name--free">{{ _("free seat") }}</li>
+    {% endfor %}
+  </ul>
+
+  {% if unassigned and car.free_seats and not festival.is_archived %}
+  <form method="post" action="/festivals/{{ festival.id }}/transport/cars/{{ car.id }}/seats" class="row">
+    <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+    <select name="participant_id" aria-label="{{ _('Add passenger') }}">
+      {% for participant in unassigned %}
+      <option value="{{ participant.id }}">{{ participant.display_name }}</option>
+      {% endfor %}
+    </select>
+    <button class="btn">{{ _("Add passenger") }}</button>
+  </form>
+  {% endif %}
+
+  {% if not festival.is_archived %}
+  <form method="post" action="/festivals/{{ festival.id }}/transport/cars/{{ car.id }}/departure" class="stack">
+    <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+    <label for="address-{{ car.id }}">{{ _("Departure address") }}</label>
+    <input id="address-{{ car.id }}" name="address" type="text" value="{{ car.departure_address or '' }}"
+           placeholder="{{ _('Town is enough') }}">
+    <button class="btn">{{ _("Save departure") }}</button>
+  </form>
+  {% endif %}
+
+  {% if car.stops %}
+  <ol class="log">
+    {% for stop in car.stops %}
+    <li>
+      {{ stop.address }}
+      {% if stop.participant %}· {{ stop.participant.display_name }}{% endif %}
+      {% if not stop.lat %}<span class="hint">{{ _("not found on the map") }}</span>{% endif %}
+      {% if not festival.is_archived %}
+      <form method="post" class="inline" action="/festivals/{{ festival.id }}/transport/stops/{{ stop.id }}/delete">
+        <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+        <button class="linkbtn">&#10005;</button>
+      </form>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ol>
+  {% endif %}
+
+  {% if not festival.is_archived %}
+  <details>
+    <summary class="hint">{{ _("Add a pickup on the way") }}</summary>
+    <form method="post" action="/festivals/{{ festival.id }}/transport/cars/{{ car.id }}/stops" class="stack">
+      <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+      <label for="stop-{{ car.id }}">{{ _("Address") }}</label>
+      <input id="stop-{{ car.id }}" name="address" type="text" required>
+      <label for="stopwho-{{ car.id }}">{{ _("Picking up (optional)") }}</label>
+      <select id="stopwho-{{ car.id }}" name="participant_id">
+        <option value="">—</option>
+        {% for seat in car.seats %}
+        <option value="{{ seat.participant.id }}">{{ seat.participant.display_name }}</option>
+        {% endfor %}
+      </select>
+      <button class="btn">{{ _("Add stop") }}</button>
+    </form>
+  </details>
+  {% endif %}
+</section>
+{% endfor %}
+</div>
+
+{% if not festival.is_archived %}
+<section class="card">
+  <h2>{{ _("Add a car") }}</h2>
+  <form method="post" action="/festivals/{{ festival.id }}/transport/cars" class="stack">
+    <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+    <label for="driver">{{ _("Who drives?") }}</label>
+    <select id="driver" name="driver_participant_id">
+      <option value="">{{ _("Decide later") }}</option>
+      {% for participant in unassigned %}
+      <option value="{{ participant.id }}">{{ participant.display_name }}</option>
+      {% endfor %}
+    </select>
+    <label for="seats_total">{{ _("Seats in total, driver included") }}</label>
+    <select id="seats_total" name="seats_total">
+      {% for number in [1, 2, 3, 4, 5] %}
+      <option value="{{ number }}" {% if number == 5 %}selected{% endif %}>{{ number }}</option>
+      {% endfor %}
+    </select>
+    <label for="icon">{{ _("Vehicle") }}</label>
+    <select id="icon" name="icon">
+      {% for name in icons %}<option value="{{ name }}">{{ name }}</option>{% endfor %}
+    </select>
+    <label for="color">{{ _("Colour") }}</label>
+    <select id="color" name="color">
+      {% for name in colors %}<option value="{{ name }}">{{ name }}</option>{% endfor %}
+    </select>
+    <button class="btn btn--primary">{{ _("Add car") }}</button>
+  </form>
+</section>
+{% endif %}
+
+<section class="card">
+  <h2>{{ _("On the map") }}</h2>
+  <div id="map" class="map" data-routes="{{ routes_json }}"
+       {% for car in cars %}data-color-{{ car.id }}="{{ car.color }}"{% endfor %}></div>
+  <p class="hint">{{ _("Straight lines show the order of the stops, not the road route.") }}</p>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/vendor/leaflet/leaflet.js" defer></script>
+<script src="/static/js/map.js" defer></script>
+<script src="/static/js/seats.js" defer></script>
+{% endblock %}

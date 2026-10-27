@@ -404,7 +404,6 @@ async def unarchive(
 
 # "bringlist" is a real page now and is served by its own router.
 TOOL_LABELS = {
-    "transport": N_("Transport"),
     "chat": N_("Chat"),
     "polls": N_("Polls"),
     "forum": N_("Forum"),

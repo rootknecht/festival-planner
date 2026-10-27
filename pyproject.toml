@@ -7,7 +7,7 @@ name = "festival-planner"
 version = "0.0.1"
 description = "Self-hosted group planning webservice for festival trips"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.11"
 license = { text = "AGPL-3.0-or-later" }
 dependencies = [
     "fastapi>=0.115",
@@ -46,7 +46,7 @@ addopts = "-q"
 
 [tool.ruff]
 line-length = 100
-target-version = "py312"
+target-version = "py311"
 # Alembic generates these from its own template; linting them adds noise only.
 extend-exclude = ["migrations/versions"]
 

@@ -17,6 +17,7 @@ from app.config import Settings, get_settings
 from app.deps import current_user
 from app.models.user import User
 from app.routes import auth as auth_routes
+from app.routes import password_reset as reset_routes
 from app.security.csrf import CsrfMiddleware
 from app.templating import render
 
@@ -80,6 +81,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.add_middleware(BaseHTTPMiddleware, dispatch=CsrfMiddleware())
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
     app.include_router(auth_routes.router)
+    app.include_router(reset_routes.router)
 
     @app.get("/", include_in_schema=False)
     async def index(request: Request, user: User | None = Depends(current_user)) -> Response:

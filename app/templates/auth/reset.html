@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Choose a new password — Festival Planner{% endblock %}
+{% block content %}
+<section class="card card--narrow">
+  <h1 class="brand">Choose a new password</h1>
+  {% if error %}
+  <p class="alert alert--error" role="alert">{{ error }}</p>
+  {% endif %}
+  <form method="post" action="/reset/{{ token }}" class="stack">
+    <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+    <label for="password">New password</label>
+    <input id="password" name="password" type="password" autocomplete="new-password" required autofocus>
+    <label for="password_repeat">Repeat password</label>
+    <input id="password_repeat" name="password_repeat" type="password" autocomplete="new-password" required>
+    <button type="submit" class="btn btn--primary">Save password</button>
+  </form>
+  <p class="hint">Saving signs you out everywhere else.</p>
+</section>
+{% endblock %}

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Festival Planner VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-27 14:39+0100\n"
+"POT-Creation-Date: 2026-10-27 14:40+0100\n"
 "PO-Revision-Date: 2026-10-27 14:26+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: de\n"
@@ -126,8 +126,7 @@ msgstr "neu"
 msgid "This festival is archived — it can be read but not changed."
 msgstr ""
 "Dieses Festival ist archiviert – es kann gelesen, aber nicht geändert "
-"werden.Dieses Festival ist archiviert – es kann gelesen, aber nicht "
-"geändert werden."
+"werden."
 
 #: app/templates/festivals/dashboard.html:11
 msgid "Open for you"
@@ -233,8 +232,7 @@ msgstr "Ausschalten"
 msgid "Optional. Adds a six-digit code from your phone to every sign-in."
 msgstr ""
 "Optional. Fügt jeder Anmeldung einen sechsstelligen Code von deinem Handy"
-" hinzu.Optional. Fügt jeder Anmeldung einen sechsstelligen Code von "
-"deinem Handy hinzu."
+" hinzu."
 
 #: app/templates/profile/index.html:64 app/templates/profile/totp.html:2
 #: app/templates/profile/totp.html:5
@@ -246,6 +244,8 @@ msgid ""
 "Scan this code with your authenticator app, then enter the six digits it "
 "shows."
 msgstr ""
+"Scanne diesen Code mit deiner Authenticator-App und gib die sechs Ziffern"
+" ein."
 
 #: app/templates/profile/totp.html:9
 msgid "QR code"
@@ -315,8 +315,7 @@ msgstr "L, Dosen, Kästen"
 msgid "With units the total adds up per unit, for example “80 L + 120 cans”."
 msgstr ""
 "Mit Einheiten summiert die Spalte je Einheit, zum Beispiel „80 L + 120 "
-"Dosen“.Mit Einheiten summiert die Spalte je Einheit, zum Beispiel „80 L +"
-" 120 Dosen“."
+"Dosen“."
 
 #: app/templates/tools/bringlist.html:87
 msgid "Add row"

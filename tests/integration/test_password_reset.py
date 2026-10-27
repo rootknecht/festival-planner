@@ -175,4 +175,5 @@ def test_resetting_logs_every_session_out(env) -> None:
     )
     after = client.get("/")
     assert after.status_code == 303
+    assert after.headers["location"] == "/login"
     assert COOKIE_NAME not in after.cookies

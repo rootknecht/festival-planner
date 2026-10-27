@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}{{ status_code }} — Festival Planner{% endblock %}
+{% block content %}
+<section class="card card--narrow">
+  <h1 class="brand">{{ status_code }}</h1>
+  <p>{{ detail }}</p>
+  <p class="hint"><a href="/">Back to your festivals</a></p>
+</section>
+{% endblock %}

@@ -123,7 +123,7 @@ def test_repeated_failures_lock_the_account_out(client: TestClient) -> None:
     assert COOKIE_NAME not in response.cookies
 
 
-def test_logged_in_user_sees_the_home_page_and_can_log_out(client: TestClient) -> None:
+def test_logged_in_user_sees_their_festival_list_and_can_log_out(client: TestClient) -> None:
     token = _csrf(client)
     client.post(
         "/login",
@@ -131,7 +131,7 @@ def test_logged_in_user_sees_the_home_page_and_can_log_out(client: TestClient) -
     )
     home = client.get("/")
     assert home.status_code == 200
-    assert "Metal Fan" in home.text
+    assert "Your festivals" in home.text
 
     logout = client.post("/logout", data={"csrf_token": token})
     assert logout.status_code == 303

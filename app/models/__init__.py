@@ -6,7 +6,16 @@ Alembic autogeneration sees the full schema.
 
 from __future__ import annotations
 
+from app.models.festival import Festival, Invite, Participant
 from app.models.password_reset import PasswordReset
 from app.models.user import LoginAttempt, User, UserSession
 
-__all__ = ["LoginAttempt", "PasswordReset", "User", "UserSession"]
+__all__ = [
+    "Festival",
+    "Invite",
+    "LoginAttempt",
+    "Participant",
+    "PasswordReset",
+    "User",
+    "UserSession",
+]

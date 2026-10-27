@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}New festival — Festival Planner{% endblock %}
+{% block content %}
+<section class="card card--narrow">
+  <h1 class="brand">New festival</h1>
+  {% if error %}<p class="alert alert--error" role="alert">{{ error }}</p>{% endif %}
+  <form method="post" action="/festivals" class="stack">
+    <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+    <label for="name">Festival name</label>
+    <input id="name" name="name" type="text" required autofocus maxlength="160">
+    <label for="website">Website</label>
+    <input id="website" name="website" type="url" placeholder="https://">
+    <label for="address_text">Venue address</label>
+    <input id="address_text" name="address_text" type="text">
+    <div class="row">
+      <div class="stack"><label for="start_date">Starts</label><input id="start_date" name="start_date" type="date"></div>
+      <div class="stack"><label for="end_date">Ends</label><input id="end_date" name="end_date" type="date"></div>
+    </div>
+    <div class="row">
+      <div class="stack"><label for="camp_arrival">Camping from</label><input id="camp_arrival" name="camp_arrival" type="date"></div>
+      <div class="stack"><label for="camp_departure">Camping until</label><input id="camp_departure" name="camp_departure" type="date"></div>
+    </div>
+    <p class="hint">Only the name is required — everything else can be filled in later.</p>
+    <button type="submit" class="btn btn--primary">Create</button>
+  </form>
+  <p class="hint"><a href="/">Back</a></p>
+</section>
+{% endblock %}

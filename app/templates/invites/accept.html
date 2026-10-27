@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Invitation — Festival Planner{% endblock %}
+{% block content %}
+<section class="card card--narrow">
+  <h1 class="brand">{{ festival.name }}</h1>
+  <p>You have been invited to help plan this festival.</p>
+  {% if error %}<p class="alert alert--error" role="alert">{{ error }}</p>{% endif %}
+
+  <form method="post" action="/invite/{{ token }}" class="stack">
+    <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+    <label>Email address</label>
+    <input type="email" value="{{ email }}" disabled>
+    {% if has_account %}
+    <p class="hint">This address already has an account — accepting adds it to this festival, then sign in as usual.</p>
+    <button type="submit" class="btn btn--primary">Join festival</button>
+    {% else %}
+    <label for="display_name">Your name</label>
+    <input id="display_name" name="display_name" type="text" maxlength="120" required autofocus>
+    <label for="password">Choose a password</label>
+    <input id="password" name="password" type="password" autocomplete="new-password" required>
+    <label for="password_repeat">Repeat password</label>
+    <input id="password_repeat" name="password_repeat" type="password" autocomplete="new-password" required>
+    <button type="submit" class="btn btn--primary">Create account and join</button>
+    {% endif %}
+  </form>
+</section>
+{% endblock %}

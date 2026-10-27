@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}{{ festival.name }} — Festival Planner{% endblock %}
+{% block content %}
+<header class="row row--between">
+  <div>
+    <h1 class="brand">{{ festival.name }}</h1>
+    <p class="hint">{{ festival.date_range }}{% if festival.is_archived %} · archived{% endif %}</p>
+  </div>
+  <div class="row">
+    {% if membership.is_admin %}<a class="btn" href="/festivals/{{ festival.id }}/settings">Settings</a>{% endif %}
+    <a class="btn" href="/">All festivals</a>
+  </div>
+</header>
+
+<section class="card">
+  <h2>Who is coming</h2>
+  <ul class="names">
+    {% for participant in participants %}
+    <li class="name{% if participant.is_placeholder %} name--placeholder{% endif %}">
+      {{ participant.display_name }}{% if participant.is_admin %} ★{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+
+<section class="card">
+  <h2>Open for you</h2>
+  <p class="hint">Notifications appear here once chat, polls and the tables are live.</p>
+</section>
+{% endblock %}

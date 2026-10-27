@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}{{ festival.name }} settings — Festival Planner{% endblock %}
+{% block content %}
+<header class="row row--between">
+  <h1 class="brand">{{ festival.name }} · settings</h1>
+  <a class="btn" href="/festivals/{{ festival.id }}">Back to dashboard</a>
+</header>
+
+{% if invite_link %}
+<p class="alert" role="status">
+  Invitation created. Copy this link if the email does not arrive:<br>
+  <code>{{ request.base_url }}invite/{{ invite_link }}</code>
+</p>
+{% endif %}
+
+<section class="card">
+  <h2>Festival</h2>
+  <form method="post" action="/festivals/{{ festival.id }}/settings" class="stack">
+    <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+    <label for="name">Name</label>
+    <input id="name" name="name" type="text" value="{{ festival.name }}" required maxlength="160">
+    <label for="website">Website</label>
+    <input id="website" name="website" type="url" value="{{ festival.website or '' }}">
+    <label for="address_text">Venue address</label>
+    <input id="address_text" name="address_text" type="text" value="{{ festival.address_text or '' }}">
+    <div class="row">
+      <div class="stack"><label for="start_date">Starts</label><input id="start_date" name="start_date" type="date" value="{{ festival.start_date or '' }}"></div>
+      <div class="stack"><label for="end_date">Ends</label><input id="end_date" name="end_date" type="date" value="{{ festival.end_date or '' }}"></div>
+    </div>
+    <div class="row">
+      <div class="stack"><label for="camp_arrival">Camping from</label><input id="camp_arrival" name="camp_arrival" type="date" value="{{ festival.camp_arrival or '' }}"></div>
+      <div class="stack"><label for="camp_departure">Camping until</label><input id="camp_departure" name="camp_departure" type="date" value="{{ festival.camp_departure or '' }}"></div>
+    </div>
+    <label for="theme">Theme</label>
+    <select id="theme" name="theme">
+      {% for option in ["metal", "matrix", "light"] %}
+      <option value="{{ option }}" {% if festival.theme == option %}selected{% endif %}>{{ option }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn btn--primary">Save</button>
+  </form>
+</section>
+
+<section class="card">
+  <h2>Participants</h2>
+  <table class="grid">
+    <tbody>
+    {% for participant in participants %}
+      <tr>
+        <td>{{ participant.display_name }}{% if participant.is_placeholder %} <span class="hint">(no account)</span>{% endif %}</td>
+        <td>{{ participant.role }}</td>
+        <td class="row">
+          {% if not participant.is_placeholder %}
+          <form method="post" action="/festivals/{{ festival.id }}/participants/{{ participant.id }}/role">
+            <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+            <input type="hidden" name="role" value="{% if participant.is_admin %}member{% else %}admin{% endif %}">
+            <button class="btn">{% if participant.is_admin %}Demote{% else %}Make admin{% endif %}</button>
+          </form>
+          {% endif %}
+          <form method="post" action="/festivals/{{ festival.id }}/participants/{{ participant.id }}/delete">
+            <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+            <button class="btn">Remove</button>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+
+  <form method="post" action="/festivals/{{ festival.id }}/participants" class="stack">
+    <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+    <label for="display_name">Add someone without an account</label>
+    <input id="display_name" name="display_name" type="text" maxlength="120" placeholder="Name">
+    <button class="btn">Add placeholder</button>
+  </form>
+</section>
+
+<section class="card">
+  <h2>Invitations</h2>
+  <form method="post" action="/festivals/{{ festival.id }}/invites" class="stack">
+    <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+    <label for="email">Email address</label>
+    <input id="email" name="email" type="email" required>
+    <label for="claims_participant_id">Claims placeholder (optional)</label>
+    <select id="claims_participant_id" name="claims_participant_id">
+      <option value="">— none —</option>
+      {% for participant in participants if participant.is_placeholder %}
+      <option value="{{ participant.id }}">{{ participant.display_name }}</option>
+      {% endfor %}
+    </select>
+    <button class="btn btn--primary">Send invitation</button>
+  </form>
+
+  {% if invites %}
+  <table class="grid">
+    <tbody>
+    {% for invite in invites %}
+      <tr>
+        <td>{{ invite.email }}</td>
+        <td class="hint">{% if invite.revoked_at %}revoked{% else %}open{% endif %}</td>
+        <td>
+          {% if not invite.revoked_at %}
+          <form method="post" action="/festivals/{{ festival.id }}/invites/{{ invite.id }}/revoke">
+            <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+            <button class="btn">Revoke</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</section>
+
+<section class="card">
+  <h2>Lifecycle</h2>
+  {% if festival.is_archived %}
+  <form method="post" action="/festivals/{{ festival.id }}/unarchive">
+    <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+    <button class="btn">Reopen festival</button>
+  </form>
+  {% else %}
+  <form method="post" action="/festivals/{{ festival.id }}/archive">
+    <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+    <button class="btn">Archive after the event</button>
+  </form>
+  {% endif %}
+</section>
+{% endblock %}

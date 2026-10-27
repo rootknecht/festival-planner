@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Your festivals — Festival Planner{% endblock %}
+{% block content %}
+<header class="row row--between">
+  <h1 class="brand">Your festivals</h1>
+  <form method="post" action="/logout"><input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}"><button class="btn">Sign out</button></form>
+</header>
+
+{% if rows %}
+<ul class="cards">
+  {% for festival, participant in rows %}
+  <li class="card">
+    <a class="card__title" href="/festivals/{{ festival.id }}">{{ festival.name }}</a>
+    <p class="hint">
+      {{ festival.date_range }}
+      {% if participant.is_admin %}· admin{% endif %}
+      {% if festival.is_archived %}· archived{% endif %}
+    </p>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="hint">You are not part of any festival yet.</p>
+{% endif %}
+
+<p><a class="btn btn--primary" href="/festivals/new">Create new festival</a></p>
+{% endblock %}

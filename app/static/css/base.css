@@ -119,3 +119,23 @@ a:focus-visible {
   .content { padding: var(--fp-gap-m); }
   .card--narrow { margin: var(--fp-gap-m) auto; }
 }
+
+/* Layout helpers used by the festival views */
+.row { display: flex; gap: var(--fp-gap-m); align-items: center; flex-wrap: wrap; }
+.row--between { justify-content: space-between; align-items: flex-start; }
+.row > .stack { flex: 1 1 10rem; }
+
+.cards { list-style: none; padding: 0; margin: 0 0 var(--fp-gap-l); display: grid; gap: var(--fp-gap-m); }
+.card + .card { margin-top: var(--fp-gap-m); }
+.card__title { font-family: var(--fp-font-display); font-size: 1.2rem; color: var(--fp-accent); text-decoration: none; }
+.card__title:hover { text-decoration: underline; }
+
+.names { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: var(--fp-gap-s); }
+.name { background: var(--fp-surface-2); border: 1px solid var(--fp-border); border-radius: 999px; padding: 0.2rem 0.75rem; font-size: 0.95rem; }
+.name--placeholder { opacity: 0.7; border-style: dashed; }
+
+.grid { width: 100%; border-collapse: collapse; margin: var(--fp-gap-m) 0; }
+.grid td, .grid th { border-bottom: 1px solid var(--fp-border); padding: 0.45rem 0.5rem; text-align: left; vertical-align: middle; }
+.grid .row { gap: var(--fp-gap-s); }
+
+code { background: var(--fp-surface-2); padding: 0.15rem 0.35rem; border-radius: var(--fp-radius-s); word-break: break-all; }

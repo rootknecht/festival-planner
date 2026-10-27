@@ -1,0 +1,44 @@
+{% extends "festival_base.html" %}
+{% block title %}{{ _("Chat") }} — {{ festival.name }}{% endblock %}
+{% block content %}
+<section class="card chat" data-ws="/festivals/{{ festival.id }}/ws" data-tool="chat">
+  <h2>{{ _("Chat") }}</h2>
+
+  <ol class="messages" id="messages">
+    {% for message in messages %}
+    <li class="message{% if message.mine %} message--mine{% endif %}" id="m{{ message.id }}">
+      <div class="row row--between">
+        <strong>{{ message.author }}</strong>
+        <span class="hint hint--tiny">
+          {{ message.created_at.strftime("%d.%m. %H:%M") }}{% if message.edited %} · {{ _("edited") }}{% endif %}
+        </span>
+      </div>
+      <div class="message__body">{{ message.body_html | safe }}</div>
+      {% if message.can_edit and not festival.is_archived %}
+      <form method="post" class="inline" action="/festivals/{{ festival.id }}/chat/{{ message.id }}/delete">
+        <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+        <button class="linkbtn">{{ _("delete") }}</button>
+      </form>
+      {% endif %}
+    </li>
+    {% else %}
+    <li class="hint">{{ _("Nothing said yet.") }}</li>
+    {% endfor %}
+  </ol>
+
+  {% if not festival.is_archived %}
+  <form method="post" action="/festivals/{{ festival.id }}/chat" class="stack">
+    <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+    <label for="body">{{ _("Your message") }}</label>
+    <textarea id="body" name="body" rows="3" required
+              placeholder="{{ _('Use @name to call somebody, @everyone for all') }}"></textarea>
+    <button class="btn btn--primary">{{ _("Send") }}</button>
+  </form>
+  <p class="hint">{{ _("You can edit or delete your own message for 15 minutes.") }}</p>
+  {% endif %}
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/live.js" defer></script>
+{% endblock %}

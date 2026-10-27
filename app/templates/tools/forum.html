@@ -1,0 +1,37 @@
+{% extends "festival_base.html" %}
+{% block title %}{{ _("Forum") }} — {{ festival.name }}{% endblock %}
+{% block content %}
+
+<section class="card">
+  <h2>{{ _("Forum") }}</h2>
+  {% if topics %}
+  <ul class="cards">
+    {% for entry in topics %}
+    <li class="card">
+      <a class="card__title" href="/festivals/{{ festival.id }}/forum/{{ entry.topic.id }}">{{ entry.topic.title }}</a>
+      <p class="hint">
+        {{ entry.posts }} {{ _("posts") }} ·
+        {{ entry.topic.last_activity_at.strftime("%d.%m.%Y %H:%M") }}
+      </p>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="hint">{{ _("Nothing here yet. Start the first topic.") }}</p>
+  {% endif %}
+</section>
+
+{% if not festival.is_archived %}
+<section class="card">
+  <h2>{{ _("New topic") }}</h2>
+  <form method="post" action="/festivals/{{ festival.id }}/forum" class="stack">
+    <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+    <label for="title">{{ _("Title") }}</label>
+    <input id="title" name="title" type="text" maxlength="200" required>
+    <label for="body">{{ _("First post") }}</label>
+    <textarea id="body" name="body" rows="4" required></textarea>
+    <button class="btn btn--primary">{{ _("Start topic") }}</button>
+  </form>
+</section>
+{% endif %}
+{% endblock %}

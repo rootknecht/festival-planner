@@ -10,6 +10,7 @@ from app.deps import get_db, require_user
 from app.models.bringlist import BringRow
 from app.models.festival import Participant
 from app.models.user import User
+from app.realtime.hub import notify_change
 from app.services import bringlist, notifications
 from app.services.access import require_admin, require_membership, require_writable
 from app.templating import render
@@ -65,6 +66,7 @@ async def add_row(
     if len(bringlist.build_table(db, festival_id)) >= bringlist.MAX_ROWS_PER_FESTIVAL:
         raise HTTPException(status_code=409, detail="this table has enough rows")
     bringlist.add_row(db, membership.festival.id, label, units, user)
+    notify_change(festival_id, "bringlist")
     return RedirectResponse(f"/festivals/{festival_id}/bringlist", status_code=303)
 
 
@@ -83,6 +85,7 @@ async def delete_row(
     if row is None or row.festival_id != festival_id:
         raise HTTPException(status_code=404, detail="not found")
     bringlist.delete_row(db, row, user)
+    notify_change(festival_id, "bringlist")
     return RedirectResponse(f"/festivals/{festival_id}/bringlist", status_code=303)
 
 
@@ -113,4 +116,5 @@ async def set_cell(
     bringlist.set_cell(
         db, row=row, participant=participant, amount=value, unit=unit or None, actor=user
     )
+    notify_change(festival_id, "bringlist")
     return RedirectResponse(f"/festivals/{festival_id}/bringlist", status_code=303)

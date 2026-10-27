@@ -32,7 +32,7 @@ from app.services.mail import Message, get_mailer
 from app.services.notification_text import describe
 from app.services.tokens import generate_token, hash_token
 from app.templating import language_for, render
-from app.translations import N_, gettext_for
+from app.translations import gettext_for
 
 router = APIRouter(tags=["festivals"])
 
@@ -408,41 +408,3 @@ async def unarchive(
         membership.festival.status = FestivalStatus.ACTIVE.value
         db.commit()
     return RedirectResponse(f"/festivals/{festival_id}", status_code=303)
-
-
-# "bringlist" is a real page now and is served by its own router.
-TOOL_LABELS = {
-    "chat": N_("Chat"),
-    "polls": N_("Polls"),
-    "forum": N_("Forum"),
-}
-
-
-@router.get("/festivals/{festival_id}/{tool}")
-async def tool_page(
-    request: Request,
-    festival_id: int,
-    tool: str,
-    user: User = Depends(require_user),
-    db: DbSession = Depends(get_db),
-) -> Response:
-    """Placeholder pages for the tools built in later milestones.
-
-    They exist now so the toolbar, the badges and the notification links are
-    real and testable rather than dead ends.
-    """
-    if tool not in TOOL_LABELS:
-        raise HTTPException(status_code=404, detail="not found")
-    membership = require_membership(db, user, festival_id)
-    translate = gettext_for(language_for(request))
-    return render(
-        request,
-        "tools/placeholder.html",
-        {
-            "festival": membership.festival,
-            "membership": membership,
-            "badges": notifications.badges(db, user.id, festival_id),
-            "active_tool": tool,
-            "tool_label": translate(TOOL_LABELS[tool]),
-        },
-    )

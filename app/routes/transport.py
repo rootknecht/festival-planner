@@ -13,6 +13,7 @@ from app.models.festival import Participant
 from app.models.notification import Tool
 from app.models.transport import CAR_COLORS, CAR_ICONS, Car, CarStop
 from app.models.user import User
+from app.realtime.hub import notify_change
 from app.services import notifications, transport
 from app.services.access import require_membership, require_writable
 from app.services.geocode import geocode
@@ -108,6 +109,7 @@ async def add_car(
         driver=driver,
         actor=user,
     )
+    notify_change(festival_id, "transport")
     return RedirectResponse(f"/festivals/{festival_id}/transport", status_code=303)
 
 
@@ -121,6 +123,7 @@ async def delete_car(
 ) -> Response:
     require_writable(require_membership(db, user, festival_id))
     transport.delete_car(db, _car_of(db, festival_id, car_id), user)
+    notify_change(festival_id, "transport")
     return RedirectResponse(f"/festivals/{festival_id}/transport", status_code=303)
 
 
@@ -140,6 +143,7 @@ async def assign_seat(
         participant=_participant_of(db, festival_id, participant_id),
         actor=user,
     )
+    notify_change(festival_id, "transport")
     return RedirectResponse(f"/festivals/{festival_id}/transport", status_code=303)
 
 
@@ -159,6 +163,7 @@ async def remove_seat(
         participant=_participant_of(db, festival_id, participant_id),
         actor=user,
     )
+    notify_change(festival_id, "transport")
     return RedirectResponse(f"/festivals/{festival_id}/transport", status_code=303)
 
 
@@ -180,6 +185,7 @@ async def set_departure(
         geocode(db, address, _settings_for(request)) if address else (None, None)
     )
     db.commit()
+    notify_change(festival_id, "transport")
     return RedirectResponse(f"/festivals/{festival_id}/transport", status_code=303)
 
 
@@ -211,6 +217,7 @@ async def add_stop(
         ),
         actor=user,
     )
+    notify_change(festival_id, "transport")
     return RedirectResponse(f"/festivals/{festival_id}/transport", status_code=303)
 
 
@@ -227,4 +234,5 @@ async def delete_stop(
     if stop is None or stop.car.festival_id != festival_id:
         raise HTTPException(status_code=404, detail="not found")
     transport.delete_stop(db, stop=stop, actor=user, festival_id=festival_id)
+    notify_change(festival_id, "transport")
     return RedirectResponse(f"/festivals/{festival_id}/transport", status_code=303)

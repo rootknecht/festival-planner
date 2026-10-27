@@ -1,6 +1,7 @@
 {% extends "festival_base.html" %}
 {% block title %}{{ _("Who brings what") }} — {{ festival.name }}{% endblock %}
 {% block content %}
+<div data-ws="/festivals/{{ festival.id }}/ws" data-tool="bringlist" hidden></div>
 
 {% if error %}<p class="alert alert--error" role="alert">{{ error }}</p>{% endif %}
 
@@ -99,4 +100,8 @@
   </ul>
 </section>
 {% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/live.js" defer></script>
 {% endblock %}

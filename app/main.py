@@ -16,9 +16,12 @@ from app import __version__
 from app.config import Settings, get_settings
 from app.routes import auth as auth_routes
 from app.routes import bringlist as bringlist_routes
+from app.routes import chat as chat_routes
 from app.routes import festivals as festival_routes
+from app.routes import forum as forum_routes
 from app.routes import invites as invite_routes
 from app.routes import password_reset as reset_routes
+from app.routes import polls as poll_routes
 from app.routes import profile as profile_routes
 from app.routes import transport as transport_routes
 from app.security.csrf import CsrfMiddleware
@@ -92,6 +95,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(profile_routes.router)
     app.include_router(bringlist_routes.router)
     app.include_router(transport_routes.router)
+    app.include_router(poll_routes.router)
+    app.include_router(chat_routes.router)
+    app.include_router(forum_routes.router)
     app.include_router(festival_routes.router)
 
     @app.exception_handler(HTTPException)

@@ -1,0 +1,69 @@
+{% extends "festival_base.html" %}
+{% block title %}{{ _("Polls") }} — {{ festival.name }}{% endblock %}
+{% block content %}
+
+{% for entry in polls %}
+<section class="card">
+  <div class="row row--between">
+    <h2>{{ entry.poll.question }}</h2>
+    {% if entry.closed %}<span class="hint">{{ _("closed") }}</span>{% endif %}
+  </div>
+
+  <form method="post" action="/festivals/{{ festival.id }}/polls/{{ entry.poll.id }}/vote" class="stack">
+    <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+    {% for option in entry.poll.options %}
+    <label class="option">
+      <input type="{{ 'checkbox' if entry.poll.is_multi else 'radio' }}" name="option_id"
+             value="{{ option.id }}" {% if option.id in entry.mine %}checked{% endif %}
+             {% if entry.closed or festival.is_archived %}disabled{% endif %}>
+      <span class="option__label">{{ option.label }}</span>
+      <span class="option__count">{{ entry.votes.get(option.id, []) | length }}</span>
+      {% if entry.votes.get(option.id) %}
+      <span class="hint">{{ entry.votes[option.id] | join(", ") }}</span>
+      {% endif %}
+    </label>
+    {% endfor %}
+
+    {% if not entry.closed and not festival.is_archived %}
+    <div class="row">
+      <button class="btn btn--primary">{{ _("Save my answer") }}</button>
+      {% if entry.poll.created_by == user.id or membership.is_admin %}
+      <button class="btn" formaction="/festivals/{{ festival.id }}/polls/{{ entry.poll.id }}/close">
+        {{ _("Close poll") }}
+      </button>
+      {% endif %}
+    </div>
+    {% endif %}
+  </form>
+
+  {% if entry.pending and not entry.closed %}
+  <p class="hint">{{ _("Still missing:") }} {{ entry.pending | join(", ") }}</p>
+  {% endif %}
+</section>
+{% else %}
+<section class="card">
+  <p class="hint">{{ _("No polls yet.") }}</p>
+</section>
+{% endfor %}
+
+{% if not festival.is_archived %}
+<section class="card">
+  <h2>{{ _("New poll") }}</h2>
+  <form method="post" action="/festivals/{{ festival.id }}/polls" class="stack">
+    <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+    <label for="question">{{ _("Question") }}</label>
+    <input id="question" name="question" type="text" required maxlength="500">
+    <label for="options">{{ _("Options, one per line") }}</label>
+    <textarea id="options" name="options" rows="4" required></textarea>
+    <label for="mode">{{ _("Answers") }}</label>
+    <select id="mode" name="mode">
+      <option value="single">{{ _("One option only") }}</option>
+      <option value="multi">{{ _("Several options allowed") }}</option>
+    </select>
+    <label for="closes_on">{{ _("Closes on (optional)") }}</label>
+    <input id="closes_on" name="closes_on" type="date">
+    <button class="btn btn--primary">{{ _("Ask everyone") }}</button>
+  </form>
+</section>
+{% endif %}
+{% endblock %}

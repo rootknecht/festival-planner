@@ -1,0 +1,51 @@
+{% extends "festival_base.html" %}
+{% block title %}{{ topic.title }} — {{ festival.name }}{% endblock %}
+{% block content %}
+
+<section class="card">
+  <div class="row row--between">
+    <h2>{{ topic.title }}</h2>
+    <div class="row">
+      {% if membership.is_admin and not festival.is_archived %}
+      <form method="post" action="/festivals/{{ festival.id }}/forum/{{ topic.id }}/delete">
+        <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+        <button class="btn">{{ _("Delete topic") }}</button>
+      </form>
+      {% endif %}
+      <a class="btn" href="/festivals/{{ festival.id }}/forum">{{ _("All topics") }}</a>
+    </div>
+  </div>
+
+  <ol class="messages">
+    {% for post in posts %}
+    <li class="message">
+      <div class="row row--between">
+        <strong>{{ post.author }}</strong>
+        <span class="hint hint--tiny">
+          {{ post.created_at.strftime("%d.%m.%Y %H:%M") }}{% if post.edited %} · {{ _("edited") }}{% endif %}
+        </span>
+      </div>
+      <div class="message__body">{{ post.body_html | safe }}</div>
+      {% if post.can_delete and not festival.is_archived %}
+      <form method="post" class="inline"
+            action="/festivals/{{ festival.id }}/forum/{{ topic.id }}/posts/{{ post.id }}/delete">
+        <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+        <button class="linkbtn">{{ _("delete") }}</button>
+      </form>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ol>
+</section>
+
+{% if not festival.is_archived %}
+<section class="card">
+  <form method="post" action="/festivals/{{ festival.id }}/forum/{{ topic.id }}/posts" class="stack">
+    <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+    <label for="body">{{ _("Your reply") }}</label>
+    <textarea id="body" name="body" rows="4" required></textarea>
+    <button class="btn btn--primary">{{ _("Reply") }}</button>
+  </form>
+</section>
+{% endif %}
+{% endblock %}

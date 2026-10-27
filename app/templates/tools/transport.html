@@ -6,6 +6,7 @@
 {% endblock %}
 
 {% block content %}
+<div data-ws="/festivals/{{ festival.id }}/ws" data-tool="transport" hidden></div>
 {% if error %}<p class="alert alert--error" role="alert">{{ error }}</p>{% endif %}
 
 <section class="card">
@@ -180,6 +181,7 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="/static/js/live.js" defer></script>
 <script src="/static/vendor/leaflet/leaflet.js" defer></script>
 <script src="/static/js/map.js" defer></script>
 <script src="/static/js/seats.js" defer></script>

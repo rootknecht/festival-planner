@@ -7,6 +7,7 @@ Alembic autogeneration sees the full schema.
 from __future__ import annotations
 
 from app.models.bringlist import BringCell, BringRow, ChangeLog
+from app.models.discussion import Message, Poll, PollOption, PollVote, Post, Topic
 from app.models.festival import Festival, Invite, Participant
 from app.models.notification import Notification
 from app.models.password_reset import PasswordReset
@@ -22,6 +23,12 @@ __all__ = [
     "BringRow",
     "ChangeLog",
     "Festival",
+    "Message",
+    "Poll",
+    "PollOption",
+    "PollVote",
+    "Post",
+    "Topic",
     "Invite",
     "LoginAttempt",
     "Notification",

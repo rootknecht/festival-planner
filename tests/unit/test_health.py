@@ -21,3 +21,14 @@ def test_security_headers_present(client: TestClient) -> None:
     assert response.headers["referrer-policy"] == "no-referrer"
     assert "default-src 'self'" in response.headers["content-security-policy"]
     assert "'unsafe-inline'" not in response.headers["content-security-policy"]
+
+
+def test_csp_allows_the_bare_openstreetmap_tile_host(client: TestClient) -> None:
+    """A wildcard does not match the bare host; the tile URL uses the bare host.
+
+    Getting this wrong blocks every map tile while the page looks fine.
+    """
+    csp = client.get("/healthz").headers["content-security-policy"]
+    assert "https://tile.openstreetmap.org" in csp
+    img_src = [part for part in csp.split(";") if part.strip().startswith("img-src")][0]
+    assert "https://tile.openstreetmap.org" in img_src.split()

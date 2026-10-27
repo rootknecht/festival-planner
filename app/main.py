@@ -36,7 +36,9 @@ CONTENT_SECURITY_POLICY = "; ".join(
         "frame-ancestors 'none'",
         "object-src 'none'",
         # OpenStreetMap tiles are the single external origin this app talks to.
-        "img-src 'self' data: https://*.tile.openstreetmap.org",
+        # Both forms are needed: a wildcard does NOT match the bare host, and
+        # the bare host is what the tile URL uses.
+        "img-src 'self' data: https://tile.openstreetmap.org https://*.tile.openstreetmap.org",
         "style-src 'self'",
         "script-src 'self'",
         "connect-src 'self'",

@@ -27,6 +27,7 @@ from app.services.access import (
     require_membership,
     require_writable,
 )
+from app.services.geocode import geocode
 from app.services.mail import Message, get_mailer
 from app.services.notification_text import describe
 from app.services.tokens import generate_token, hash_token
@@ -215,7 +216,14 @@ async def save_settings(
 
     festival.name = clean_name[:160]
     festival.website = _clean(website)
-    festival.address_text = _clean(address_text)
+    new_address = _clean(address_text)
+    if new_address != festival.address_text:
+        # Only on an actual change: the venue does not move, and the public
+        # geocoder should not be asked again on every unrelated settings save.
+        festival.lat, festival.lon = (
+            geocode(db, new_address, _settings_for(request)) if new_address else (None, None)
+        )
+    festival.address_text = new_address
     festival.start_date = _date(start_date)
     festival.end_date = _date(end_date)
     festival.camp_arrival = _date(camp_arrival)

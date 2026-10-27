@@ -330,3 +330,27 @@ def test_an_archived_festival_freezes_the_cars(festival, factory) -> None:
     assert owner.get(f"/festivals/{festival_id}/transport").status_code == 200
     assert seat(owner, festival_id, car.id, who["Kai"].id).status_code == 409
     assert add_car(owner, festival_id, None).status_code == 409
+
+
+def test_the_venue_address_is_geocoded_when_it_changes(festival, factory,
+                                                       no_live_geocoding) -> None:
+    """The map needs a destination marker, and the venue only moves when edited."""
+    festival_id, owner = festival
+    owner.post(
+        f"/festivals/{festival_id}/settings",
+        data={"name": "Wacken", "address_text": "Wacken, Germany", "csrf_token": csrf(owner)},
+    )
+    with factory() as db:
+        from app.models.festival import Festival
+
+        stored = db.get(Festival, festival_id)
+    assert (stored.lat, stored.lon) == (53.5, 9.9)
+    assert no_live_geocoding == ["Wacken, Germany"]
+
+    # saving again without touching the address must not ask the geocoder again
+    owner.post(
+        f"/festivals/{festival_id}/settings",
+        data={"name": "Wacken Open Air", "address_text": "Wacken, Germany",
+              "csrf_token": csrf(owner)},
+    )
+    assert no_live_geocoding == ["Wacken, Germany"]

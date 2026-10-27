@@ -6,6 +6,10 @@
 *::before,
 *::after { box-sizing: border-box; }
 
+/* A display rule on a class silently defeats the hidden attribute; this makes
+   hidden mean hidden no matter what styles an element carries. */
+[hidden] { display: none !important; }
+
 html, body {
   margin: 0;
   padding: 0;

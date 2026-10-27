@@ -1,30 +1,48 @@
-{% extends "base.html" %}
+{% extends "festival_base.html" %}
 {% block title %}{{ festival.name }} — Festival Planner{% endblock %}
 {% block content %}
-<header class="row row--between">
-  <div>
-    <h1 class="brand">{{ festival.name }}</h1>
-    <p class="hint">{{ festival.date_range }}{% if festival.is_archived %} · archived{% endif %}</p>
-  </div>
-  <div class="row">
-    {% if membership.is_admin %}<a class="btn" href="/festivals/{{ festival.id }}/settings">Settings</a>{% endif %}
-    <a class="btn" href="/">All festivals</a>
-  </div>
-</header>
+
+{% if festival.is_archived %}
+<p class="alert" role="status">{{ _("This festival is archived — it can be read but not changed.") }}</p>
+{% endif %}
 
 <section class="card">
-  <h2>Who is coming</h2>
-  <ul class="names">
-    {% for participant in participants %}
-    <li class="name{% if participant.is_placeholder %} name--placeholder{% endif %}">
-      {{ participant.display_name }}{% if participant.is_admin %} ★{% endif %}
+  <div class="row row--between">
+    <h2>{{ _("Open for you") }}</h2>
+    {% if membership.is_admin %}
+    <a class="btn" href="/festivals/{{ festival.id }}/settings">{{ _("Settings") }}</a>
+    {% endif %}
+  </div>
+
+  {% if notifications %}
+  <ul class="blocks">
+    {% for item in notifications %}
+    <li class="block block--{{ item.kind }}">
+      <span class="block__text">{{ item.text }}</span>
+      <span class="row">
+        {% if item.link %}<a class="btn" href="{{ item.link }}">{{ _("Open") }}</a>{% endif %}
+        <form method="post" action="/festivals/{{ festival.id }}/notifications/{{ item.id }}/clear" class="inline">
+          <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+          <button class="btn">{{ _("Got it") }}</button>
+        </form>
+      </span>
     </li>
     {% endfor %}
   </ul>
+  {% else %}
+  <p class="hint">{{ _("Nothing needs your attention right now.") }}</p>
+  {% endif %}
 </section>
 
 <section class="card">
-  <h2>Open for you</h2>
-  <p class="hint">Notifications appear here once chat, polls and the tables are live.</p>
+  <h2>{{ _("Who is coming") }}</h2>
+  <ul class="names">
+    {% for participant in participants %}
+    <li class="name{% if participant.is_placeholder %} name--placeholder{% endif %}">
+      {{ participant.display_name }}{% if participant.is_admin %} &#9733;{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  <p class="hint">{{ _("Dashed names have no account yet.") }}</p>
 </section>
 {% endblock %}

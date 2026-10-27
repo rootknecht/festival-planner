@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Set up two-factor") }} — Festival Planner{% endblock %}
+{% block content %}
+<section class="card card--narrow">
+  <h1 class="brand">{{ _("Set up two-factor") }}</h1>
+  {% if error %}<p class="alert alert--error" role="alert">{{ error }}</p>{% endif %}
+
+  <p>{{ _("Scan this code with your authenticator app, then enter the six digits it shows.") }}</p>
+  <p><img class="qr" alt="{{ _('QR code') }}" src="/profile/totp/qr?uri={{ uri | urlencode }}"></p>
+  <p class="hint">{{ _("Cannot scan? Enter this secret manually:") }} <code>{{ secret }}</code></p>
+
+  <form method="post" action="/profile/totp" class="stack">
+    <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+    <input type="hidden" name="secret" value="{{ secret }}">
+    <label for="code">{{ _("Six-digit code") }}</label>
+    <input id="code" name="code" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" required autofocus>
+    <button class="btn btn--primary">{{ _("Turn on") }}</button>
+  </form>
+  <p class="hint"><a href="/profile">{{ _("Cancel") }}</a></p>
+</section>
+{% endblock %}

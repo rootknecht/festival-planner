@@ -19,6 +19,7 @@ from app.models.festival import (
     ParticipantRole,
 )
 from app.models.user import User, utcnow
+from app.services import notifications
 from app.services.access import (
     count_admins,
     festivals_for,
@@ -27,8 +28,10 @@ from app.services.access import (
     require_writable,
 )
 from app.services.mail import Message, get_mailer
+from app.services.notification_text import describe
 from app.services.tokens import generate_token, hash_token
-from app.templating import render
+from app.templating import language_for, render
+from app.translations import N_, gettext_for
 
 router = APIRouter(tags=["festivals"])
 
@@ -123,6 +126,11 @@ async def festival_dashboard(
         .where(Participant.festival_id == festival_id)
         .order_by(func.lower(Participant.display_name))
     ).all()
+    translate = gettext_for(language_for(request))
+    blocks = [
+        describe(item, translate, festival_id)
+        for item in notifications.open_for(db, user.id, festival_id)
+    ]
     return render(
         request,
         "festivals/dashboard.html",
@@ -130,8 +138,25 @@ async def festival_dashboard(
             "festival": membership.festival,
             "membership": membership,
             "participants": participants,
+            "notifications": blocks,
+            "badges": notifications.badges(db, user.id, festival_id),
+            "active_tool": "dashboard",
         },
     )
+
+
+@router.post("/festivals/{festival_id}/notifications/{notification_id}/clear")
+async def clear_notification(
+    request: Request,
+    festival_id: int,
+    notification_id: int,
+    user: User = Depends(require_user),
+    db: DbSession = Depends(get_db),
+) -> Response:
+    require_membership(db, user, festival_id)
+    if not notifications.clear(db, notification_id, user.id):
+        raise HTTPException(status_code=404, detail="not found")
+    return RedirectResponse(f"/festivals/{festival_id}", status_code=303)
 
 
 @router.get("/festivals/{festival_id}/settings")
@@ -375,3 +400,42 @@ async def unarchive(
         membership.festival.status = FestivalStatus.ACTIVE.value
         db.commit()
     return RedirectResponse(f"/festivals/{festival_id}", status_code=303)
+
+
+TOOL_LABELS = {
+    "transport": N_("Transport"),
+    "bringlist": N_("Who brings what"),
+    "chat": N_("Chat"),
+    "polls": N_("Polls"),
+    "forum": N_("Forum"),
+}
+
+
+@router.get("/festivals/{festival_id}/{tool}")
+async def tool_page(
+    request: Request,
+    festival_id: int,
+    tool: str,
+    user: User = Depends(require_user),
+    db: DbSession = Depends(get_db),
+) -> Response:
+    """Placeholder pages for the tools built in later milestones.
+
+    They exist now so the toolbar, the badges and the notification links are
+    real and testable rather than dead ends.
+    """
+    if tool not in TOOL_LABELS:
+        raise HTTPException(status_code=404, detail="not found")
+    membership = require_membership(db, user, festival_id)
+    translate = gettext_for(language_for(request))
+    return render(
+        request,
+        "tools/placeholder.html",
+        {
+            "festival": membership.festival,
+            "membership": membership,
+            "badges": notifications.badges(db, user.id, festival_id),
+            "active_tool": tool,
+            "tool_label": translate(TOOL_LABELS[tool]),
+        },
+    )

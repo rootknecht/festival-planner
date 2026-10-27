@@ -1,0 +1,28 @@
+/* Theme: Light — for daylight and for people who dislike dark interfaces. */
+:root {
+  --fp-bg: #f4f4f6;
+  --fp-bg-image: none;
+  --fp-surface: #ffffff;
+  --fp-surface-2: #ececed;
+  --fp-input-bg: #ffffff;
+  --fp-fg: #1b1b1f;
+  --fp-muted: #65656e;
+  --fp-border: #d3d3d8;
+  --fp-accent: #a3121c;
+  --fp-accent-fg: #ffffff;
+  --fp-danger: #a3121c;
+  --fp-danger-bg: #fbe9ea;
+  --fp-danger-fg: #6d0b12;
+  --fp-ok: #2f6b24;
+  --fp-radius: 10px;
+  --fp-radius-s: 6px;
+  --fp-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+  --fp-gap-s: 0.5rem;
+  --fp-gap-m: 1rem;
+  --fp-gap-l: 1.5rem;
+  --fp-gap-xl: 3rem;
+  --fp-font-body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --fp-font-display: "Trebuchet MS", system-ui, sans-serif;
+  --fp-display-tracking: 0.02em;
+  --fp-brand-transform: none;
+}

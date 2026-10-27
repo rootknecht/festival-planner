@@ -1,0 +1,270 @@
+# German translations for Festival Planner.
+# Copyright (C) 2026 Festival Planner contributors
+# This file is distributed under the same license as the Festival Planner
+# project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Festival Planner VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-10-27 14:27+0100\n"
+"PO-Revision-Date: 2026-10-27 14:26+0100\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: de\n"
+"Language-Team: de <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: app/routes/festivals.py:406 app/templates/festival_base.html:4
+msgid "Transport"
+msgstr "Anfahrt"
+
+#: app/routes/festivals.py:407 app/templates/festival_base.html:5
+msgid "Who brings what"
+msgstr "Wer bringt was"
+
+#: app/routes/festivals.py:408 app/templates/festival_base.html:6
+msgid "Chat"
+msgstr "Chat"
+
+#: app/routes/festivals.py:409 app/templates/festival_base.html:7
+msgid "Polls"
+msgstr "Abstimmungen"
+
+#: app/routes/festivals.py:410 app/templates/festival_base.html:8
+msgid "Forum"
+msgstr "Forum"
+
+#: app/services/notification_text.py:16
+#, python-brace-format
+msgid "{actor} mentioned you in the chat."
+msgstr "{actor} hat dich im Chat erwähnt."
+
+#: app/services/notification_text.py:17
+#, python-brace-format
+msgid "{actor} wrote to everyone in the chat."
+msgstr "{actor} hat an alle geschrieben."
+
+#: app/services/notification_text.py:18
+#, python-brace-format
+msgid "{actor} mentioned you in “{topic}”."
+msgstr "{actor} hat dich in „{topic}“ erwähnt."
+
+#: app/services/notification_text.py:19
+#, python-brace-format
+msgid "A poll is waiting for your answer: “{question}”."
+msgstr "Eine Abstimmung wartet auf deine Antwort: „{question}“."
+
+#: app/services/notification_text.py:20
+#, python-brace-format
+msgid "{actor} placed you in {car}."
+msgstr "{actor} hat dich in {car} eingetragen."
+
+#: app/services/notification_text.py:21
+#, python-brace-format
+msgid "{actor} took you out of {car}."
+msgstr "{actor} hat dich aus {car} ausgetragen."
+
+#: app/services/notification_text.py:22
+#, python-brace-format
+msgid "{actor} noted that you bring {item}."
+msgstr "{actor} hat eingetragen, dass du {item} mitbringst."
+
+#: app/services/notification_text.py:23
+#, python-brace-format
+msgid "{actor} changed your amount for {item}."
+msgstr "{actor} hat deine Menge für {item} geändert."
+
+#: app/services/notification_text.py:24
+#, python-brace-format
+msgid "{actor} cleared your entry for {item}."
+msgstr "{actor} hat deinen Eintrag für {item} gelöscht."
+
+#: app/services/notification_text.py:47
+msgid "Someone"
+msgstr "Jemand"
+
+#: app/services/notification_text.py:54
+msgid "Something changed that involves you."
+msgstr "Es hat sich etwas geändert, das dich betrifft."
+
+#: app/templates/festival_base.html:22
+msgid "Switch language"
+msgstr "Sprache wechseln"
+
+#: app/templates/festival_base.html:24 app/templates/profile/index.html:2
+#: app/templates/profile/index.html:5
+msgid "Profile"
+msgstr "Profil"
+
+#: app/templates/festival_base.html:26
+msgid "Install app"
+msgstr "App installieren"
+
+#: app/templates/festival_base.html:29
+msgid "Sign out"
+msgstr "Abmelden"
+
+#: app/templates/festival_base.html:34
+msgid "Festival tools"
+msgstr "Festival-Werkzeuge"
+
+#: app/templates/festival_base.html:38
+msgid "Dashboard"
+msgstr "Übersicht"
+
+#: app/templates/festival_base.html:45
+msgid "new"
+msgstr "neu"
+
+#: app/templates/festivals/dashboard.html:6
+msgid "This festival is archived — it can be read but not changed."
+msgstr ""
+"Dieses Festival ist archiviert – es kann gelesen, aber nicht geändert "
+"werden."
+
+#: app/templates/festivals/dashboard.html:11
+msgid "Open for you"
+msgstr "Offen für dich"
+
+#: app/templates/festivals/dashboard.html:13
+msgid "Settings"
+msgstr "Einstellungen"
+
+#: app/templates/festivals/dashboard.html:23
+msgid "Open"
+msgstr "Öffnen"
+
+#: app/templates/festivals/dashboard.html:26
+msgid "Got it"
+msgstr "Verstanden"
+
+#: app/templates/festivals/dashboard.html:33
+msgid "Nothing needs your attention right now."
+msgstr "Im Moment ist nichts für dich offen."
+
+#: app/templates/festivals/dashboard.html:38
+msgid "Who is coming"
+msgstr "Wer mitkommt"
+
+#: app/templates/festivals/dashboard.html:46
+msgid "Dashed names have no account yet."
+msgstr "Gestrichelte Namen haben noch kein Konto."
+
+#: app/templates/profile/index.html:6
+msgid "Your festivals"
+msgstr "Deine Festivals"
+
+#: app/templates/profile/index.html:13
+msgid "You"
+msgstr "Du"
+
+#: app/templates/profile/index.html:16
+msgid "Email address"
+msgstr "E-Mail-Adresse"
+
+#: app/templates/profile/index.html:18
+msgid "Display name"
+msgstr "Anzeigename"
+
+#: app/templates/profile/index.html:20
+msgid "Language"
+msgstr "Sprache"
+
+#: app/templates/profile/index.html:26
+msgid "Theme"
+msgstr "Design"
+
+#: app/templates/profile/index.html:28
+msgid "Follow the festival's theme"
+msgstr "Design des Festivals übernehmen"
+
+#: app/templates/profile/index.html:33
+msgid "Save"
+msgstr "Speichern"
+
+#: app/templates/profile/index.html:38
+msgid "Password"
+msgstr "Passwort"
+
+#: app/templates/profile/index.html:41
+msgid "Current password"
+msgstr "Aktuelles Passwort"
+
+#: app/templates/profile/index.html:43
+msgid "New password"
+msgstr "Neues Passwort"
+
+#: app/templates/profile/index.html:45
+msgid "Repeat new password"
+msgstr "Neues Passwort wiederholen"
+
+#: app/templates/profile/index.html:47
+msgid "Changing your password signs you out on every device."
+msgstr "Beim Ändern des Passworts wirst du auf allen Geräten abgemeldet."
+
+#: app/templates/profile/index.html:48
+msgid "Change password"
+msgstr "Passwort ändern"
+
+#: app/templates/profile/index.html:53
+msgid "Two-factor authentication"
+msgstr "Zwei-Faktor-Anmeldung"
+
+#: app/templates/profile/index.html:55
+msgid "Two-factor authentication is active on this account."
+msgstr "Die Zwei-Faktor-Anmeldung ist für dieses Konto aktiv."
+
+#: app/templates/profile/index.html:58
+msgid "Confirm with your password"
+msgstr "Mit deinem Passwort bestätigen"
+
+#: app/templates/profile/index.html:60
+msgid "Turn off"
+msgstr "Ausschalten"
+
+#: app/templates/profile/index.html:63
+msgid "Optional. Adds a six-digit code from your phone to every sign-in."
+msgstr ""
+"Optional. Fügt jeder Anmeldung einen sechsstelligen Code von deinem Handy"
+" hinzu."
+
+#: app/templates/profile/index.html:64 app/templates/profile/totp.html:2
+#: app/templates/profile/totp.html:5
+msgid "Set up two-factor"
+msgstr "Zwei-Faktor einrichten"
+
+#: app/templates/profile/totp.html:8
+msgid ""
+"Scan this code with your authenticator app, then enter the six digits it "
+"shows."
+msgstr ""
+
+#: app/templates/profile/totp.html:9
+msgid "QR code"
+msgstr "QR-Code"
+
+#: app/templates/profile/totp.html:10
+msgid "Cannot scan? Enter this secret manually:"
+msgstr "Scannen nicht möglich? Trage dieses Geheimnis von Hand ein:"
+
+#: app/templates/profile/totp.html:15
+msgid "Six-digit code"
+msgstr "Sechsstelliger Code"
+
+#: app/templates/profile/totp.html:17
+msgid "Turn on"
+msgstr "Einschalten"
+
+#: app/templates/profile/totp.html:19
+msgid "Cancel"
+msgstr "Abbrechen"
+
+#: app/templates/tools/placeholder.html:6
+msgid "This part is not built yet."
+msgstr "Dieser Teil ist noch nicht gebaut."
+

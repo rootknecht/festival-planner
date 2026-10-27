@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Profile") }} — Festival Planner{% endblock %}
+{% block content %}
+<header class="row row--between">
+  <h1 class="brand">{{ _("Profile") }}</h1>
+  <a class="btn" href="/">{{ _("Your festivals") }}</a>
+</header>
+
+{% if error %}<p class="alert alert--error" role="alert">{{ error }}</p>{% endif %}
+{% if notice %}<p class="alert" role="status">{{ notice }}</p>{% endif %}
+
+<section class="card">
+  <h2>{{ _("You") }}</h2>
+  <form method="post" action="/profile" class="stack">
+    <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+    <label>{{ _("Email address") }}</label>
+    <input type="email" value="{{ user.email }}" disabled>
+    <label for="display_name">{{ _("Display name") }}</label>
+    <input id="display_name" name="display_name" type="text" maxlength="120" value="{{ user.display_name }}">
+    <label for="language">{{ _("Language") }}</label>
+    <select id="language" name="language">
+      {% for code, label in supported_languages.items() %}
+      <option value="{{ code }}" {% if user.language == code %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <label for="theme_override">{{ _("Theme") }}</label>
+    <select id="theme_override" name="theme_override">
+      <option value="">{{ _("Follow the festival's theme") }}</option>
+      {% for theme_name in themes %}
+      <option value="{{ theme_name }}" {% if user.theme_override == theme_name %}selected{% endif %}>{{ theme_name }}</option>
+      {% endfor %}
+    </select>
+    <button class="btn btn--primary">{{ _("Save") }}</button>
+  </form>
+</section>
+
+<section class="card">
+  <h2>{{ _("Password") }}</h2>
+  <form method="post" action="/profile/password" class="stack">
+    <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+    <label for="current_password">{{ _("Current password") }}</label>
+    <input id="current_password" name="current_password" type="password" autocomplete="current-password" required>
+    <label for="password">{{ _("New password") }}</label>
+    <input id="password" name="password" type="password" autocomplete="new-password" required>
+    <label for="password_repeat">{{ _("Repeat new password") }}</label>
+    <input id="password_repeat" name="password_repeat" type="password" autocomplete="new-password" required>
+    <p class="hint">{{ _("Changing your password signs you out on every device.") }}</p>
+    <button class="btn">{{ _("Change password") }}</button>
+  </form>
+</section>
+
+<section class="card">
+  <h2>{{ _("Two-factor authentication") }}</h2>
+  {% if totp_enabled %}
+  <p>{{ _("Two-factor authentication is active on this account.") }}</p>
+  <form method="post" action="/profile/totp/disable" class="stack">
+    <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+    <label for="password_totp">{{ _("Confirm with your password") }}</label>
+    <input id="password_totp" name="password" type="password" autocomplete="current-password" required>
+    <button class="btn">{{ _("Turn off") }}</button>
+  </form>
+  {% else %}
+  <p class="hint">{{ _("Optional. Adds a six-digit code from your phone to every sign-in.") }}</p>
+  <p><a class="btn" href="/profile/totp">{{ _("Set up two-factor") }}</a></p>
+  {% endif %}
+</section>
+{% endblock %}

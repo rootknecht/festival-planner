@@ -1,0 +1,28 @@
+/* Theme: Matrix — green on black, for the techno crowd. */
+:root {
+  --fp-bg: #000400;
+  --fp-bg-image: radial-gradient(circle at 50% 0%, #021a07 0%, #000400 60%);
+  --fp-surface: #04140a;
+  --fp-surface-2: #07220f;
+  --fp-input-bg: #010a04;
+  --fp-fg: #b9ffc6;
+  --fp-muted: #4e9b63;
+  --fp-border: #0c3b1b;
+  --fp-accent: #22e05a;
+  --fp-accent-fg: #00140a;
+  --fp-danger: #e03b22;
+  --fp-danger-bg: #1a0603;
+  --fp-danger-fg: #ffc9bf;
+  --fp-ok: #22e05a;
+  --fp-radius: 4px;
+  --fp-radius-s: 2px;
+  --fp-shadow: 0 0 12px rgba(34, 224, 90, 0.18);
+  --fp-gap-s: 0.5rem;
+  --fp-gap-m: 1rem;
+  --fp-gap-l: 1.5rem;
+  --fp-gap-xl: 3rem;
+  --fp-font-body: "DejaVu Sans Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --fp-font-display: "DejaVu Sans Mono", ui-monospace, monospace;
+  --fp-display-tracking: 0.12em;
+  --fp-brand-transform: uppercase;
+}

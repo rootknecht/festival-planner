@@ -1,0 +1,129 @@
+/* Application shell: title bar on top, tool rail on the left.
+   On phones the rail becomes a bottom bar, which is where thumbs are. */
+
+.titlebar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--fp-gap-m);
+  padding: 0.6rem var(--fp-gap-m);
+  background: var(--fp-surface);
+  border-bottom: 1px solid var(--fp-border);
+}
+
+.titlebar__home { text-decoration: none; color: inherit; display: flex; flex-direction: column; min-width: 0; }
+.titlebar__name {
+  font-family: var(--fp-font-display);
+  text-transform: var(--fp-brand-transform, none);
+  letter-spacing: var(--fp-display-tracking, 0);
+  color: var(--fp-accent);
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.titlebar__dates { color: var(--fp-muted); font-size: 0.8rem; }
+.titlebar__actions { display: flex; align-items: center; gap: 0.35rem; }
+
+.inline { display: inline; }
+
+.iconbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.25rem;
+  height: 2.25rem;
+  padding: 0 0.5rem;
+  border: 1px solid var(--fp-border);
+  border-radius: var(--fp-radius-s);
+  background: var(--fp-surface-2);
+  color: var(--fp-fg);
+  text-decoration: none;
+  font: inherit;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+.iconbtn:hover { border-color: var(--fp-accent); }
+
+.toolbar {
+  position: fixed;
+  top: 3.4rem;
+  left: 0;
+  bottom: 0;
+  width: 5.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: var(--fp-gap-s);
+  background: var(--fp-surface);
+  border-right: 1px solid var(--fp-border);
+  overflow-y: auto;
+}
+
+.toolbar__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.5rem 0.25rem;
+  border-radius: var(--fp-radius-s);
+  color: var(--fp-fg);
+  text-decoration: none;
+  font-size: 0.68rem;
+  text-align: center;
+}
+.toolbar__item:hover { background: var(--fp-surface-2); }
+.toolbar__item.is-active { background: var(--fp-surface-2); box-shadow: inset 2px 0 0 var(--fp-accent); }
+.toolbar__icon { position: relative; font-size: 1.3rem; line-height: 1; }
+.toolbar__label { line-height: 1.1; }
+
+.dot {
+  position: absolute;
+  top: -0.15rem;
+  right: -0.4rem;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--fp-danger);
+  box-shadow: 0 0 0 2px var(--fp-surface);
+}
+
+body:has(.toolbar) .content { margin-left: 5.5rem; }
+
+.blocks { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--fp-gap-s); }
+.block {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--fp-gap-m);
+  flex-wrap: wrap;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--fp-border);
+  border-left: 3px solid var(--fp-accent);
+  border-radius: var(--fp-radius-s);
+  background: var(--fp-surface-2);
+}
+.block--poll { border-left-color: var(--fp-ok); }
+.block--change { border-left-color: var(--fp-muted); }
+.block__text { flex: 1 1 14rem; }
+
+.qr { background: #fff; padding: 0.5rem; border-radius: var(--fp-radius-s); max-width: 220px; }
+
+@media (max-width: 760px) {
+  .toolbar {
+    top: auto;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    flex-direction: row;
+    justify-content: space-around;
+    border-right: none;
+    border-top: 1px solid var(--fp-border);
+    padding-bottom: calc(var(--fp-gap-s) + env(safe-area-inset-bottom, 0px));
+  }
+  .toolbar__item.is-active { box-shadow: inset 0 2px 0 var(--fp-accent); }
+  body:has(.toolbar) .content { margin-left: 0; padding-bottom: 5.5rem; }
+}

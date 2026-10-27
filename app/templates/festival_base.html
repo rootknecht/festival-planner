@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% set tools = [
+  ("transport", _("Transport")),
+  ("bringlist", _("Who brings what")),
+  ("chat", _("Chat")),
+  ("polls", _("Polls")),
+  ("forum", _("Forum")),
+] %}
+
+{% block chrome %}
+<header class="titlebar">
+  <a class="titlebar__home" href="/festivals/{{ festival.id }}">
+    <span class="titlebar__name">{{ festival.name }}</span>
+    <span class="titlebar__dates">{{ festival.date_range }}</span>
+  </a>
+  <nav class="titlebar__actions">
+    <form method="post" action="/profile/language" class="inline">
+      <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+      <input type="hidden" name="next" value="{{ request.url.path }}">
+      <button class="iconbtn" name="language" value="{{ 'de' if language == 'en' else 'en' }}"
+              title="{{ _('Switch language') }}">{{ 'DE' if language == 'en' else 'EN' }}</button>
+    </form>
+    <a class="iconbtn" href="/profile" title="{{ _('Profile') }}" aria-label="{{ _('Profile') }}">&#9881;</a>
+    <a class="iconbtn iconbtn--install" href="#" data-install-app hidden
+       title="{{ _('Install app') }}">&#8681;</a>
+    <form method="post" action="/logout" class="inline">
+      <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+      <button class="iconbtn" title="{{ _('Sign out') }}">&#9211;</button>
+    </form>
+  </nav>
+</header>
+
+<nav class="toolbar" aria-label="{{ _('Festival tools') }}">
+  <a class="toolbar__item{% if active_tool == 'dashboard' %} is-active{% endif %}"
+     href="/festivals/{{ festival.id }}">
+    <span class="toolbar__icon">&#9632;</span>
+    <span class="toolbar__label">{{ _("Dashboard") }}</span>
+  </a>
+  {% for key, label in tools %}
+  <a class="toolbar__item{% if active_tool == key %} is-active{% endif %}"
+     href="/festivals/{{ festival.id }}/{{ key }}">
+    <span class="toolbar__icon">
+      {{ {'transport': '&#128663;', 'bringlist': '&#9776;', 'chat': '&#128172;', 'polls': '&#9745;', 'forum': '&#128196;'}[key] | safe }}
+      {% if badges.get(key) %}<span class="dot" aria-label="{{ _('new') }}"></span>{% endif %}
+    </span>
+    <span class="toolbar__label">{{ label }}</span>
+  </a>
+  {% endfor %}
+</nav>
+{% endblock %}

@@ -18,6 +18,7 @@ from app.routes import auth as auth_routes
 from app.routes import festivals as festival_routes
 from app.routes import invites as invite_routes
 from app.routes import password_reset as reset_routes
+from app.routes import profile as profile_routes
 from app.security.csrf import CsrfMiddleware
 from app.templating import render
 
@@ -83,6 +84,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(auth_routes.router)
     app.include_router(reset_routes.router)
     app.include_router(invite_routes.router)
+    app.include_router(profile_routes.router)
     app.include_router(festival_routes.router)
 
     @app.exception_handler(HTTPException)

@@ -6,4 +6,6 @@ Alembic autogeneration sees the full schema.
 
 from __future__ import annotations
 
-__all__: list[str] = []
+from app.models.user import LoginAttempt, User, UserSession
+
+__all__ = ["User", "UserSession", "LoginAttempt"]

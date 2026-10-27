@@ -23,6 +23,7 @@ from app.routes import invites as invite_routes
 from app.routes import password_reset as reset_routes
 from app.routes import polls as poll_routes
 from app.routes import profile as profile_routes
+from app.routes import pwa as pwa_routes
 from app.routes import transport as transport_routes
 from app.security.csrf import CsrfMiddleware
 from app.templating import render
@@ -93,6 +94,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(reset_routes.router)
     app.include_router(invite_routes.router)
     app.include_router(profile_routes.router)
+    app.include_router(pwa_routes.router)
     app.include_router(bringlist_routes.router)
     app.include_router(transport_routes.router)
     app.include_router(poll_routes.router)

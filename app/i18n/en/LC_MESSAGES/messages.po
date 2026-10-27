@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Festival Planner VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-27 15:45+0100\n"
+"POT-Creation-Date: 2026-10-27 16:17+0100\n"
 "PO-Revision-Date: 2026-10-27 14:26+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -124,6 +124,22 @@ msgstr ""
 msgid "new"
 msgstr ""
 
+#: app/templates/offline.html:2
+msgid "Offline"
+msgstr ""
+
+#: app/templates/offline.html:5
+msgid "No connection"
+msgstr ""
+
+#: app/templates/offline.html:6
+msgid "This page needs the network. Everything you already opened stays readable."
+msgstr ""
+
+#: app/templates/offline.html:7
+msgid "Try again"
+msgstr ""
+
 #: app/templates/festivals/dashboard.html:6
 msgid "This festival is archived — it can be read but not changed."
 msgstr ""
@@ -213,26 +229,52 @@ msgid "Change password"
 msgstr ""
 
 #: app/templates/profile/index.html:53
-msgid "Two-factor authentication"
+msgid "Notifications on this device"
 msgstr ""
 
-#: app/templates/profile/index.html:55
-msgid "Two-factor authentication is active on this account."
+#: app/templates/profile/index.html:54
+msgid "The red dots in the app are always right. Push is extra."
+msgstr ""
+
+#: app/templates/profile/index.html:57
+msgid "Push is on for this device"
 msgstr ""
 
 #: app/templates/profile/index.html:58
+msgid "Push is not configured on this server"
+msgstr ""
+
+#: app/templates/profile/index.html:59
+msgid "Turn on push for this device"
+msgstr ""
+
+#: app/templates/profile/index.html:62
+msgid ""
+"On iPhone, add the app to the home screen first — Apple allows push only "
+"for installed web apps, and may drop it again without warning."
+msgstr ""
+
+#: app/templates/profile/index.html:66
+msgid "Two-factor authentication"
+msgstr ""
+
+#: app/templates/profile/index.html:68
+msgid "Two-factor authentication is active on this account."
+msgstr ""
+
+#: app/templates/profile/index.html:71
 msgid "Confirm with your password"
 msgstr ""
 
-#: app/templates/profile/index.html:60
+#: app/templates/profile/index.html:73
 msgid "Turn off"
 msgstr ""
 
-#: app/templates/profile/index.html:63
+#: app/templates/profile/index.html:76
 msgid "Optional. Adds a six-digit code from your phone to every sign-in."
 msgstr ""
 
-#: app/templates/profile/index.html:64 app/templates/profile/totp.html:2
+#: app/templates/profile/index.html:77 app/templates/profile/totp.html:2
 #: app/templates/profile/totp.html:5
 msgid "Set up two-factor"
 msgstr ""

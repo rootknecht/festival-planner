@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session as DbSession
 from app.models.festival import Participant
 from app.models.notification import Notification, NotificationKind, Tool
 from app.models.user import utcnow
+from app.services.push import send_to_user
 
 
 def notify(
@@ -24,6 +25,7 @@ def notify(
     ref_id: int | None = None,
     actor_name: str | None = None,
     actor_user_id: int | None = None,
+    push_text: str | None = None,
 ) -> int:
     """Create one notification per recipient. Never notifies the actor."""
     created = 0
@@ -44,6 +46,32 @@ def notify(
         )
         created += 1
     db.commit()
+
+    # Push is a courtesy on top of the in-app dots; a failure here is logged
+    # inside the push service and never surfaces to the caller.
+    if push_text is None:
+        # Build the sentence once, in English: a push is composed server-side
+        # and cannot be re-rendered per reader like the dashboard blocks.
+        from app.services.notification_text import TEMPLATES
+
+        template = TEMPLATES.get(message_key, "{actor} did something.")
+        values = dict(payload or {})
+        values.setdefault("actor", actor_name or "Someone")
+        try:
+            push_text = template.format(**values)
+        except (KeyError, IndexError):
+            push_text = "Something changed that involves you."
+
+    for user_id in dict.fromkeys(user_ids):
+        if actor_user_id is not None and user_id == actor_user_id:
+            continue
+        send_to_user(
+            db,
+            user_id,
+            title="Festival Planner",
+            body=push_text or "Something needs your attention.",
+            url=f"/festivals/{festival_id}",
+        )
     return created
 
 

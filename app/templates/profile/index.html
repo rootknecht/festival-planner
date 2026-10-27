@@ -50,6 +50,19 @@
 </section>
 
 <section class="card">
+  <h2>{{ _("Notifications on this device") }}</h2>
+  <p class="hint">{{ _("The red dots in the app are always right. Push is extra.") }}</p>
+  <p>
+    <button class="btn" data-push-toggle hidden
+            data-label-on="{{ _('Push is on for this device') }}"
+            data-label-unavailable="{{ _('Push is not configured on this server') }}">
+      {{ _("Turn on push for this device") }}
+    </button>
+  </p>
+  <p class="hint">{{ _("On iPhone, add the app to the home screen first — Apple allows push only for installed web apps, and may drop it again without warning.") }}</p>
+</section>
+
+<section class="card">
   <h2>{{ _("Two-factor authentication") }}</h2>
   {% if totp_enabled %}
   <p>{{ _("Two-factor authentication is active on this account.") }}</p>

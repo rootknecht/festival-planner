@@ -76,6 +76,29 @@ def purge_sessions(_args: argparse.Namespace) -> int:
     return 0
 
 
+def generate_vapid(_args: argparse.Namespace) -> int:
+    """Print a fresh VAPID key pair for the env file."""
+    import base64
+
+    from cryptography.hazmat.primitives import serialization
+    from py_vapid import Vapid01
+
+    vapid = Vapid01()
+    vapid.generate_keys()
+    private_key = vapid.private_pem().decode("utf-8").strip()
+    raw_public = vapid.public_key.public_bytes(
+        encoding=serialization.Encoding.X962,
+        format=serialization.PublicFormat.UncompressedPoint,
+    )
+    public_key = base64.urlsafe_b64encode(raw_public).decode("utf-8").rstrip("=")
+    print("# add these to the service env file, then restart")
+    print(f"FP_VAPID_PUBLIC_KEY={public_key}")
+    print("FP_VAPID_PRIVATE_KEY<<EOF")
+    print(private_key)
+    print("EOF")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="app.cli", description="Festival Planner admin tasks")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -91,6 +114,9 @@ def build_parser() -> argparse.ArgumentParser:
     reset.add_argument("--email", required=True)
     reset.add_argument("--password", default=None)
     reset.set_defaults(func=set_password)
+
+    vapid = sub.add_parser("generate-vapid", help="create Web Push keys")
+    vapid.set_defaults(func=generate_vapid)
 
     purge = sub.add_parser("purge-sessions", help="delete expired sessions")
     purge.set_defaults(func=purge_sessions)

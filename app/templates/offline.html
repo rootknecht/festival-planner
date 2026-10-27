@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Offline") }} — Festival Planner{% endblock %}
+{% block content %}
+<section class="card card--narrow">
+  <h1 class="brand">{{ _("No connection") }}</h1>
+  <p>{{ _("This page needs the network. Everything you already opened stays readable.") }}</p>
+  <p><a class="btn" href="/">{{ _("Try again") }}</a></p>
+</section>
+{% endblock %}

@@ -56,11 +56,9 @@ h1, h2, h3 {
 
 label { font-weight: 600; font-size: 0.9rem; }
 
-input[type="text"],
-input[type="email"],
-input[type="password"],
-input[type="number"],
-input[type="date"],
+/* Style every text-ish input by exclusion, so a new input type added later
+   cannot silently fall back to the browser's white default. */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]):not([type="submit"]):not([type="button"]),
 select,
 textarea {
   width: 100%;

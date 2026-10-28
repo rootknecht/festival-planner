@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Festival Planner VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-28 13:33+0100\n"
+"POT-Creation-Date: 2026-10-28 13:57+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -78,11 +78,21 @@ msgstr ""
 msgid "{actor} confirmed your {amount} for {what}."
 msgstr ""
 
-#: app/services/notification_text.py:53
+#: app/services/notification_text.py:31
+#, python-brace-format
+msgid "{actor} says they paid you {amount}."
+msgstr ""
+
+#: app/services/notification_text.py:32
+#, python-brace-format
+msgid "{actor} confirmed receiving your {amount}."
+msgstr ""
+
+#: app/services/notification_text.py:56
 msgid "Someone"
 msgstr ""
 
-#: app/services/notification_text.py:60
+#: app/services/notification_text.py:63
 msgid "Something changed that involves you."
 msgstr ""
 
@@ -239,24 +249,22 @@ msgid "Money"
 msgstr ""
 
 #: app/templates/festivals/dashboard.html:42
-#: app/templates/tools/expenses.html:23 app/templates/tools/expenses.html:70
-#: app/templates/tools/transport.html:64
+#: app/templates/tools/expenses.html:23 app/templates/tools/transport.html:64
 msgid "from"
 msgstr ""
 
 #: app/templates/festivals/dashboard.html:45
-#: app/templates/tools/expenses.html:26 app/templates/tools/expenses.html:50
+#: app/templates/tools/expenses.html:26
 msgid "to"
 msgstr ""
 
 #: app/templates/festivals/dashboard.html:49
-#: app/templates/tools/expenses.html:32 app/templates/tools/expenses.html:53
+#: app/templates/tools/expenses.html:32
 msgid "waiting for confirmation"
 msgstr ""
 
 #: app/templates/festivals/dashboard.html:51
-#: app/templates/tools/expenses.html:34 app/templates/tools/expenses.html:80
-#: app/templates/tools/expenses.html:263
+#: app/templates/tools/expenses.html:34 app/templates/tools/expenses.html:246
 msgid "open"
 msgstr ""
 
@@ -336,7 +344,7 @@ msgstr ""
 
 #: app/templates/profile/index.html:33 app/templates/tools/bringlist.html:70
 #: app/templates/tools/bringlist.html:123
-#: app/templates/tools/bringlist.html:141 app/templates/tools/expenses.html:245
+#: app/templates/tools/bringlist.html:141 app/templates/tools/expenses.html:228
 msgid "Save"
 msgstr ""
 
@@ -563,135 +571,131 @@ msgid "Your balance"
 msgstr ""
 
 #: app/templates/tools/expenses.html:46
-msgid "You owe"
-msgstr ""
-
-#: app/templates/tools/expenses.html:57
 msgid "I paid this"
 msgstr ""
 
-#: app/templates/tools/expenses.html:66
-msgid "Owed to you"
+#: app/templates/tools/expenses.html:54
+msgid "They settled up"
 msgstr ""
 
-#: app/templates/tools/expenses.html:77
+#: app/templates/tools/expenses.html:62
 msgid "Received"
 msgstr ""
 
-#: app/templates/tools/expenses.html:88
+#: app/templates/tools/expenses.html:71
 msgid ""
 "Nothing outstanding. Either nobody has spent anything yet, or everything "
 "is settled."
 msgstr ""
 
-#: app/templates/tools/expenses.html:95
+#: app/templates/tools/expenses.html:78
 msgid "Add a cost"
 msgstr ""
 
-#: app/templates/tools/expenses.html:101 app/templates/tools/expenses.html:172
+#: app/templates/tools/expenses.html:84 app/templates/tools/expenses.html:155
 msgid "What did you pay for?"
 msgstr ""
 
-#: app/templates/tools/expenses.html:103
+#: app/templates/tools/expenses.html:86
 msgid "Crate of beer, firewood, fuel …"
 msgstr ""
 
-#: app/templates/tools/expenses.html:104 app/templates/tools/expenses.html:175
+#: app/templates/tools/expenses.html:87 app/templates/tools/expenses.html:158
 msgid "Amount in euro"
 msgstr ""
 
-#: app/templates/tools/expenses.html:107 app/templates/tools/expenses.html:178
+#: app/templates/tools/expenses.html:90 app/templates/tools/expenses.html:161
 msgid "Date (optional)"
 msgstr ""
 
-#: app/templates/tools/expenses.html:110 app/templates/tools/expenses.html:202
+#: app/templates/tools/expenses.html:93 app/templates/tools/expenses.html:185
 msgid "Split"
 msgstr ""
 
-#: app/templates/tools/expenses.html:112 app/templates/tools/expenses.html:208
+#: app/templates/tools/expenses.html:95 app/templates/tools/expenses.html:191
 msgid "Equally between everyone"
 msgstr ""
 
-#: app/templates/tools/expenses.html:113 app/templates/tools/expenses.html:214
+#: app/templates/tools/expenses.html:96 app/templates/tools/expenses.html:197
 msgid "Equally between a selection"
 msgstr ""
 
-#: app/templates/tools/expenses.html:114 app/templates/tools/expenses.html:229
+#: app/templates/tools/expenses.html:97 app/templates/tools/expenses.html:212
 msgid "A specific amount each"
 msgstr ""
 
-#: app/templates/tools/expenses.html:119 app/templates/tools/transport.html:282
+#: app/templates/tools/expenses.html:102 app/templates/tools/transport.html:282
 #: app/templates/tools/transport.html:340
 msgid "Select all"
 msgstr ""
 
-#: app/templates/tools/expenses.html:120 app/templates/tools/transport.html:283
+#: app/templates/tools/expenses.html:103 app/templates/tools/transport.html:283
 #: app/templates/tools/transport.html:341
 msgid "Select none"
 msgstr ""
 
-#: app/templates/tools/expenses.html:143
+#: app/templates/tools/expenses.html:126
 msgid ""
 "These have to add up to the total — leave somebody empty if they owe "
 "nothing."
 msgstr ""
 
-#: app/templates/tools/expenses.html:146 app/templates/tools/expenses.html:181
+#: app/templates/tools/expenses.html:129 app/templates/tools/expenses.html:164
 msgid "Note (optional)"
 msgstr ""
 
-#: app/templates/tools/expenses.html:148
+#: app/templates/tools/expenses.html:131
 msgid "Save cost"
 msgstr ""
 
-#: app/templates/tools/expenses.html:155
+#: app/templates/tools/expenses.html:138
 msgid "All costs"
 msgstr ""
 
-#: app/templates/tools/expenses.html:163
+#: app/templates/tools/expenses.html:146
 msgid "paid by"
 msgstr ""
 
-#: app/templates/tools/expenses.html:169
+#: app/templates/tools/expenses.html:152
 msgid "Edit"
 msgstr ""
 
-#: app/templates/tools/expenses.html:188
+#: app/templates/tools/expenses.html:171
 msgid ""
 "Someone has already marked part of this as paid, so who pays and how it "
 "splits are fixed now. Changing the total re-divides only what is still "
 "open."
 msgstr ""
 
-#: app/templates/tools/expenses.html:190
+#: app/templates/tools/expenses.html:173
 msgid "Who paid?"
 msgstr ""
 
-#: app/templates/tools/expenses.html:250 app/templates/tools/transport.html:319
+#: app/templates/tools/expenses.html:233 app/templates/tools/transport.html:319
 msgid "Remove"
 msgstr ""
 
-#: app/templates/tools/expenses.html:261
+#: app/templates/tools/expenses.html:244
 msgid "settled"
 msgstr ""
 
-#: app/templates/tools/expenses.html:262
+#: app/templates/tools/expenses.html:245
 msgid "paid, not confirmed"
 msgstr ""
 
-#: app/templates/tools/expenses.html:272
+#: app/templates/tools/expenses.html:255
 msgid "Nobody has entered a cost yet."
 msgstr ""
 
-#: app/templates/tools/expenses.html:277
+#: app/templates/tools/expenses.html:260
 msgid "Who stands where"
 msgstr ""
 
-#: app/templates/tools/expenses.html:285
+#: app/templates/tools/expenses.html:268
 msgid "even"
 msgstr ""
 
-#: app/templates/tools/expenses.html:289
+#: app/templates/tools/expenses.html:272
 msgid "A plus means the group still owes this person."
 msgstr ""
 

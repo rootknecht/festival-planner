@@ -35,56 +35,39 @@
       {% elif line.cents < 0 %}
       <span class="pill pill--owe">{{ _("to pay") }}</span>
       {% endif %}
-    </li>
-    {% endfor %}
-  </ul>
-  {% endif %}
-  {% if balance.has_anything %}
 
-
-  {% if balance.owes %}
-  <h3>{{ _("You owe") }}</h3>
-  <ul class="debts">
-    {% for debt in balance.owes %}
-    <li class="debt{% if debt.state == 'paid' %} debt--waiting{% endif %}">
-      <span>{{ money(debt.cents) }} {{ _("to") }} <strong>{{ debt.other_name }}</strong>
-        <span class="hint">{{ debt.what }}</span></span>
-      {% if debt.state == 'paid' %}
-      <span class="pill">{{ _("waiting for confirmation") }}</span>
-      {% elif not festival.is_archived %}
-      <form method="post" action="/festivals/{{ festival.id }}/expenses/shares/{{ debt.share_id }}/paid" class="inline">
+      {# The handshake runs per PERSON too, since that is how the money moves:
+         one transfer, one claim, one confirmation. Both buttons can appear on
+         the same line when debts cross in both directions. #}
+      {% if not festival.is_archived and my_participant_id %}
+      {% if line.can_claim %}
+      <form method="post" action="/festivals/{{ festival.id }}/expenses/settle/{{ line.participant_id }}/paid" class="inline">
         <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
         <button class="btn btn--small">{{ _("I paid this") }}</button>
       </form>
       {% endif %}
-    </li>
-    {% endfor %}
-  </ul>
-  {% endif %}
-
-  {% if balance.owed %}
-  <h3>{{ _("Owed to you") }}</h3>
-  <ul class="debts">
-    {% for debt in balance.owed %}
-    <li class="debt{% if debt.state == 'paid' %} debt--waiting{% endif %}">
-      <span>{{ money(debt.cents) }} {{ _("from") }} <strong>{{ debt.other_name }}</strong>
-        <span class="hint">{{ debt.what }}</span></span>
-      {% if debt.state == 'paid' and not festival.is_archived %}
-      {# Only you can close this out — that is the whole point of the two-step
-         handshake: nobody declares their own debt settled. #}
-      <form method="post" action="/festivals/{{ festival.id }}/expenses/shares/{{ debt.share_id }}/received" class="inline">
+      {% if line.can_close_alone and not line.can_confirm %}
+      {# They have no account and can never press anything, so their debt
+         would stay open forever. Closing it is the creditor's own call. #}
+      <form method="post" action="/festivals/{{ festival.id }}/expenses/settle/{{ line.participant_id }}/received" class="inline">
+        <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+        <button class="btn btn--small">{{ _("They settled up") }}</button>
+      </form>
+      {% endif %}
+      {% if line.can_confirm %}
+      {# Only the person owed the money sees this — nobody closes out their
+         own debt. #}
+      <form method="post" action="/festivals/{{ festival.id }}/expenses/settle/{{ line.participant_id }}/received" class="inline">
         <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
         <button class="btn btn--small btn--primary">{{ _("Received") }}</button>
       </form>
-      {% else %}
-      <span class="pill">{{ _("open") }}</span>
+      {% endif %}
       {% endif %}
     </li>
     {% endfor %}
   </ul>
   {% endif %}
-
-  {% else %}
+  {% if not balance.has_anything %}
   <p class="hint">{{ _("Nothing outstanding. Either nobody has spent anything yet, or everything is settled.") }}</p>
   {% endif %}
 </section>

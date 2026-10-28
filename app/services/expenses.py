@@ -306,6 +306,8 @@ class Debt:
     what: str
     cents: int
     state: ShareState
+    #: The other side has no account, so they can never press a button.
+    other_is_placeholder: bool = False
 
     @property
     def amount(self) -> float:
@@ -326,6 +328,14 @@ class PersonTotal:
     cents: int           # positive: they owe you. negative: you owe them.
     items: list[str]
     waiting: bool        # at least one side has claimed payment, unconfirmed
+    #: I have an OPEN debt to them, so I can claim to have paid it.
+    can_claim: bool = False
+    #: They have claimed payment to me, so I alone can confirm it arrived.
+    can_confirm: bool = False
+    #: They owe me and have no account, so no handshake is possible: I close
+    #: it myself. Safe in a way that self-settling a debt never is — the only
+    #: person who can be wronged by this is me, and I am the one pressing it.
+    can_close_alone: bool = False
 
     @property
     def euro(self) -> str:
@@ -368,23 +378,31 @@ class Balance:
         you 80 and you owe Benne 10, you are owed 70 and should not be shown
         two lines that invite two transfers.
         """
+        blank = {"name": "", "cents": 0, "what": [], "waiting": False,
+                 "can_claim": False, "can_confirm": False,
+                 "placeholder": False}
         totals: dict[int, dict] = {}
         for debt in self.owed:
             entry = totals.setdefault(
-                debt.other_participant_id,
-                {"name": debt.other_name, "cents": 0, "what": [], "waiting": False},
+                debt.other_participant_id, {**blank, "name": debt.other_name,
+                                            "what": []},
             )
             entry["cents"] += debt.cents
             entry["what"].append(debt.what)
             entry["waiting"] = entry["waiting"] or debt.waiting
+            # They claimed payment to me: only I can confirm it arrived.
+            entry["can_confirm"] = entry["can_confirm"] or debt.waiting
+            entry["placeholder"] = entry["placeholder"] or debt.other_is_placeholder
         for debt in self.owes:
             entry = totals.setdefault(
-                debt.other_participant_id,
-                {"name": debt.other_name, "cents": 0, "what": [], "waiting": False},
+                debt.other_participant_id, {**blank, "name": debt.other_name,
+                                            "what": []},
             )
             entry["cents"] -= debt.cents
             entry["what"].append(debt.what)
             entry["waiting"] = entry["waiting"] or debt.waiting
+            # Still OPEN on my side: I can say I have paid it.
+            entry["can_claim"] = entry["can_claim"] or not debt.waiting
 
         lines = [
             PersonTotal(
@@ -393,6 +411,9 @@ class Balance:
                 cents=entry["cents"],
                 items=_dedupe(entry["what"]),
                 waiting=entry["waiting"],
+                can_claim=entry["can_claim"],
+                can_confirm=entry["can_confirm"],
+                can_close_alone=entry["placeholder"] and entry["cents"] > 0,
             )
             for pid, entry in totals.items()
             if entry["cents"] != 0 or entry["waiting"]
@@ -446,6 +467,7 @@ def balance_for(db: DbSession, festival_id: int, participant_id: int | None) -> 
                     what=expense.description,
                     cents=share.amount_cents,
                     state=share.state,
+                    other_is_placeholder=expense.payer.user_id is None,
                 )
             )
         elif expense.payer_participant_id == participant_id:
@@ -457,6 +479,7 @@ def balance_for(db: DbSession, festival_id: int, participant_id: int | None) -> 
                     what=expense.description,
                     cents=share.amount_cents,
                     state=share.state,
+                    other_is_placeholder=share.participant.user_id is None,
                 )
             )
     return Balance(owes=owes, owed=owed)
@@ -599,3 +622,137 @@ def edit_expense(
         log(db, expense.festival_id, "expense", expense.id, actor, "; ".join(changes))
     db.commit()
     return expense
+
+
+def settle_with_person(
+    db: DbSession,
+    *,
+    festival_id: int,
+    me: int,
+    other: int,
+    actor: User,
+) -> int:
+    """Mark everything I owe one person as paid, in one go.
+
+    People do not transfer money one crate of beer at a time; they send one
+    sum to one person. So the handshake runs per PERSON, not per expense:
+    this flips every open share I owe them at once and tells them a single
+    total, rather than firing one notification per item.
+
+    Returns the number of cents claimed, so the caller can say what happened.
+    """
+    shares = [
+        share
+        for share in _shares_between(db, festival_id, debtor=me, creditor=other)
+        if share.state is ShareState.OPEN
+    ]
+    if not shares:
+        raise ExpenseRefused("there is nothing open with this person")
+
+    total = 0
+    for share in shares:
+        share.state = ShareState.PAID
+        share.paid_at = utcnow()
+        total += share.amount_cents
+    log(
+        db,
+        festival_id,
+        "expense_settlement",
+        other,
+        actor,
+        f"marked {total / 100:.2f} as paid across {len(shares)} item(s)",
+    )
+    db.commit()
+
+    notify_participant(
+        db,
+        festival_id=festival_id,
+        participant_id=other,
+        kind=NotificationKind.CHANGE,
+        tool=Tool.EXPENSES,
+        message_key="change.expense.paid.total",
+        payload={"amount": f"{total / 100:.2f}", "count": str(len(shares))},
+        actor_name=_participant_name(db, me),
+        actor_user_id=actor.id,
+    )
+    return total
+
+
+def confirm_from_person(
+    db: DbSession,
+    *,
+    festival_id: int,
+    me: int,
+    other: int,
+    actor: User,
+) -> int:
+    """Confirm everything one person claims to have paid me.
+
+    Only the creditor reaches this, which is the whole point of the two-step
+    handshake: nobody declares their own debt settled. Shares still OPEN are
+    left alone — confirming money that was never claimed would quietly write
+    off a debt the other person still owes.
+    """
+    other_participant = db.get(Participant, other)
+    placeholder = other_participant is not None and other_participant.user_id is None
+    # A placeholder has no account and can never claim payment, so their debt
+    # would otherwise be unsettleable forever. The creditor closes it alone;
+    # the handshake only exists to stop people clearing their OWN debts.
+    wanted = {ShareState.PAID, ShareState.OPEN} if placeholder else {ShareState.PAID}
+    shares = [
+        share
+        for share in _shares_between(db, festival_id, debtor=other, creditor=me)
+        if share.state in wanted
+    ]
+    if not shares:
+        raise ExpenseRefused("nothing is waiting for your confirmation")
+
+    total = 0
+    for share in shares:
+        share.state = ShareState.CONFIRMED
+        share.confirmed_at = utcnow()
+        total += share.amount_cents
+    log(
+        db,
+        festival_id,
+        "expense_settlement",
+        other,
+        actor,
+        f"confirmed {total / 100:.2f} across {len(shares)} item(s)",
+    )
+    db.commit()
+
+    notify_participant(
+        db,
+        festival_id=festival_id,
+        participant_id=other,
+        kind=NotificationKind.CHANGE,
+        tool=Tool.EXPENSES,
+        message_key="change.expense.received.total",
+        payload={"amount": f"{total / 100:.2f}", "count": str(len(shares))},
+        actor_name=_participant_name(db, me),
+        actor_user_id=actor.id,
+    )
+    return total
+
+
+def _shares_between(
+    db: DbSession, festival_id: int, *, debtor: int, creditor: int
+) -> list[ExpenseShare]:
+    """Every share where `debtor` owes `creditor` in this festival."""
+    return list(
+        db.scalars(
+            select(ExpenseShare)
+            .join(Expense, ExpenseShare.expense_id == Expense.id)
+            .where(
+                Expense.festival_id == festival_id,
+                Expense.payer_participant_id == creditor,
+                ExpenseShare.participant_id == debtor,
+            )
+        ).all()
+    )
+
+
+def _participant_name(db: DbSession, participant_id: int) -> str:
+    participant = db.get(Participant, participant_id)
+    return participant.display_name if participant else "Somebody"

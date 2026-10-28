@@ -112,6 +112,19 @@ def add_cost(client, festival_id, payer_id, amount="30,00", description="Beer",
     return client.post(f"/festivals/{festival_id}/expenses", data=data)
 
 
+def add_placeholder(client, factory, festival_id, name) -> int:
+    """Someone on the list without an account — they cannot press buttons."""
+    response = client.post(
+        f"/festivals/{festival_id}/participants",
+        data={"display_name": name, "csrf_token": csrf(client)},
+    )
+    assert response.status_code in (200, 303)
+    with factory() as db:
+        return db.scalars(
+            select(Participant).where(Participant.display_name == name)
+        ).one().id
+
+
 def shares_of(factory, description="Beer") -> list[ExpenseShare]:
     with factory() as db:
         expense = db.scalars(select(Expense).where(Expense.description == description)).one()
@@ -423,14 +436,28 @@ def test_the_expenses_icon_carries_a_dot_until_opened(trip, factory) -> None:
 
 
 def test_the_balance_shows_both_directions(trip, factory) -> None:
+    """Both directions appear, now as one netted line per person.
+
+    The old "You owe" / "Owed to you" lists are gone: they listed one row per
+    expense, and nobody pays a debt one expense at a time.
+    """
     festival_id, owner, kai, anna = trip
     people = who(factory, festival_id)
     add_cost(kai, festival_id, people["Kai"].id, amount="30,00", description="Beer")
     add_cost(anna, festival_id, people["Anna"].id, amount="15,00", description="Ice")
 
     page = kai.get(f"/festivals/{festival_id}/expenses").text
-    assert "You owe" in page       # Kai owes Anna for the ice
-    assert "Owed to you" in page   # and is owed for the beer
+    assert "You owe" not in page
+    assert "Owed to you" not in page
+
+    with factory() as db:
+        lines = {
+            line.name: line
+            for line in service.balance_for(db, festival_id, people["Kai"].id).by_person
+        }
+    # Kai is owed 10 by Anna for the beer and owes her 5 for the ice: +5 net.
+    assert lines["Anna"].cents == 500
+    assert sorted(lines["Anna"].items) == ["Beer", "Ice"]
 
 
 # --- deleting ---------------------------------------------------------------
@@ -694,3 +721,176 @@ def test_debts_in_both_directions_with_one_person_net_off(trip, factory) -> None
         balance = service.balance_for(db, festival_id, people["Anna"].id)
     kai_line = next(line for line in balance.by_person if line.name == "Kai")
     assert kai_line.cents == -1000 + 300      # Anna owes 10, Kai owes her 3
+
+
+# --- settling with a person, not with an expense -----------------------------
+
+
+def test_paying_a_person_settles_every_open_item_at_once(trip, factory) -> None:
+    """One transfer, one click: people do not pay per crate of beer."""
+    festival_id, owner, kai, anna = trip
+    people = who(factory, festival_id)
+    add_cost(kai, festival_id, people["Kai"].id, amount="30,00", description="Beer")
+    add_cost(kai, festival_id, people["Kai"].id, amount="60,00", description="Power")
+
+    response = anna.post(
+        f"/festivals/{festival_id}/expenses/settle/{people['Kai'].id}/paid",
+        data={"csrf_token": csrf(anna)},
+    )
+    assert response.status_code == 303
+    with factory() as db:
+        states = [
+            s.state
+            for s in db.scalars(
+                select(ExpenseShare).where(ExpenseShare.participant_id == people["Anna"].id)
+            ).all()
+        ]
+    assert states == [ShareState.PAID, ShareState.PAID]
+
+
+def test_only_the_creditor_can_confirm_the_whole_sum(trip, factory) -> None:
+    festival_id, owner, kai, anna = trip
+    people = who(factory, festival_id)
+    add_cost(kai, festival_id, people["Kai"].id, amount="30,00")
+    anna.post(f"/festivals/{festival_id}/expenses/settle/{people['Kai'].id}/paid",
+              data={"csrf_token": csrf(anna)})
+
+    # Anna cannot confirm her own payment: she has nothing owed TO her by Kai.
+    refused = anna.post(
+        f"/festivals/{festival_id}/expenses/settle/{people['Kai'].id}/received",
+        data={"csrf_token": csrf(anna)},
+    )
+    assert refused.status_code == 200
+    assert "nothing is waiting" in refused.text
+
+    accepted = kai.post(
+        f"/festivals/{festival_id}/expenses/settle/{people['Anna'].id}/received",
+        data={"csrf_token": csrf(kai)},
+    )
+    assert accepted.status_code == 303
+    with factory() as db:
+        share = db.scalars(
+            select(ExpenseShare).where(ExpenseShare.participant_id == people["Anna"].id)
+        ).one()
+        assert share.state is ShareState.CONFIRMED
+
+
+def test_confirming_leaves_unclaimed_debts_alone(trip, factory) -> None:
+    """Confirming must not write off money nobody has claimed to have sent."""
+    festival_id, owner, kai, anna = trip
+    people = who(factory, festival_id)
+    add_cost(kai, festival_id, people["Kai"].id, amount="30,00", description="Beer")
+    anna.post(f"/festivals/{festival_id}/expenses/settle/{people['Kai'].id}/paid",
+              data={"csrf_token": csrf(anna)})
+    # A second cost appears AFTER Anna's claim — it is not covered by it.
+    add_cost(kai, festival_id, people["Kai"].id, amount="60,00", description="Power")
+
+    kai.post(f"/festivals/{festival_id}/expenses/settle/{people['Anna'].id}/received",
+             data={"csrf_token": csrf(kai)})
+    with factory() as db:
+        states = sorted(
+            s.state.value
+            for s in db.scalars(
+                select(ExpenseShare).where(ExpenseShare.participant_id == people["Anna"].id)
+            ).all()
+        )
+    assert states == ["confirmed", "open"]
+
+
+def test_the_balance_line_offers_the_right_button_to_each_side(trip, factory) -> None:
+    festival_id, owner, kai, anna = trip
+    people = who(factory, festival_id)
+    add_cost(kai, festival_id, people["Kai"].id, amount="30,00")
+
+    with factory() as db:
+        anna_line = next(
+            line for line in service.balance_for(db, festival_id, people["Anna"].id).by_person
+            if line.name == "Kai"
+        )
+        kai_line = next(
+            line for line in service.balance_for(db, festival_id, people["Kai"].id).by_person
+            if line.name == "Anna"
+        )
+    # Anna owes: she may claim. Kai is owed but nothing is claimed yet.
+    assert (anna_line.can_claim, anna_line.can_confirm) == (True, False)
+    assert (kai_line.can_claim, kai_line.can_confirm) == (False, False)
+
+    anna.post(f"/festivals/{festival_id}/expenses/settle/{people['Kai'].id}/paid",
+              data={"csrf_token": csrf(anna)})
+    with factory() as db:
+        kai_line = next(
+            line for line in service.balance_for(db, festival_id, people["Kai"].id).by_person
+            if line.name == "Anna"
+        )
+    assert (kai_line.can_claim, kai_line.can_confirm) == (False, True)
+
+
+def test_settling_tells_the_other_side_one_total_not_one_per_item(trip, factory) -> None:
+    festival_id, owner, kai, anna = trip
+    people = who(factory, festival_id)
+    add_cost(kai, festival_id, people["Kai"].id, amount="30,00", description="Beer")
+    add_cost(kai, festival_id, people["Kai"].id, amount="60,00", description="Power")
+
+    anna.post(f"/festivals/{festival_id}/expenses/settle/{people['Kai'].id}/paid",
+              data={"csrf_token": csrf(anna)})
+    with factory() as db:
+        claims = [
+            row for row in db.scalars(select(Notification)).all()
+            if row.message_key == "change.expense.paid.total"
+            and row.user_id == people["Kai"].user_id
+        ]
+    assert len(claims) == 1              # one message, not two
+    assert "30.00" in (claims[0].payload or "")   # 10 + 20
+
+
+def test_a_placeholders_debt_can_be_closed_by_the_person_owed(trip, factory) -> None:
+    """Somebody without an account can never press "I paid this".
+
+    Without this, their debt is unsettleable forever — which is exactly what
+    the live data looked like. The creditor closes it alone; that is safe in
+    a way self-settling never is, because the only person who can lose out is
+    the one pressing the button.
+    """
+    festival_id, owner, kai, anna = trip
+    people = who(factory, festival_id)
+    ghost = add_placeholder(owner, factory, festival_id, "Sabine")
+    add_cost(kai, festival_id, people["Kai"].id, amount="30,00",
+             split_mode="selection", share_ids=[ghost])
+
+    with factory() as db:
+        line = next(
+            line for line in service.balance_for(db, festival_id, people["Kai"].id).by_person
+            if line.name == "Sabine"
+        )
+    assert line.can_close_alone is True
+    assert line.can_claim is False
+
+    response = kai.post(
+        f"/festivals/{festival_id}/expenses/settle/{ghost}/received",
+        data={"csrf_token": csrf(kai)},
+    )
+    assert response.status_code == 303
+    with factory() as db:
+        share = db.scalars(
+            select(ExpenseShare).where(ExpenseShare.participant_id == ghost)
+        ).one()
+        assert share.state is ShareState.CONFIRMED
+
+
+def test_an_account_holders_open_debt_still_cannot_be_closed_unilaterally(trip, factory) -> None:
+    """The exception is for placeholders only — the handshake still stands."""
+    festival_id, owner, kai, anna = trip
+    people = who(factory, festival_id)
+    add_cost(kai, festival_id, people["Kai"].id, amount="30,00")
+
+    refused = kai.post(
+        f"/festivals/{festival_id}/expenses/settle/{people['Anna'].id}/received",
+        data={"csrf_token": csrf(kai)},
+    )
+    assert refused.status_code == 200
+    assert "nothing is waiting" in refused.text
+    with factory() as db:
+        share = db.scalars(
+            select(ExpenseShare).where(ExpenseShare.participant_id == people["Anna"].id)
+        ).one()
+        assert share.state is ShareState.OPEN

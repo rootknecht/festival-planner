@@ -451,3 +451,33 @@ def test_no_reset_link_for_a_placeholder(factory, settings) -> None:
         data={"csrf_token": owner.cookies[CSRF_COOKIE]},
     )
     assert response.status_code == 400
+
+
+def test_the_dashboard_line_shows_the_festival_address(factory, settings) -> None:
+    """Reported: it said "location to be announced" with an address set.
+
+    The template was reading festival.location, which does not exist on the
+    model — Jinja resolves an unknown attribute to undefined, which is falsy,
+    so the fallback won every time and nothing ever raised.
+    """
+    client = make_client(settings)
+    token = login(client, "owner@example.org")
+    festival_id = create_festival(client, token, name="RockHarz 2027")
+
+    response = client.post(
+        f"/festivals/{festival_id}/settings",
+        data={
+            "csrf_token": token,
+            "name": "RockHarz 2027",
+            "address_text": "Flugplatz Ballenstedt",
+            "start_date": "2027-07-28",
+            "end_date": "2027-07-31",
+            "timezone": "Europe/Berlin",
+            "theme": "metal",
+        },
+    )
+    assert response.status_code in (200, 303)
+
+    page = client.get(f"/festivals/{festival_id}").text
+    assert "Flugplatz Ballenstedt" in page
+    assert "location to be announced" not in page

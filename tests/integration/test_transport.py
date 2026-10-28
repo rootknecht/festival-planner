@@ -101,13 +101,12 @@ def people(factory, festival_id) -> dict[str, Participant]:
 
 
 def add_car(client, festival_id, driver_id=None, seats=5, color="blue",
-            departure_date="", departure_time=""):
+            departure_date=""):
     return client.post(
         f"/festivals/{festival_id}/transport/cars",
         data={
             "color": color,
             "departure_date": departure_date,
-            "departure_time": departure_time,
             "seats_total": seats,
             "driver_participant_id": str(driver_id or ""),
             "csrf_token": csrf(client),
@@ -389,12 +388,14 @@ def add_meeting_point(client, festival_id, name="Gate services", address="Dinkel
     return client.post(f"/festivals/{festival_id}/transport/meeting-points", data=data)
 
 
-def test_a_car_can_carry_a_departure_time(festival, factory) -> None:
+def test_a_car_can_carry_a_departure_day(festival, factory) -> None:
+    """A day, not a time. Cars leave "on Friday"; the exact hour gets agreed
+    the night before, and a wrong one is worse than none."""
     festival_id, owner = festival
-    add_car(owner, festival_id, None, departure_date="2027-08-18", departure_time="06:30")
+    add_car(owner, festival_id, None, departure_date="2027-08-18")
     car = only_car(factory)
-    assert car.departure_at is not None
-    assert car.departure_at.strftime("%Y-%m-%d %H:%M") == "2027-08-18 06:30"
+    assert car.departure_on is not None
+    assert car.departure_on.isoformat() == "2027-08-18"
 
 
 def test_a_half_typed_departure_is_treated_as_unset_not_as_an_error(festival, factory) -> None:
@@ -406,7 +407,7 @@ def test_a_half_typed_departure_is_treated_as_unset_not_as_an_error(festival, fa
     """
     festival_id, owner = festival
     assert add_car(owner, festival_id, None, departure_date="2027-08").status_code == 303
-    assert only_car(factory).departure_at is None
+    assert only_car(factory).departure_on is None
 
 
 def test_a_car_stays_editable_after_creation(festival, factory) -> None:
@@ -414,12 +415,12 @@ def test_a_car_stays_editable_after_creation(festival, factory) -> None:
     add_car(owner, festival_id, None, seats=4, color="blue")
     car = only_car(factory)
     assert edit_car(owner, festival_id, car.id, color="grey", seats_total=7,
-                    departure_date="2027-08-17", departure_time="18:00").status_code == 303
+                    departure_date="2027-08-17").status_code == 303
     with factory() as db:
         fresh = db.get(Car, car.id)
         assert fresh.color == "grey"
         assert fresh.seats_total == 7
-        assert fresh.departure_at.hour == 18
+        assert fresh.departure_on.isoformat() == "2027-08-17"
 
 
 def test_grey_is_an_available_colour(festival, factory) -> None:
@@ -452,11 +453,11 @@ def test_shrinking_a_car_below_its_passengers_is_refused(festival, factory) -> N
 
 def test_the_departure_time_can_be_cleared(festival, factory) -> None:
     festival_id, owner = festival
-    add_car(owner, festival_id, None, departure_date="2027-08-18", departure_time="06:30")
+    add_car(owner, festival_id, None, departure_date="2027-08-18")
     car = only_car(factory)
     edit_car(owner, festival_id, car.id, clear_departure="1")
     with factory() as db:
-        assert db.get(Car, car.id).departure_at is None
+        assert db.get(Car, car.id).departure_on is None
 
 
 def test_car_size_shows_as_icon_length(festival, factory) -> None:
@@ -576,20 +577,14 @@ def test_the_add_car_form_is_hidden_behind_a_button(festival, factory) -> None:
     assert "Add a car" in page
 
 
-def test_a_date_without_a_time_means_midnight(festival, factory) -> None:
-    """"We leave on Friday" is worth recording even before the hour is agreed."""
+def test_a_car_records_the_day_it_leaves(festival, factory) -> None:
+    """Cars carry a DAY and no clock time: an hour agreed weeks in advance is
+    fiction, and a wrong one is worse than none."""
     festival_id, owner = festival
     add_car(owner, festival_id, None, departure_date="2027-08-18")
     car = only_car(factory)
-    assert car.departure_at is not None
-    assert car.departure_at.strftime("%Y-%m-%d %H:%M") == "2027-08-18 00:00"
-
-
-def test_a_time_without_a_date_is_ignored(festival, factory) -> None:
-    """A time alone means nothing, and guessing today would be a wrong fact."""
-    festival_id, owner = festival
-    add_car(owner, festival_id, None, departure_time="06:30")
-    assert only_car(factory).departure_at is None
+    assert car.departure_on is not None
+    assert car.departure_on.isoformat() == "2027-08-18"
 
 
 def test_a_meeting_point_takes_a_separate_date_and_time(festival, factory) -> None:

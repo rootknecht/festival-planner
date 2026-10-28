@@ -52,3 +52,17 @@ def format_date_range(
         first = f"{start.day}. {month}" if german else f"{_english_ordinal(start.day)} {month}"
         return f"{first} – {format_long_date(end, language)}"
     return f"{format_long_date(start, language)} – {format_long_date(end, language)}"
+
+
+def format_short_date(value: dt.date | None, language: str = "en") -> str:
+    """Day and month only — "7. Juli" / "7 Jul".
+
+    No year: everything in a festival happens within days of everything else,
+    and the year is already in the title bar.
+    """
+    if value is None:
+        return ""
+    month = babel_format_date(value, format="LLL", locale=language or "en")
+    if (language or "en").startswith("de"):
+        return f"{value.day}. {month}"
+    return f"{value.day} {month}"

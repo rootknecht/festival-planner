@@ -72,6 +72,23 @@ def _page(request: Request, db: DbSession, user: User, festival_id: int, **extra
     )
 
 
+def _parse_day(raw: str) -> dt.date | None:
+    """Parse a plain <input type=date> value.
+
+    Cars carry a DAY and no clock time: an hour agreed weeks in advance is
+    fiction, and a wrong time is worse than none because people plan around
+    it. Meeting points still take a time — that is the one moment that has
+    to be exact.
+    """
+    raw = (raw or "").strip()
+    if not raw:
+        return None
+    try:
+        return dt.date.fromisoformat(raw)
+    except ValueError:
+        return None
+
+
 def _parse_when(date_raw: str, time_raw: str = "") -> dt.datetime | None:
     """Combine a <input type=date> and an <input type=time> into one moment.
 
@@ -158,7 +175,6 @@ async def add_car(
     seats_total: int = Form(default=5),
     driver_participant_id: str = Form(default=""),
     departure_date: str = Form(default=""),
-    departure_time: str = Form(default=""),
     departure_address: str = Form(default=""),
     user: User = Depends(require_user),
     db: DbSession = Depends(get_db),
@@ -176,7 +192,7 @@ async def add_car(
         seats_total=seats_total,
         driver=driver,
         actor=user,
-        departure_at=_parse_when(departure_date, departure_time),
+        departure_on=_parse_day(departure_date),
     )
     if departure_address.strip():
         _set_departure_address(db, request, car, departure_address)
@@ -317,7 +333,6 @@ async def edit_car(
     color: str = Form(default=""),
     seats_total: int = Form(default=0),
     departure_date: str = Form(default=""),
-    departure_time: str = Form(default=""),
     departure_address: str | None = Form(default=None),
     clear_departure: str = Form(default=""),
     user: User = Depends(require_user),
@@ -332,8 +347,8 @@ async def edit_car(
             car=car,
             color=color or None,
             seats_total=seats_total or None,
-            departure_at=_parse_when(departure_date, departure_time),
-            clear_departure_at=bool(clear_departure),
+            departure_on=_parse_day(departure_date),
+            clear_departure_on=bool(clear_departure),
             actor=user,
         )
     except transport.SeatRefused as exc:

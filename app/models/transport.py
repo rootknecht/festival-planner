@@ -5,6 +5,7 @@ from __future__ import annotations
 import datetime as dt
 
 from sqlalchemy import (
+    Date,
     DateTime,
     Float,
     ForeignKey,
@@ -62,7 +63,11 @@ class Car(Base):
     #: When this car leaves. Date and time are kept together because "Friday"
     #: without an hour is useless for arranging a pickup, and a time without a
     #: date is ambiguous when people travel on different days.
-    departure_at: Mapped[dt.datetime | None] = mapped_column(DateTime, nullable=True)
+    #: The DAY the car leaves. Date only, deliberately: an hour agreed weeks
+    #: in advance is fiction, and a wrong time is worse than no time because
+    #: somebody plans around it. The hour gets settled in chat the night
+    #: before; the meeting points carry the real clock times.
+    departure_on: Mapped[dt.date | None] = mapped_column(Date, nullable=True)
     created_by: Mapped[int | None] = mapped_column(
         ForeignKey("user.id", ondelete="SET NULL"), nullable=True
     )

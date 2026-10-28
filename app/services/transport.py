@@ -93,7 +93,7 @@ def add_car(
     seats_total: int,
     driver: Participant | None,
     actor: User,
-    departure_at: dt.datetime | None = None,
+    departure_on: dt.date | None = None,
 ) -> Car:
     if color not in CAR_COLORS:
         color = CAR_COLORS[0]
@@ -107,7 +107,7 @@ def add_car(
         color=color,
         seats_total=seats_total,
         driver_participant_id=driver.id if driver else None,
-        departure_at=departure_at,
+        departure_on=departure_on,
         created_by=actor.id,
     )
     db.add(car)
@@ -123,8 +123,8 @@ def edit_car(
     car: Car,
     color: str | None = None,
     seats_total: int | None = None,
-    departure_at: dt.datetime | None = None,
-    clear_departure_at: bool = False,
+    departure_on: dt.date | None = None,
+    clear_departure_on: bool = False,
     actor: User,
 ) -> Car:
     """Change a car after the fact. Shrinking below the people in it is refused.
@@ -145,13 +145,13 @@ def edit_car(
                 )
             changes.append(f"seats {car.seats_total} -> {wanted}")
             car.seats_total = wanted
-    if clear_departure_at:
-        if car.departure_at is not None:
+    if clear_departure_on:
+        if car.departure_on is not None:
             changes.append("departure cleared")
-            car.departure_at = None
-    elif departure_at is not None and departure_at != car.departure_at:
-        changes.append(f"departure {departure_at.isoformat(timespec='minutes')}")
-        car.departure_at = departure_at
+            car.departure_on = None
+    elif departure_on is not None and departure_on != car.departure_on:
+        changes.append(f"departure {departure_on.isoformat()}")
+        car.departure_on = departure_on
     if changes:
         log(db, car.festival_id, "car", car.id, actor, "; ".join(changes))
     db.commit()

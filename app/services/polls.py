@@ -156,3 +156,68 @@ def close_poll(db: DbSession, poll: Poll) -> None:
     ):
         if participant.user_id:
             clear_ref(db, participant.user_id, poll.festival_id, NotificationKind.POLL, poll.id)
+
+
+def reopen_poll(db: DbSession, poll: Poll, actor: User) -> None:
+    """Put a closed poll back in play.
+
+    Closing is reversible because it is usually a judgement call made too
+    early — "everyone has voted" turns out to be wrong when somebody joins
+    the festival a week later. Existing votes are kept: reopening is not a
+    reset, and silently discarding answers people already gave would be the
+    worse surprise.
+
+    Everyone who has not voted gets their block back, since the question is
+    live again and they are the ones who need to act.
+    """
+    if poll.closed_at is None:
+        return
+    poll.closed_at = None
+    db.commit()
+
+    # Only the people who still owe an answer get a block back. Re-notifying
+    # someone who already voted would be asking them a question they have
+    # answered, which is how people learn to ignore the dot.
+    voted = {
+        vote.participant_id
+        for vote in db.scalars(
+            select(PollVote).join(PollOption).where(PollOption.poll_id == poll.id)
+        )
+    }
+    targets = [
+        p.user_id
+        for p in db.scalars(
+            select(Participant).where(Participant.festival_id == poll.festival_id)
+        )
+        if p.user_id and p.id not in voted
+    ]
+    if targets:
+        notify(
+            db,
+            festival_id=poll.festival_id,
+            user_ids=targets,
+            kind=NotificationKind.POLL,
+            tool=Tool.POLLS,
+            message_key="poll.open",
+            payload={"question": poll.question},
+            ref_id=poll.id,
+            actor_name=actor.display_name,
+            actor_user_id=actor.id,
+        )
+
+
+def delete_poll(db: DbSession, poll: Poll) -> None:
+    """Remove a poll, its options and its votes.
+
+    The blocks go first: a notification pointing at a poll that no longer
+    exists would render as a dead link on everyone's dashboard.
+    """
+    for participant in db.scalars(
+        select(Participant).where(Participant.festival_id == poll.festival_id)
+    ):
+        if participant.user_id:
+            clear_ref(
+                db, participant.user_id, poll.festival_id, NotificationKind.POLL, poll.id
+            )
+    db.delete(poll)
+    db.commit()

@@ -12,7 +12,7 @@ from sqlalchemy.pool import StaticPool
 from app.config import Settings
 from app.db import Base, reset_engine_for_tests
 from app.main import create_app
-from app.models.discussion import Message, Poll, PollVote, Post, Topic
+from app.models.discussion import Message, Poll, PollOption, PollVote, Post, Topic
 from app.models.user import User
 from app.security.csrf import CSRF_COOKIE
 from app.services import notifications
@@ -597,3 +597,111 @@ def test_poll_results_do_not_name_who_voted_for_what(festival, factory) -> None:
     assert "Owner" not in before_pending      # no voter names beside the bars
     assert "Still missing" in page            # the pending list survives
     assert "Friend" in page.split("Still missing")[1]
+
+
+# --- admin poll management --------------------------------------------------
+
+
+def test_an_admin_can_reopen_a_closed_poll_without_losing_votes(festival, factory) -> None:
+    """Closing is a judgement call, often made too early. Reopening must not
+    be a reset: silently discarding answers people already gave would be a
+    far worse surprise than a poll that stayed shut."""
+    festival_id, owner, friend = festival
+    create_poll(owner, festival_id)
+    pid = poll_id(factory)
+    options = option_ids(factory, pid)
+    friend.post(f"/festivals/{festival_id}/polls/{pid}/vote",
+                data={"option_id": options[0], "csrf_token": csrf(friend)})
+    owner.post(f"/festivals/{festival_id}/polls/{pid}/close",
+               data={"csrf_token": csrf(owner)})
+
+    response = owner.post(f"/festivals/{festival_id}/polls/{pid}/reopen",
+                          data={"csrf_token": csrf(owner)})
+    assert response.status_code == 303
+    with factory() as db:
+        assert db.get(Poll, pid).closed_at is None
+        assert len(db.scalars(select(PollVote)).all()) == 1
+
+
+def test_reopening_asks_only_the_people_who_never_voted(festival, factory) -> None:
+    """Re-notifying someone who already answered is how people learn to
+    ignore the dot. The admin doing the reopening is never notified either —
+    they already know, they just pressed the button."""
+    festival_id, owner, friend = festival
+    create_poll(owner, festival_id)
+    pid = poll_id(factory)
+    options = option_ids(factory, pid)
+    # The OWNER votes this time, so the only outstanding voter is the friend.
+    owner.post(f"/festivals/{festival_id}/polls/{pid}/vote",
+               data={"option_id": options[0], "csrf_token": csrf(owner)})
+    owner.post(f"/festivals/{festival_id}/polls/{pid}/close",
+               data={"csrf_token": csrf(owner)})
+    with factory() as db:
+        friend_user = db.scalar(select(User).where(User.email == "friend@example.org"))
+        # Closing cleared the block: the question was no longer answerable.
+        assert notifications.open_for(db, friend_user.id, festival_id) == []
+
+    owner.post(f"/festivals/{festival_id}/polls/{pid}/reopen",
+               data={"csrf_token": csrf(owner)})
+    with factory() as db:
+        friend_user = db.scalar(select(User).where(User.email == "friend@example.org"))
+        owner_user = db.scalar(select(User).where(User.email == "owner@example.org"))
+        assert [b.message_key for b in notifications.open_for(db, friend_user.id, festival_id)] == [
+            "poll.open"
+        ]
+        assert notifications.open_for(db, owner_user.id, festival_id) == []
+
+
+def test_an_admin_can_delete_a_poll_and_its_votes(festival, factory) -> None:
+    festival_id, owner, friend = festival
+    create_poll(owner, festival_id)
+    pid = poll_id(factory)
+    options = option_ids(factory, pid)
+    friend.post(f"/festivals/{festival_id}/polls/{pid}/vote",
+                data={"option_id": options[0], "csrf_token": csrf(friend)})
+
+    response = owner.post(f"/festivals/{festival_id}/polls/{pid}/delete",
+                          data={"csrf_token": csrf(owner)})
+    assert response.status_code == 303
+    with factory() as db:
+        assert db.get(Poll, pid) is None
+        assert db.scalars(select(PollVote)).all() == []
+        assert db.scalars(select(PollOption)).all() == []
+
+
+def test_deleting_a_poll_clears_the_blocks_pointing_at_it(festival, factory) -> None:
+    """A notification linking to a poll that no longer exists is a dead link
+    on everybody's dashboard."""
+    festival_id, owner, friend = festival
+    create_poll(owner, festival_id)
+    pid = poll_id(factory)
+    with factory() as db:
+        friend_user = db.scalar(select(User).where(User.email == "friend@example.org"))
+        assert notifications.open_for(db, friend_user.id, festival_id) != []
+
+    owner.post(f"/festivals/{festival_id}/polls/{pid}/delete",
+               data={"csrf_token": csrf(owner)})
+    with factory() as db:
+        friend_user = db.scalar(select(User).where(User.email == "friend@example.org"))
+        assert notifications.open_for(db, friend_user.id, festival_id) == []
+
+
+def test_a_member_cannot_delete_a_poll_even_their_own(festival, factory) -> None:
+    """Closing preserves the result; deleting destroys other people's answers.
+    That is an admin decision, deliberately stricter than closing."""
+    festival_id, owner, friend = festival
+    create_poll(friend, festival_id)
+    pid = poll_id(factory)
+
+    refused = friend.post(f"/festivals/{festival_id}/polls/{pid}/delete",
+                          data={"csrf_token": csrf(friend)})
+    assert refused.status_code == 403
+    with factory() as db:
+        assert db.get(Poll, pid) is not None
+
+
+def test_the_edit_panel_is_admin_only(festival, factory) -> None:
+    festival_id, owner, friend = festival
+    create_poll(owner, festival_id)
+    assert "Edit polls" in owner.get(f"/festivals/{festival_id}/polls").text
+    assert "Edit polls" not in friend.get(f"/festivals/{festival_id}/polls").text

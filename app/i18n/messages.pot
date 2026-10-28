@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Festival Planner VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-28 14:33+0100\n"
+"POT-Creation-Date: 2026-10-28 16:27+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -265,6 +265,7 @@ msgstr ""
 
 #: app/templates/festivals/dashboard.html:51
 #: app/templates/tools/expenses.html:34 app/templates/tools/expenses.html:246
+#: app/templates/tools/polls.html:102
 msgid "open"
 msgstr ""
 
@@ -727,7 +728,7 @@ msgstr ""
 msgid "This part is not built yet."
 msgstr ""
 
-#: app/templates/tools/polls.html:10
+#: app/templates/tools/polls.html:10 app/templates/tools/polls.html:102
 msgid "closed"
 msgstr ""
 
@@ -751,48 +752,64 @@ msgstr ""
 msgid "No polls yet."
 msgstr ""
 
-#: app/templates/tools/polls.html:63
+#: app/templates/tools/polls.html:64
 msgid "New poll"
 msgstr ""
 
-#: app/templates/tools/polls.html:66
+#: app/templates/tools/polls.html:67
 msgid "Question"
 msgstr ""
 
-#: app/templates/tools/polls.html:68
+#: app/templates/tools/polls.html:69
 msgid "Options"
 msgstr ""
 
-#: app/templates/tools/polls.html:73
+#: app/templates/tools/polls.html:74
 msgid "First option"
 msgstr ""
 
-#: app/templates/tools/polls.html:75
+#: app/templates/tools/polls.html:76
 msgid "Second option"
 msgstr ""
 
-#: app/templates/tools/polls.html:78
+#: app/templates/tools/polls.html:79
 msgid "Add option"
 msgstr ""
 
-#: app/templates/tools/polls.html:80
+#: app/templates/tools/polls.html:81
 msgid "Answers"
 msgstr ""
 
-#: app/templates/tools/polls.html:82
+#: app/templates/tools/polls.html:83
 msgid "One option only"
 msgstr ""
 
-#: app/templates/tools/polls.html:83
+#: app/templates/tools/polls.html:84
 msgid "Several options allowed"
 msgstr ""
 
-#: app/templates/tools/polls.html:85
+#: app/templates/tools/polls.html:86
 msgid "Closes on (optional)"
 msgstr ""
 
-#: app/templates/tools/polls.html:87
+#: app/templates/tools/polls.html:88
 msgid "Ask everyone"
+msgstr ""
+
+#: app/templates/tools/polls.html:96
+msgid "Edit polls"
+msgstr ""
+
+#: app/templates/tools/polls.html:108
+msgid "Reopen"
+msgstr ""
+
+#: app/templates/tools/polls.html:113
+msgid "Close"
+msgstr ""
+
+#: app/templates/tools/polls.html:118
+msgid "Delete this poll and every vote in it"
 msgstr ""
 
 #: app/templates/tools/topic.html:12

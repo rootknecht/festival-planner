@@ -59,6 +59,7 @@
 
 {% if not festival.is_archived %}
 <section class="card">
+  <div class="row">
   <details class="reveal">
     <summary class="btn btn--primary">{{ icon("plus") }} {{ _("New poll") }}</summary>
   <form method="post" action="/festivals/{{ festival.id }}/polls" class="stack">
@@ -87,6 +88,42 @@
     <button class="btn btn--primary">{{ _("Ask everyone") }}</button>
   </form>
   </details>
+
+  {% if membership.is_admin and polls %}
+  {# Reopen, close and delete behind one button beside "New poll" — the three
+     things an admin does to an existing poll, in one place. #}
+  <details class="reveal">
+    <summary class="btn btn--small">{{ icon("pencil") }} {{ _("Edit polls") }}</summary>
+    <div class="stack">
+      {% for entry in polls %}
+      <div class="row row--between">
+        <span>
+          {{ entry.poll.question }}
+          <span class="pill">{{ _("closed") if entry.closed else _("open") }}</span>
+        </span>
+        <span class="row">
+          {% if entry.closed %}
+          <form method="post" action="/festivals/{{ festival.id }}/polls/{{ entry.poll.id }}/reopen" class="inline">
+            <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+            <button class="btn btn--small">{{ _("Reopen") }}</button>
+          </form>
+          {% else %}
+          <form method="post" action="/festivals/{{ festival.id }}/polls/{{ entry.poll.id }}/close" class="inline">
+            <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+            <button class="btn btn--small">{{ _("Close") }}</button>
+          </form>
+          {% endif %}
+          <form method="post" action="/festivals/{{ festival.id }}/polls/{{ entry.poll.id }}/delete" class="inline">
+            <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+            <button class="linkbtn" title="{{ _('Delete this poll and every vote in it') }}">&#10005;</button>
+          </form>
+        </span>
+      </div>
+      {% endfor %}
+    </div>
+  </details>
+  {% endif %}
+  </div>
 </section>
 {% endif %}
 {% endblock %}

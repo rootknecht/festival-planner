@@ -462,3 +462,79 @@ def test_a_stranger_sees_nothing_of_the_expenses(trip, factory, settings) -> Non
         db.commit()
     stranger = client_for(settings, "stranger@example.org")
     assert stranger.get(f"/festivals/{festival_id}/expenses").status_code == 404
+
+
+def test_the_dashboard_shows_the_total_balance(trip, factory) -> None:
+    """Money owed is the thing people forget — it belongs on the front page."""
+    festival_id, owner, kai, anna = trip
+    people = who(factory, festival_id)
+    add_cost(kai, festival_id, people["Kai"].id, amount="30,00")
+
+    kai_dashboard = kai.get(f"/festivals/{festival_id}").text
+    assert "Money" in kai_dashboard
+    assert "20,00" in kai_dashboard          # owed to Kai by the other two
+    assert "owed to you" in kai_dashboard
+
+    anna_dashboard = anna.get(f"/festivals/{festival_id}").text
+    assert "10,00" in anna_dashboard         # Anna's own share
+    assert "you still owe" in anna_dashboard
+
+
+def test_the_dashboard_stays_quiet_when_nothing_is_owed(trip, factory) -> None:
+    festival_id, owner, kai, anna = trip
+    assert "Money" not in kai.get(f"/festivals/{festival_id}").text
+
+
+def test_the_payer_can_correct_a_cost(trip, factory) -> None:
+    festival_id, owner, kai, anna = trip
+    people = who(factory, festival_id)
+    add_cost(kai, festival_id, people["Kai"].id, amount="30,00", description="Beer")
+    with factory() as db:
+        expense_id = db.scalars(select(Expense)).one().id
+
+    response = kai.post(
+        f"/festivals/{festival_id}/expenses/{expense_id}/edit",
+        data={"csrf_token": csrf(kai), "description": "Crate of beer", "amount": "45,00"},
+    )
+    assert response.status_code == 303
+    with factory() as db:
+        expense = db.get(Expense, expense_id)
+        assert expense.description == "Crate of beer"
+        assert expense.amount_cents == 4500
+        # The shares were re-divided and still add up to the new total.
+        assert sum(s.amount_cents for s in expense.shares) == 4500
+
+
+def test_editing_cannot_rewrite_money_that_already_moved(trip, factory) -> None:
+    """A settled share is somebody's completed handshake — leave it alone."""
+    festival_id, owner, kai, anna = trip
+    people = who(factory, festival_id)
+    add_cost(kai, festival_id, people["Kai"].id, amount="30,00")
+    share_id = _open_share(factory, people["Anna"].id)
+    anna.post(f"/festivals/{festival_id}/expenses/shares/{share_id}/paid",
+              data={"csrf_token": csrf(anna)})
+    kai.post(f"/festivals/{festival_id}/expenses/shares/{share_id}/received",
+             data={"csrf_token": csrf(kai)})
+
+    with factory() as db:
+        expense_id = db.scalars(select(Expense)).one().id
+    kai.post(
+        f"/festivals/{festival_id}/expenses/{expense_id}/edit",
+        data={"csrf_token": csrf(kai), "description": "Beer", "amount": "45,00"},
+    )
+    with factory() as db:
+        settled = db.get(ExpenseShare, share_id)
+        assert settled.amount_cents == 1000       # untouched
+        assert settled.state is ShareState.CONFIRMED
+
+
+def test_a_bystander_cannot_edit_somebody_elses_cost(trip, factory) -> None:
+    festival_id, owner, kai, anna = trip
+    people = who(factory, festival_id)
+    add_cost(kai, festival_id, people["Kai"].id)
+    with factory() as db:
+        expense_id = db.scalars(select(Expense)).one().id
+    assert anna.post(
+        f"/festivals/{festival_id}/expenses/{expense_id}/edit",
+        data={"csrf_token": csrf(anna), "description": "x", "amount": "5,00"},
+    ).status_code == 403

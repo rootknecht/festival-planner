@@ -113,6 +113,11 @@ def log(db: DbSession, festival_id: int, entity: str, entity_id: int | None,
     )
 
 
+def normalise_units(units: str) -> list[str]:
+    """Comma-separated free text into a clean unit list."""
+    return [u.strip()[:40] for u in (units or "").split(",") if u.strip()][:12]
+
+
 def add_row(db: DbSession, festival_id: int, label: str, units: str, actor: User) -> BringRow:
     position = db.scalar(
         select(func.coalesce(func.max(BringRow.position), 0)).where(
@@ -122,7 +127,7 @@ def add_row(db: DbSession, festival_id: int, label: str, units: str, actor: User
     row = BringRow(
         festival_id=festival_id,
         label=label.strip()[:120],
-        units=",".join(u.strip()[:40] for u in units.split(",") if u.strip())[:200],
+        units=",".join(normalise_units(units))[:200],
         position=(position or 0) + 1,
         created_by=actor.id,
     )
@@ -203,3 +208,33 @@ def recent_changes(db: DbSession, festival_id: int, limit: int = 15) -> list[Cha
             .limit(limit)
         )
     )
+
+
+def edit_row(
+    db: DbSession, *, row: BringRow, label: str, units: str, actor: User
+) -> BringRow:
+    """Rename an item and/or change its unit list.
+
+    Cells keep their numbers when units change. Clearing them would be the
+    safer-looking option and the wrong one: somebody wrote "2 crates" and the
+    admin meant to fix a typo in the unit name, not to delete everyone's
+    entries. A cell whose unit is no longer offered keeps its stored unit
+    until that cell is next edited.
+    """
+    changes: list[str] = []
+    label = label.strip()[:120]
+    if label and label != row.label:
+        changes.append(f"renamed {row.label} -> {label}")
+        row.label = label
+
+    wanted = normalise_units(units)
+    if wanted != row.unit_list:
+        changes.append(
+            f"units {', '.join(row.unit_list) or '—'} -> {', '.join(wanted) or '—'}"
+        )
+        row.units = ",".join(wanted)
+
+    if changes:
+        log(db, row.festival_id, "bring_row", row.id, actor, "; ".join(changes))
+    db.commit()
+    return row

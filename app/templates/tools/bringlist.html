@@ -23,14 +23,10 @@
           <th class="sticky-col">{{ _("Who") }}</th>
           {% for row in rows %}
           <th>
+            {# No unit under the header and no delete cross: both were noise
+               on every column. Units still appear where they are chosen (in
+               the cell), and deleting moved into the admin's column editor. #}
             {{ row.label }}
-            {% if row.units %}<span class="hint">{{ row.units | join(" / ") }}</span>{% endif %}
-            {% if membership.is_admin and not festival.is_archived %}
-            <form method="post" action="/festivals/{{ festival.id }}/bringlist/rows/{{ row.id }}/delete" class="inline">
-              <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
-              <button class="linkbtn" title="{{ _('Delete row') }}">&#10005;</button>
-            </form>
-            {% endif %}
           </th>
           {% endfor %}
         </tr>
@@ -74,9 +70,6 @@
                 <button class="cellsave" title="{{ _('Save') }}">&#10003;</button>
               </form>
             </details>
-            {% if cell and cell.updated_by_name %}
-            <span class="hint hint--tiny">{{ _("by") }} {{ cell.updated_by_name }}</span>
-            {% endif %}
             {% endif %}
           </td>
           {% endfor %}
@@ -106,7 +99,9 @@
   </p>
   {% endif %}
 
-  {% if my_participant_id and rows and not festival.is_archived %}
+  {% if not festival.is_archived %}
+  <div class="row">
+    {% if my_participant_id and rows %}
   {# A direct way into your own column, needed because you have no row in the
      table until you bring something. #}
   <details class="reveal">
@@ -128,25 +123,47 @@
       <button class="btn btn--primary">{{ _("Save") }}</button>
     </form>
   </details>
+    {% endif %}
+
+    {% if membership.is_admin and rows %}
+    {# Columns are an admin concern: renaming an item or changing its units
+       changes what everybody else is agreeing to. #}
+    <details class="reveal">
+      <summary class="btn btn--small">{{ icon("pencil") }} {{ _("Edit items") }}</summary>
+      <div class="stack">
+        {% for row in rows %}
+        <form method="post" action="/festivals/{{ festival.id }}/bringlist/rows/{{ row.id }}/edit" class="row">
+          <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+          <input name="label" type="text" maxlength="120" value="{{ row.label }}"
+                 aria-label="{{ _('Item') }}">
+          <input name="units" type="text" maxlength="200" value="{{ row.units | join(', ') }}"
+                 placeholder="{{ _('L, cans, crates') }}" aria-label="{{ _('Units') }}">
+          <button class="btn btn--small">{{ _("Save") }}</button>
+          <button class="linkbtn" formaction="/festivals/{{ festival.id }}/bringlist/rows/{{ row.id }}/delete"
+                  title="{{ _('Delete row') }}">&#10005;</button>
+        </form>
+        {% endfor %}
+      </div>
+    </details>
+    {% endif %}
+
+    <details class="reveal">
+      <summary class="btn btn--primary">{{ icon("plus") }} {{ _("Add a row") }}</summary>
+      <form method="post" action="/festivals/{{ festival.id }}/bringlist/rows" class="stack">
+        <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+        <label for="label">{{ _("What has to come along?") }}</label>
+        <input id="label" name="label" type="text" maxlength="120" required placeholder="{{ _('Pavilion, beer, camping table …') }}">
+        <label for="units">{{ _("Units (optional, comma separated)") }}</label>
+        <input id="units" name="units" type="text" maxlength="200" placeholder="{{ _('L, cans, crates') }}">
+        <p class="hint">{{ _("With units the total adds up per unit, for example “80 L + 120 cans”.") }}</p>
+        <button class="btn btn--primary">{{ _("Add row") }}</button>
+      </form>
+    </details>
+  </div>
   {% endif %}
 </section>
 
-{% if not festival.is_archived %}
-<section class="card">
-  <details class="reveal">
-    <summary class="btn btn--primary">{{ icon("plus") }} {{ _("Add a row") }}</summary>
-    <form method="post" action="/festivals/{{ festival.id }}/bringlist/rows" class="stack">
-      <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
-      <label for="label">{{ _("What has to come along?") }}</label>
-      <input id="label" name="label" type="text" maxlength="120" required placeholder="{{ _('Pavilion, beer, camping table …') }}">
-      <label for="units">{{ _("Units (optional, comma separated)") }}</label>
-      <input id="units" name="units" type="text" maxlength="200" placeholder="{{ _('L, cans, crates') }}">
-      <p class="hint">{{ _("With units the total adds up per unit, for example “80 L + 120 cans”.") }}</p>
-      <button class="btn btn--primary">{{ _("Add row") }}</button>
-    </form>
-  </details>
-</section>
-{% endif %}
+
 
 {% if changes %}
 <section class="card">

@@ -144,3 +144,36 @@ async def set_cell(
     )
     notify_change(festival_id, "bringlist")
     return RedirectResponse(f"/festivals/{festival_id}/bringlist", status_code=303)
+
+
+@router.post("/festivals/{festival_id}/bringlist/rows/{row_id}/edit")
+async def edit_row(
+    request: Request,
+    festival_id: int,
+    row_id: int,
+    label: str = Form(default=""),
+    units: str = Form(default=""),
+    user: User = Depends(require_user),
+    db: DbSession = Depends(get_db),
+) -> Response:
+    """Rename an item or change its units. Admin only.
+
+    Renaming an item changes what everybody else has already agreed to bring,
+    and changing the units changes what their numbers MEAN — "4" of a thing
+    measured in crates is not "4" litres. That is a decision for an admin,
+    not for whoever happens to open the page.
+    """
+    membership = require_writable(require_membership(db, user, festival_id))
+    if not membership.is_admin:
+        raise HTTPException(status_code=403, detail='admins only')
+    row = db.get(BringRow, row_id)
+    if row is None or row.festival_id != festival_id:
+        raise HTTPException(status_code=404, detail="not found")
+
+    label = label.strip()
+    if not label:
+        return _page(request, db, user, festival_id, error="An item needs a name.")
+
+    bringlist.edit_row(db, row=row, label=label, units=units, actor=user)
+    notify_change(festival_id, "bringlist")
+    return RedirectResponse(f"/festivals/{festival_id}/bringlist", status_code=303)

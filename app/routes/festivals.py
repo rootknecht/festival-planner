@@ -139,6 +139,10 @@ def _dashboard(
         describe(item, translate, festival_id)
         for item in notifications.open_for(db, user.id, festival_id)
     ]
+    from app.services import expenses as expense_service
+
+    mine = next((p for p in participants if p.user_id == user.id), None)
+    balance = expense_service.balance_for(db, festival_id, mine.id if mine else None)
     return render(
         request,
         "festivals/dashboard.html",
@@ -149,6 +153,7 @@ def _dashboard(
             "notifications": blocks,
             "badges": notifications.badges(db, user.id, festival_id),
             "active_tool": "dashboard",
+            "balance": balance,
             **extra,
         },
     )

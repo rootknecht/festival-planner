@@ -375,3 +375,62 @@ def totals_by_participant(db: DbSession, festival_id: int) -> dict[int, int]:
                 result.get(expense.payer_participant_id, 0) + share.amount_cents
             )
     return result
+
+
+def edit_expense(
+    db: DbSession,
+    *,
+    expense: Expense,
+    description: str,
+    amount_cents: int,
+    note: str | None,
+    spent_on: dt.date | None,
+    actor: User,
+) -> Expense:
+    """Correct a cost after the fact.
+
+    The SPLIT is deliberately not re-opened here. Re-dividing an expense whose
+    shares are part-settled would silently invalidate a handshake that two
+    people already completed — somebody's "received" would start meaning a
+    different number. Changing who pays what means deleting the cost and
+    entering it again, which forces both sides to agree afresh.
+
+    The amount is rescaled proportionally so the shares keep adding up to the
+    total; a settled share is left alone, because that money has already moved.
+    """
+    description = (description or "").strip()
+    if not description:
+        raise ExpenseRefused("a description is required")
+
+    old_total = expense.amount_cents
+    changes: list[str] = []
+    if description != expense.description:
+        changes.append(f"renamed {expense.description} -> {description}")
+        expense.description = description[:160]
+    if note is not None and (note.strip() or None) != expense.note:
+        expense.note = note.strip() or None
+        changes.append("note changed")
+    if spent_on != expense.spent_on:
+        expense.spent_on = spent_on
+        changes.append("date changed")
+
+    if amount_cents != old_total:
+        open_shares = [s for s in expense.shares if s.state is not ShareState.CONFIRMED]
+        settled = sum(
+            s.amount_cents for s in expense.shares if s.state is ShareState.CONFIRMED
+        )
+        remaining = amount_cents - settled
+        if not open_shares or remaining < 0:
+            raise ExpenseRefused(
+                "too much of this is already settled to change the amount"
+            )
+        fresh = split_equally(remaining, [s.participant_id for s in open_shares])
+        for share in open_shares:
+            share.amount_cents = fresh[share.participant_id]
+        changes.append(f"amount {old_total / 100:.2f} -> {amount_cents / 100:.2f}")
+        expense.amount_cents = amount_cents
+
+    if changes:
+        log(db, expense.festival_id, "expense", expense.id, actor, "; ".join(changes))
+    db.commit()
+    return expense

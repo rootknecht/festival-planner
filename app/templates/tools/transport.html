@@ -10,14 +10,23 @@
    old vehicle-type picker: size is the only thing about the shape that anyone
    actually cares about when looking for a free seat. #}
 {% macro car_icon(car) %}
-{# Size and colour arrive as CLASSES, not as an inline style: the CSP says
+{# A car, not a bar: roof, body, two windows and two wheels. The LENGTH still
+   carries the seat count, which is why there is no vehicle-type picker.
+
+   The outline flips with the paint — light line on a dark car, dark line on a
+   light one — so a black car stays visible on the metal theme and a white one
+   on the light theme.
+
+   Size, paint and outline all arrive as CLASSES: the CSP says
    style-src 'self', which blocks inline style attributes outright. The HTML
-   looked perfectly correct in curl and the browser silently ignored it —
-   found only by reading the computed style in a real browser. #}
+   looks perfectly correct in curl and the browser silently ignores it. #}
 <span class="carbar carbar--seats-{{ car.seats_total }} carcolor--{{ car.color }}{% if car.is_full %} carbar--full{% endif %}"
       role="img"
       aria-label="{{ car.seats_total }} {{ _('seats') }}{% if car.is_full %}, {{ _('full') }}{% endif %}">
+  <span class="carbar__roof"></span>
   <span class="carbar__body"></span>
+  <span class="carbar__window carbar__window--front"></span>
+  <span class="carbar__window carbar__window--rear"></span>
   <span class="carbar__wheel carbar__wheel--front"></span>
   <span class="carbar__wheel carbar__wheel--rear"></span>
 </span>
@@ -50,7 +59,10 @@
     <div class="row">
       {{ car_icon(car) }}
       <div>
-        <strong>{{ car.driver.display_name if car.driver else _("No driver yet") }}</strong>
+        <strong>
+          {{ car.driver.display_name if car.driver else _("No driver yet") }}{% if car.departure_address %}
+          <span class="car__from">{{ _("from") }} {{ car.departure_address }}</span>{% endif %}
+        </strong>
         <p class="hint">
           {% if car.is_full %}
           <span class="pill pill--full">{{ _("full") }}</span>
@@ -103,48 +115,23 @@
   </ul>
 
   {% if unassigned and car.free_seats and not festival.is_archived %}
-  <form method="post" action="/festivals/{{ festival.id }}/transport/cars/{{ car.id }}/seats" class="row">
-    <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
-    <select name="participant_id" aria-label="{{ _('Add passenger') }}">
-      {% for participant in unassigned %}
-      <option value="{{ participant.id }}">{{ participant.display_name }}</option>
-      {% endfor %}
-    </select>
-    <button class="btn">{{ _("Add passenger") }}</button>
-  </form>
+  {# The name list only appears once asked for; it was permanently open on
+     every car and pushed the cars themselves off the screen. #}
+  <details class="reveal">
+    <summary class="btn btn--small">{{ icon("plus") }} {{ _("Add passenger") }}</summary>
+    <form method="post" action="/festivals/{{ festival.id }}/transport/cars/{{ car.id }}/seats" class="row">
+      <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+      <select name="participant_id" aria-label="{{ _('Add passenger') }}">
+        {% for participant in unassigned %}
+        <option value="{{ participant.id }}">{{ participant.display_name }}</option>
+        {% endfor %}
+      </select>
+      <button class="btn">{{ _("Add passenger") }}</button>
+    </form>
+  </details>
   {% endif %}
 
-  {# Departure address: once it is set the form collapses to the address plus a
-     small edit button. The standing "Save departure" button was noise on every
-     car for the rest of the trip. #}
-  {% if not festival.is_archived %}
-    {% if car.departure_address %}
-    <p class="row row--between">
-      <span>{{ _("From") }} <strong>{{ car.departure_address }}</strong>
-        {% if not car.departure_lat %}<span class="hint">{{ _("not found on the map") }}</span>{% endif %}
-      </span>
-      <details class="reveal reveal--inline">
-        <summary class="iconbtn" title="{{ _('Change departure') }}">{{ icon("pencil") }}</summary>
-        <form method="post" action="/festivals/{{ festival.id }}/transport/cars/{{ car.id }}/departure" class="stack">
-          <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
-          <input name="address" type="text" value="{{ car.departure_address }}">
-          <button class="btn">{{ _("Save") }}</button>
-        </form>
-      </details>
-    </p>
-    {% else %}
-    <details class="reveal">
-      <summary class="btn btn--small">{{ icon("plus") }} {{ _("Departure address") }}</summary>
-      <form method="post" action="/festivals/{{ festival.id }}/transport/cars/{{ car.id }}/departure" class="stack">
-        <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
-        <label for="address-{{ car.id }}">{{ _("Departure address") }}</label>
-        <input id="address-{{ car.id }}" name="address" type="text"
-               placeholder="{{ _('Town is enough') }}">
-        <button class="btn">{{ _("Save departure") }}</button>
-      </form>
-    </details>
-    {% endif %}
-  {% endif %}
+
 
   {% if car.stops %}
   <ol class="log">
@@ -202,9 +189,19 @@
           <option value="{{ number }}" {% if number == car.seats_total %}selected{% endif %}>{{ number }}</option>
           {% endfor %}
         </select>
+        <label for="editfrom-{{ car.id }}">{{ _("Departure address") }}</label>
+        <input id="editfrom-{{ car.id }}" name="departure_address" type="text"
+               value="{{ car.departure_address or '' }}"
+               placeholder="{{ _('Town is enough') }}">
         <label for="editwhen-{{ car.id }}">{{ _("Departure") }}</label>
-        <input id="editwhen-{{ car.id }}" name="departure_at" type="datetime-local"
-               value="{{ car.departure_at.strftime('%Y-%m-%dT%H:%M') if car.departure_at else '' }}">
+        <div class="row">
+          <input id="editwhen-{{ car.id }}" name="departure_date" type="date"
+                 aria-label="{{ _('Departure date') }}"
+                 value="{{ car.departure_at.strftime('%Y-%m-%d') if car.departure_at else '' }}">
+          <input name="departure_time" type="time" step="300"
+                 aria-label="{{ _('Departure time') }}"
+                 value="{{ car.departure_at.strftime('%H:%M') if car.departure_at else '' }}">
+        </div>
         {% if car.departure_at %}
         <label class="check">
           <input type="checkbox" name="clear_departure" value="1"> {{ _("Clear the departure time") }}
@@ -219,10 +216,13 @@
 {% endfor %}
 </div>
 
+
+
 {% if not festival.is_archived %}
 <section class="card">
-  {# Small button first, fields only after a click — the add form used to sit
-     open on the page permanently and pushed the actual cars out of view. #}
+  {# Both "new" buttons live together: adding a car and adding a meeting
+     point are the two things you come to this page to create. #}
+  <div class="row">
   <details class="reveal">
     <summary class="btn btn--primary">{{ icon("plus") }} {{ _("Add a car") }}</summary>
     <form method="post" action="/festivals/{{ festival.id }}/transport/cars" class="stack">
@@ -244,11 +244,56 @@
       <select id="color" name="color">
         {% for key, label in colors %}<option value="{{ key }}">{{ label }}</option>{% endfor %}
       </select>
+      <label for="newfrom">{{ _("Departure address") }}</label>
+      <input id="newfrom" name="departure_address" type="text"
+             placeholder="{{ _('Town is enough') }}">
       <label for="when">{{ _("Departure") }}</label>
-      <input id="when" name="departure_at" type="datetime-local">
+      {# Date and time as SEPARATE fields. A single datetime-local keeps a
+         half-filled value you cannot clear — the browser shows a leftover
+         dash and then refuses the form with "invalid format", which is
+         exactly the bug reported here. Two fields have no partial state:
+         either part may be left empty and the server copes. #}
+      <div class="row">
+        <input id="when" name="departure_date" type="date" aria-label="{{ _('Departure date') }}">
+        <input name="departure_time" type="time" step="300" aria-label="{{ _('Departure time') }}">
+      </div>
       <button class="btn btn--primary">{{ _("Add car") }}</button>
     </form>
   </details>
+  {% if membership.is_admin and not festival.is_archived and meeting_points | length < max_meeting_points %}
+    <details class="reveal">
+      <summary class="btn">{{ icon("plus") }} {{ _("Add a meeting point") }}</summary>
+      <form method="post" action="/festivals/{{ festival.id }}/transport/meeting-points" class="stack">
+        <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+        <label for="mp-name">{{ _("Name") }}</label>
+        <input id="mp-name" name="name" type="text" required
+               placeholder="{{ _('Last services before the gate') }}">
+        <label for="mp-address">{{ _("Address") }}</label>
+        <input id="mp-address" name="address" type="text" required>
+        <label for="mp-when">{{ _("Meet at") }}</label>
+        <div class="row">
+          <input id="mp-when" name="meet_date" type="date" aria-label="{{ _('Meeting date') }}">
+          <input name="meet_time" type="time" step="300" aria-label="{{ _('Meeting time') }}">
+        </div>
+        {% if cars %}
+        <div class="row">
+          <button type="button" class="btn btn--small" data-select-all="#cars-new">{{ _("Select all") }}</button>
+          <button type="button" class="btn btn--small" data-select-none="#cars-new">{{ _("Select none") }}</button>
+        </div>
+        <ul class="checks" id="cars-new">
+          {% for car in cars %}
+          <li><label class="check">
+            <input type="checkbox" name="car_ids" value="{{ car.id }}" checked>
+            {{ car.driver.display_name if car.driver else _("No driver yet") }}
+          </label></li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+        <button class="btn btn--primary">{{ _("Add meeting point") }}</button>
+      </form>
+    </details>
+  {% endif %}
+  </div>
 </section>
 {% endif %}
 
@@ -313,36 +358,7 @@
   <p class="hint">{{ _("No meeting point yet.") }}</p>
   {% endif %}
 
-  {% if membership.is_admin and not festival.is_archived and meeting_points | length < max_meeting_points %}
-  <details class="reveal">
-    <summary class="btn">{{ icon("plus") }} {{ _("Add a meeting point") }}</summary>
-    <form method="post" action="/festivals/{{ festival.id }}/transport/meeting-points" class="stack">
-      <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
-      <label for="mp-name">{{ _("Name") }}</label>
-      <input id="mp-name" name="name" type="text" required
-             placeholder="{{ _('Last services before the gate') }}">
-      <label for="mp-address">{{ _("Address") }}</label>
-      <input id="mp-address" name="address" type="text" required>
-      <label for="mp-when">{{ _("Meet at") }}</label>
-      <input id="mp-when" name="meet_at" type="datetime-local">
-      {% if cars %}
-      <div class="row">
-        <button type="button" class="btn btn--small" data-select-all="#cars-new">{{ _("Select all") }}</button>
-        <button type="button" class="btn btn--small" data-select-none="#cars-new">{{ _("Select none") }}</button>
-      </div>
-      <ul class="checks" id="cars-new">
-        {% for car in cars %}
-        <li><label class="check">
-          <input type="checkbox" name="car_ids" value="{{ car.id }}" checked>
-          {{ car.driver.display_name if car.driver else _("No driver yet") }}
-        </label></li>
-        {% endfor %}
-      </ul>
-      {% endif %}
-      <button class="btn btn--primary">{{ _("Add meeting point") }}</button>
-    </form>
-  </details>
-  {% endif %}
+
 </section>
 
 <section class="card">

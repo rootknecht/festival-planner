@@ -14,7 +14,17 @@
 <header class="titlebar">
   <a class="titlebar__home" href="/festivals/{{ festival.id }}">
     <span class="titlebar__name">{{ festival.name }}</span>
-    <span class="titlebar__dates">{{ festival.date_range }}</span>
+    <span class="titlebar__dates">
+      {{ date_range(festival.start_date, festival.end_date, language) }}
+      {% set days = festival.countdown_days %}
+      {% if days is not none and days > 0 %}
+      {# The countdown lives in the header now: it belongs next to the dates,
+         and it is on every page rather than only the dashboard. #}
+      <span class="titlebar__countdown">{{ _("in %(days)s days") % {"days": days} }}</span>
+      {% elif days == 0 %}
+      <span class="titlebar__countdown">{{ _("today!") }}</span>
+      {% endif %}
+    </span>
   </a>
   <nav class="titlebar__actions">
     <form method="post" action="/profile/language" class="inline">

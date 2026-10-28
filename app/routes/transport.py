@@ -71,23 +71,49 @@ def _page(request: Request, db: DbSession, user: User, festival_id: int, **extra
     )
 
 
-def _parse_when(raw: str) -> dt.datetime | None:
-    """Parse an <input type=datetime-local> value.
+def _parse_when(date_raw: str, time_raw: str = "") -> dt.datetime | None:
+    """Combine a <input type=date> and an <input type=time> into one moment.
 
-    Browsers send "2027-08-18T06:30" (no seconds, no zone). An unparseable or
-    empty value means "not set" rather than an error: a car without a departure
-    time is a perfectly normal state, and rejecting the whole form over a
-    half-typed date would lose the rest of the edit.
+    Two separate fields instead of one datetime-local, because that control
+    keeps a half-entered value that the user cannot clear: the browser leaves
+    a dash in place and then rejects the form as "invalid format". Reported
+    from real use on the meeting-point form.
+
+    A date with no time means midnight — "we leave on Friday" is a useful
+    thing to record on its own. A time with no date means nothing, so it is
+    ignored rather than guessed into today.
     """
-    raw = raw.strip()
-    if not raw:
+    date_text = (date_raw or "").strip()
+    time_text = (time_raw or "").strip()
+    if not date_text:
         return None
-    for shape in ("%Y-%m-%dT%H:%M", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M"):
+    try:
+        day = dt.date.fromisoformat(date_text)
+    except ValueError:
+        return None
+    hour, minute = 0, 0
+    if time_text:
         try:
-            return dt.datetime.strptime(raw, shape)
+            parsed = dt.time.fromisoformat(time_text)
+            hour, minute = parsed.hour, parsed.minute
         except ValueError:
-            continue
-    return None
+            hour, minute = 0, 0
+    return dt.datetime.combine(day, dt.time(hour, minute))
+
+
+def _set_departure_address(db: DbSession, request: Request, car: Car, address: str) -> None:
+    """Store the address and geocode it, on save and never on page view.
+
+    An address the geocoder cannot place is still kept — "the car park behind
+    the church" is a perfectly good meeting instruction, it just gets no pin.
+    """
+    address = address.strip()
+    car.departure_address = address or None
+    if address:
+        car.departure_lat, car.departure_lon = geocode(db, address, _settings_for(request))
+    else:
+        car.departure_lat = car.departure_lon = None
+    db.commit()
 
 
 def _meeting_point_of(db: DbSession, festival_id: int, point_id: int) -> MeetingPoint:
@@ -130,7 +156,9 @@ async def add_car(
     color: str = Form(default="red"),
     seats_total: int = Form(default=5),
     driver_participant_id: str = Form(default=""),
-    departure_at: str = Form(default=""),
+    departure_date: str = Form(default=""),
+    departure_time: str = Form(default=""),
+    departure_address: str = Form(default=""),
     user: User = Depends(require_user),
     db: DbSession = Depends(get_db),
 ) -> Response:
@@ -140,15 +168,17 @@ async def add_car(
         if driver_participant_id.strip()
         else None
     )
-    transport.add_car(
+    car = transport.add_car(
         db,
         festival_id=festival_id,
         color=color,
         seats_total=seats_total,
         driver=driver,
         actor=user,
-        departure_at=_parse_when(departure_at),
+        departure_at=_parse_when(departure_date, departure_time),
     )
+    if departure_address.strip():
+        _set_departure_address(db, request, car, departure_address)
     notify_change(festival_id, "transport")
     return RedirectResponse(f"/festivals/{festival_id}/transport", status_code=303)
 
@@ -285,7 +315,9 @@ async def edit_car(
     car_id: int,
     color: str = Form(default=""),
     seats_total: int = Form(default=0),
-    departure_at: str = Form(default=""),
+    departure_date: str = Form(default=""),
+    departure_time: str = Form(default=""),
+    departure_address: str | None = Form(default=None),
     clear_departure: str = Form(default=""),
     user: User = Depends(require_user),
     db: DbSession = Depends(get_db),
@@ -299,12 +331,14 @@ async def edit_car(
             car=car,
             color=color or None,
             seats_total=seats_total or None,
-            departure_at=_parse_when(departure_at),
+            departure_at=_parse_when(departure_date, departure_time),
             clear_departure_at=bool(clear_departure),
             actor=user,
         )
     except transport.SeatRefused as exc:
         return _page(request, db, user, festival_id, error=str(exc))
+    if departure_address is not None:
+        _set_departure_address(db, request, car, departure_address)
     notify_change(festival_id, "transport")
     return RedirectResponse(f"/festivals/{festival_id}/transport", status_code=303)
 
@@ -315,7 +349,8 @@ async def add_meeting_point(
     festival_id: int,
     name: str = Form(default=""),
     address: str = Form(default=""),
-    meet_at: str = Form(default=""),
+    meet_date: str = Form(default=""),
+    meet_time: str = Form(default=""),
     car_ids: list[int] = Form(default=[]),
     user: User = Depends(require_user),
     db: DbSession = Depends(get_db),
@@ -329,7 +364,7 @@ async def add_meeting_point(
         festival_id=festival_id,
         name=name,
         address=address,
-        meet_at=_parse_when(meet_at),
+        meet_at=_parse_when(meet_date, meet_time),
         car_ids=car_ids,
         actor=user,
     )

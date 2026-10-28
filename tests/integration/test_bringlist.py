@@ -367,3 +367,63 @@ def test_cells_cannot_be_written_across_festivals(festival, factory, settings) -
     # row from festival A, submitted against festival B
     response = set_cell(owner, other_id, rows[0].id, people[0].id, "5", "L")
     assert response.status_code == 404
+
+
+def test_an_admin_can_rename_an_item_and_change_its_units(festival, factory) -> None:
+    festival_id, owner, friend = festival
+    add_row(owner, festival_id, "Bier", "L")
+    rows, people = ids(factory, festival_id)
+    owner_p = next(p for p in people if p.display_name == "Owner")
+    set_cell(owner, festival_id, rows[0].id, owner_p.id, "20")
+
+    response = owner.post(
+        f"/festivals/{festival_id}/bringlist/rows/{rows[0].id}/edit",
+        data={"label": "Beer", "units": "L, crates", "csrf_token": csrf(owner)},
+    )
+    assert response.status_code == 303
+    with factory() as db:
+        row = db.get(BringRow, rows[0].id)
+        assert row.label == "Beer"
+        assert row.unit_list == ["L", "crates"]
+        # The amounts survive a unit change: the admin meant to fix the list,
+        # not to wipe what everybody had already entered.
+        cell = db.scalars(select(BringCell).where(BringCell.row_id == row.id)).one()
+        assert cell.amount == 20
+
+
+def test_a_member_cannot_rename_an_item(festival, factory) -> None:
+    festival_id, owner, friend = festival
+    add_row(owner, festival_id, "Bier", "L")
+    rows, _ = ids(factory, festival_id)
+    refused = friend.post(
+        f"/festivals/{festival_id}/bringlist/rows/{rows[0].id}/edit",
+        data={"label": "Beer", "units": "", "csrf_token": csrf(friend)},
+    )
+    assert refused.status_code == 403
+
+
+def test_an_item_cannot_be_renamed_to_nothing(festival, factory) -> None:
+    festival_id, owner, friend = festival
+    add_row(owner, festival_id, "Bier", "L")
+    rows, _ = ids(factory, festival_id)
+    response = owner.post(
+        f"/festivals/{festival_id}/bringlist/rows/{rows[0].id}/edit",
+        data={"label": "   ", "units": "", "csrf_token": csrf(owner)},
+    )
+    assert response.status_code == 200
+    with factory() as db:
+        assert db.get(BringRow, rows[0].id).label == "Bier"
+
+
+def test_the_table_no_longer_shows_who_last_touched_a_cell(festival, factory) -> None:
+    """Requested: the per-cell "by <name>" note was clutter; the change log
+    below the table still records it."""
+    festival_id, owner, friend = festival
+    add_row(owner, festival_id, "Firewood")
+    rows, people = ids(factory, festival_id)
+    owner_p = next(p for p in people if p.display_name == "Owner")
+    set_cell(owner, festival_id, rows[0].id, owner_p.id, "3")
+
+    page = owner.get(f"/festivals/{festival_id}/bringlist").text
+    table = page.split("<tbody>")[1].split("</tbody>")[0]
+    assert "hint--tiny" not in table

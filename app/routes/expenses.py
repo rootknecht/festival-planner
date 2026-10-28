@@ -155,6 +155,51 @@ async def add(
     return RedirectResponse(f"/festivals/{festival_id}/expenses", status_code=303)
 
 
+@router.post("/festivals/{festival_id}/expenses/{expense_id}/edit")
+async def edit(
+    request: Request,
+    festival_id: int,
+    expense_id: int,
+    description: str = Form(default=""),
+    amount: str = Form(default=""),
+    note: str = Form(default=""),
+    spent_on: str = Form(default=""),
+    user: User = Depends(require_user),
+    db: DbSession = Depends(get_db),
+) -> Response:
+    """Correct a cost. The payer or an admin, same rule as deleting."""
+    membership = require_writable(require_membership(db, user, festival_id))
+    expense = db.get(Expense, expense_id)
+    if expense is None or expense.festival_id != festival_id:
+        raise HTTPException(status_code=404, detail="not found")
+    mine = _my_participant_id(db, festival_id, user)
+    if not membership.is_admin and expense.payer_participant_id != mine:
+        raise HTTPException(status_code=403, detail="only the payer or an admin")
+
+    when: dt.date | None = None
+    if spent_on.strip():
+        try:
+            when = dt.date.fromisoformat(spent_on.strip())
+        except ValueError:
+            when = None
+
+    try:
+        expenses.edit_expense(
+            db,
+            expense=expense,
+            description=description,
+            amount_cents=expenses.parse_amount(amount),
+            note=note,
+            spent_on=when,
+            actor=user,
+        )
+    except expenses.ExpenseRefused as exc:
+        return _page(request, db, user, festival_id, error=exc.detail)
+
+    notify_change(festival_id, "expenses")
+    return RedirectResponse(f"/festivals/{festival_id}/expenses", status_code=303)
+
+
 @router.post("/festivals/{festival_id}/expenses/{expense_id}/delete")
 async def delete(
     request: Request,

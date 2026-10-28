@@ -148,10 +148,32 @@
           {% if expense.spent_on %}<span class="hint">{{ expense.spent_on.strftime("%d.%m.%Y") }}</span>{% endif %}
         </span>
         {% if not festival.is_archived and (membership.is_admin or expense.payer_participant_id == my_participant_id) %}
-        <form method="post" action="/festivals/{{ festival.id }}/expenses/{{ expense.id }}/delete" class="inline">
-          <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
-          <button class="linkbtn" title="{{ _('Remove') }}">&#10005;</button>
-        </form>
+        <span class="row">
+          <details class="reveal reveal--inline">
+            <summary class="iconbtn" title="{{ _('Edit') }}">{{ icon("pencil") }}</summary>
+            <form method="post" action="/festivals/{{ festival.id }}/expenses/{{ expense.id }}/edit" class="stack">
+              <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+              <label for="ed-what-{{ expense.id }}">{{ _("What did you pay for?") }}</label>
+              <input id="ed-what-{{ expense.id }}" name="description" type="text" maxlength="160"
+                     value="{{ expense.description }}" required>
+              <label for="ed-amount-{{ expense.id }}">{{ _("Amount in euro") }}</label>
+              <input id="ed-amount-{{ expense.id }}" name="amount" type="text" inputmode="decimal"
+                     value="{{ "%.2f"|format(expense.amount_cents / 100) | replace(".", ",") }}" required>
+              <label for="ed-date-{{ expense.id }}">{{ _("Date (optional)") }}</label>
+              <input id="ed-date-{{ expense.id }}" name="spent_on" type="date"
+                     value="{{ expense.spent_on.isoformat() if expense.spent_on else '' }}">
+              <label for="ed-note-{{ expense.id }}">{{ _("Note (optional)") }}</label>
+              <input id="ed-note-{{ expense.id }}" name="note" type="text" maxlength="400"
+                     value="{{ expense.note or '' }}">
+              <p class="hint">{{ _("Changing the total re-divides what is still open. To change WHO pays, delete this and enter it again.") }}</p>
+              <button class="btn btn--primary">{{ _("Save") }}</button>
+            </form>
+          </details>
+          <form method="post" action="/festivals/{{ festival.id }}/expenses/{{ expense.id }}/delete" class="inline">
+            <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+            <button class="linkbtn" title="{{ _('Remove') }}">&#10005;</button>
+          </form>
+        </span>
         {% endif %}
       </div>
       {% if expense.note %}<p class="hint">{{ expense.note }}</p>{% endif %}

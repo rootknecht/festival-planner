@@ -25,6 +25,22 @@ templates.env.globals["csrf_field_name"] = CSRF_FIELD
 templates.env.globals["languages"] = SUPPORTED_LANGUAGES
 
 
+def _long_date(value, language="en"):
+    from app.services.dates import format_long_date
+
+    return format_long_date(value, language)
+
+
+def _date_range(start, end, language="en"):
+    from app.services.dates import format_date_range
+
+    return format_date_range(start, end, language)
+
+
+templates.env.filters["long_date"] = _long_date
+templates.env.globals["date_range"] = _date_range
+
+
 def language_for(request: Request) -> str:
     user = getattr(request.state, "user", None)
     if user is not None and user.language:

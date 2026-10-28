@@ -100,12 +100,14 @@ def people(factory, festival_id) -> dict[str, Participant]:
     return {row.display_name: row for row in rows}
 
 
-def add_car(client, festival_id, driver_id=None, seats=5, color="blue", departure_at=""):
+def add_car(client, festival_id, driver_id=None, seats=5, color="blue",
+            departure_date="", departure_time=""):
     return client.post(
         f"/festivals/{festival_id}/transport/cars",
         data={
             "color": color,
-            "departure_at": departure_at,
+            "departure_date": departure_date,
+            "departure_time": departure_time,
             "seats_total": seats,
             "driver_participant_id": str(driver_id or ""),
             "csrf_token": csrf(client),
@@ -389,16 +391,21 @@ def add_meeting_point(client, festival_id, name="Gate services", address="Dinkel
 
 def test_a_car_can_carry_a_departure_time(festival, factory) -> None:
     festival_id, owner = festival
-    add_car(owner, festival_id, None, departure_at="2027-08-18T06:30")
+    add_car(owner, festival_id, None, departure_date="2027-08-18", departure_time="06:30")
     car = only_car(factory)
     assert car.departure_at is not None
     assert car.departure_at.strftime("%Y-%m-%d %H:%M") == "2027-08-18 06:30"
 
 
 def test_a_half_typed_departure_is_treated_as_unset_not_as_an_error(festival, factory) -> None:
-    """Losing the whole form over a bad date would be worse than no date."""
+    """Losing the whole form over a bad date would be worse than no date.
+
+    This is the shape of the bug reported from real use: a single
+    datetime-local keeps a half-entered value the user cannot clear and then
+    refuses the form. Separate date and time fields have no partial state.
+    """
     festival_id, owner = festival
-    assert add_car(owner, festival_id, None, departure_at="2027-08").status_code == 303
+    assert add_car(owner, festival_id, None, departure_date="2027-08").status_code == 303
     assert only_car(factory).departure_at is None
 
 
@@ -407,7 +414,7 @@ def test_a_car_stays_editable_after_creation(festival, factory) -> None:
     add_car(owner, festival_id, None, seats=4, color="blue")
     car = only_car(factory)
     assert edit_car(owner, festival_id, car.id, color="grey", seats_total=7,
-                    departure_at="2027-08-17T18:00").status_code == 303
+                    departure_date="2027-08-17", departure_time="18:00").status_code == 303
     with factory() as db:
         fresh = db.get(Car, car.id)
         assert fresh.color == "grey"
@@ -445,7 +452,7 @@ def test_shrinking_a_car_below_its_passengers_is_refused(festival, factory) -> N
 
 def test_the_departure_time_can_be_cleared(festival, factory) -> None:
     festival_id, owner = festival
-    add_car(owner, festival_id, None, departure_at="2027-08-18T06:30")
+    add_car(owner, festival_id, None, departure_date="2027-08-18", departure_time="06:30")
     car = only_car(factory)
     edit_car(owner, festival_id, car.id, clear_departure="1")
     with factory() as db:
@@ -567,3 +574,57 @@ def test_the_add_car_form_is_hidden_behind_a_button(festival, factory) -> None:
     page = owner.get(f"/festivals/{festival_id}/transport").text
     assert "details class=\"reveal\"" in page or 'class="reveal"' in page
     assert "Add a car" in page
+
+
+def test_a_date_without_a_time_means_midnight(festival, factory) -> None:
+    """"We leave on Friday" is worth recording even before the hour is agreed."""
+    festival_id, owner = festival
+    add_car(owner, festival_id, None, departure_date="2027-08-18")
+    car = only_car(factory)
+    assert car.departure_at is not None
+    assert car.departure_at.strftime("%Y-%m-%d %H:%M") == "2027-08-18 00:00"
+
+
+def test_a_time_without_a_date_is_ignored(festival, factory) -> None:
+    """A time alone means nothing, and guessing today would be a wrong fact."""
+    festival_id, owner = festival
+    add_car(owner, festival_id, None, departure_time="06:30")
+    assert only_car(factory).departure_at is None
+
+
+def test_a_meeting_point_takes_a_separate_date_and_time(festival, factory) -> None:
+    festival_id, owner = festival
+    response = owner.post(
+        f"/festivals/{festival_id}/transport/meeting-points",
+        data={
+            "csrf_token": csrf(owner),
+            "name": "Gate services",
+            "address": "Dinkelsbuehl",
+            "meet_date": "2027-08-18",
+            "meet_time": "14:30",
+            "car_ids": [],
+        },
+    )
+    assert response.status_code == 303
+    with factory() as db:
+        point = db.scalars(select(MeetingPoint)).one()
+    assert point.meet_at.strftime("%Y-%m-%d %H:%M") == "2027-08-18 14:30"
+
+
+def test_a_meeting_point_without_a_time_still_saves(festival, factory) -> None:
+    """The reported bug: the form refused to submit at all. It must not."""
+    festival_id, owner = festival
+    response = owner.post(
+        f"/festivals/{festival_id}/transport/meeting-points",
+        data={
+            "csrf_token": csrf(owner),
+            "name": "Gate services",
+            "address": "Dinkelsbuehl",
+            "meet_date": "",
+            "meet_time": "",
+            "car_ids": [],
+        },
+    )
+    assert response.status_code == 303
+    with factory() as db:
+        assert db.scalars(select(MeetingPoint)).one().meet_at is None

@@ -386,7 +386,13 @@ textarea { min-height: 4rem; resize: vertical; }
    The items are short words, so the default table padding spread them so far
    apart that a phone showed two columns and a lot of nothing. The vertical
    line does the separating that the whitespace used to. */
-.grid--matrix th, .grid--matrix td { padding-left: .18rem; padding-right: .18rem; }
+/* The matrix shrinks to its content instead of filling the card.
+   ".grid { width: 100% }" was the real cause of the wide gaps: the table
+   stretched to the full width and handed the leftover space to the columns,
+   so trimming cell padding barely moved anything. Items are short words; the
+   table should be as narrow as they are and simply end. */
+.grid--matrix { width: auto; }
+.grid--matrix th, .grid--matrix td { padding-left: .35rem; padding-right: .35rem; }
 /* A rule between every pair of neighbouring cells, INCLUDING the one between
    the names column and the first item — that edge is a th followed by a td,
    so the td + td rule alone skipped exactly the line you notice most. */

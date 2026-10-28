@@ -26,24 +26,21 @@
       <span>{{ _("to") }} {{ line.name }}</span>
       {% endif %}
       {% if line.items %}<span class="hint">({{ line.items | join(", ") }})</span>{% endif %}
-      {% if line.waiting %}<span class="pill pill--wait">{{ _("waiting for confirmation") }}</span>{% endif %}
+      {# Status belongs on the person, not on a separate summary: nobody pays
+         their debts one expense at a time, they settle with a person. #}
+      {% if line.waiting %}
+      <span class="pill pill--wait">{{ _("waiting for confirmation") }}</span>
+      {% elif line.cents > 0 %}
+      <span class="pill">{{ _("open") }}</span>
+      {% elif line.cents < 0 %}
+      <span class="pill pill--owe">{{ _("to pay") }}</span>
+      {% endif %}
     </li>
     {% endfor %}
   </ul>
   {% endif %}
   {% if balance.has_anything %}
-  <p class="balance">
-    {% if balance.net_cents > 0 %}
-    <span class="balance__net balance__net--plus">+ {{ money(balance.net_cents) }}</span>
-    <span class="hint">{{ _("in your favour") }}</span>
-    {% elif balance.net_cents < 0 %}
-    <span class="balance__net balance__net--minus">− {{ money(-balance.net_cents) }}</span>
-    <span class="hint">{{ _("you still owe") }}</span>
-    {% else %}
-    <span class="balance__net">{{ money(0) }}</span>
-    <span class="hint">{{ _("even, but some confirmations are missing") }}</span>
-    {% endif %}
-  </p>
+
 
   {% if balance.owes %}
   <h3>{{ _("You owe") }}</h3>

@@ -5,9 +5,9 @@
    This replaces the countdown that sat in the title bar — the header is for
    identifying the festival, not for carrying statistics. #}
 <section class="card oneliner">
-  <span class="oneliner__item">{{ icon("tent") }} {{ festival.location or _("location to be announced") }}</span>
+  <span class="oneliner__item">{{ icon("tent") }} {{ festival.address_text or _("location to be announced") }}</span>
   <span class="oneliner__sep">—</span>
-  <span class="oneliner__item">{{ icon("beer") }} {{ ngettext("%(n)s drinker", "%(n)s drinkers", summary.people) % {"n": summary.people} }}</span>
+  <span class="oneliner__item">{{ icon("beerglass") }} {{ ngettext("%(n)s drinker", "%(n)s drinkers", summary.people) % {"n": summary.people} }}</span>
   <span class="oneliner__sep">—</span>
   <span class="oneliner__item">{{ icon("car") }} {{ ngettext("%(n)s car", "%(n)s cars", summary.cars) % {"n": summary.cars} }}</span>
   {% if summary.days is not none %}
@@ -45,23 +45,17 @@
       <span>{{ _("to") }} {{ line.name }}</span>
       {% endif %}
       {% if line.items %}<span class="hint">({{ line.items | join(", ") }})</span>{% endif %}
-      {% if line.waiting %}<span class="pill pill--wait">{{ _("waiting for confirmation") }}</span>{% endif %}
+      {% if line.waiting %}
+      <span class="pill pill--wait">{{ _("waiting for confirmation") }}</span>
+      {% elif line.cents > 0 %}
+      <span class="pill">{{ _("open") }}</span>
+      {% elif line.cents < 0 %}
+      <span class="pill pill--owe">{{ _("to pay") }}</span>
+      {% endif %}
     </li>
     {% endfor %}
   </ul>
-  <p class="balance">
-    {% set net = balance.net_cents %}
-    {% if net > 0 %}
-    <span class="balance__net balance__net--plus">+ {{ "%.2f"|format(net / 100) | replace(".", ",") }} €</span>
-    <span class="hint">{{ _("owed to you") }}</span>
-    {% elif net < 0 %}
-    <span class="balance__net balance__net--minus">− {{ "%.2f"|format(-net / 100) | replace(".", ",") }} €</span>
-    <span class="hint">{{ _("you still owe") }}</span>
-    {% else %}
-    <span class="balance__net">0,00 €</span>
-    <span class="hint">{{ _("even, but some confirmations are missing") }}</span>
-    {% endif %}
-  </p>
+
 </section>
 {% endif %}
 

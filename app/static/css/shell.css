@@ -381,3 +381,20 @@ textarea { min-height: 4rem; resize: vertical; }
 .balance__people li { display: flex; flex-wrap: wrap; align-items: baseline; gap: .4rem; }
 .balance__net--plus { color: var(--fp-ok); }
 .balance__net--minus { color: var(--fp-warn); }
+
+/* Bring-list matrix: tighter columns with a grey rule between them.
+   The items are short words, so the default table padding spread them so far
+   apart that a phone showed two columns and a lot of nothing. The vertical
+   line does the separating that the whitespace used to. */
+.grid--matrix th, .grid--matrix td { padding-left: .3rem; padding-right: .3rem; }
+.grid--matrix thead th + th,
+.grid--matrix tbody td + td,
+.grid--matrix tfoot th + th,
+.grid--matrix tfoot td + td { border-left: 1px solid var(--fp-border); }
+.grid--matrix thead th { font-size: .86rem; line-height: 1.15; vertical-align: bottom; }
+/* The first column (the names) keeps its breathing room: it is the only
+   column with long text in it. */
+.grid--matrix .sticky-col { padding-left: .5rem; padding-right: .7rem; }
+
+/* Status pills on the balance lines. */
+.pill--owe { border-color: var(--fp-warn); color: var(--fp-warn); }

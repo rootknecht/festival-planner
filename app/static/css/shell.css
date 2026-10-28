@@ -163,8 +163,20 @@ body:has(.toolbar) .content { margin-left: 5.5rem; }
    what it looked like. grid-auto-rows: 1fr makes all rows equal instead. */
 .cars {
   display: grid; gap: var(--fp-gap-m);
-  grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   grid-auto-rows: 1fr;
+}
+/* Exactly two, then exactly three per row — not "as many as fit".
+   minmax(0, 1fr) rather than a bare 1fr is the important part: 1fr means
+   minmax(AUTO, 1fr), and an auto minimum is content-based, so one car with a
+   long departure address silently widened its own column and shrank the
+   others. That is why the third box came out slightly smaller. A zero minimum
+   lets every column be exactly the same width and the text wrap instead. */
+@media (min-width: 46rem) {
+  .cars { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 68rem) {
+  .cars { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 .car { display: flex; flex-direction: column; }
 /* The generic ".card + .card { margin-top }" is for cards STACKED in a

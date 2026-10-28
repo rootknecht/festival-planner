@@ -37,6 +37,44 @@
       if (field) field.focus();
     });
   });
+
+  // A Cancel button on every reveal form.
+  //
+  // Generated here rather than written into a dozen templates: it is the same
+  // button every time, and a new form added next month gets one for free
+  // instead of being the one that silently does not. Opening a form to look
+  // at it and then wanting out is the common case, and on a phone the only
+  // alternative was scrolling back to the summary line to collapse it.
+  //
+  // Forms with nothing to fill in are skipped — "I paid this" and the delete
+  // crosses are single-action forms where a Cancel button would mean nothing.
+  // Without JavaScript nothing is lost: the <details> still collapses on its
+  // own summary, which is the same escape route.
+  function labelForCancel() {
+    // The page carries its own translation, so this works in German too
+    // without shipping a second string table to the browser.
+    var node = document.querySelector("[data-cancel-label]");
+    return (node && node.getAttribute("data-cancel-label")) || "Cancel";
+  }
+
+  document.querySelectorAll("details.reveal form").forEach(function (form) {
+    if (!form.querySelector("input:not([type=hidden]):not([type=submit]), select, textarea")) {
+      return;
+    }
+    var submit = form.querySelector("button:not([type=button]):not([formaction])");
+    if (!submit) return;
+
+    var cancel = document.createElement("button");
+    cancel.type = "button";
+    cancel.className = "btn btn--small";
+    cancel.textContent = labelForCancel();
+    cancel.addEventListener("click", function () {
+      form.reset();
+      var box = form.closest("details.reveal");
+      if (box) box.open = false;
+    });
+    submit.insertAdjacentElement("afterend", cancel);
+  });
 })();
 
 // "Add option" for the poll form: clone the last field rather than building

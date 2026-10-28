@@ -7,7 +7,7 @@
 <section class="card oneliner">
   <span class="oneliner__item">{{ icon("tent") }} {{ festival.address_text or _("location to be announced") }}</span>
   <span class="oneliner__sep">—</span>
-  <span class="oneliner__item">{{ icon("beerglass") }} {{ ngettext("%(n)s drinker", "%(n)s drinkers", summary.people) % {"n": summary.people} }}</span>
+  <span class="oneliner__item">{{ icon("drinker") }} {{ ngettext("%(n)s drinker", "%(n)s drinkers", summary.people) % {"n": summary.people} }}</span>
   <span class="oneliner__sep">—</span>
   <span class="oneliner__item">{{ icon("car") }} {{ ngettext("%(n)s car", "%(n)s cars", summary.cars) % {"n": summary.cars} }}</span>
   {% if summary.days is not none %}

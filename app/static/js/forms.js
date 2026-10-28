@@ -59,3 +59,20 @@
     });
   });
 })();
+
+// Show only the split panel that matches the chosen mode. Without JavaScript
+// every panel stays visible and the form still works — the server decides
+// which inputs it reads from the mode, so an unused panel is harmless.
+(function () {
+  "use strict";
+  var select = document.querySelector("[data-split-mode]");
+  if (!select) return;
+  var panels = document.querySelectorAll("[data-split-panel]");
+  function sync() {
+    panels.forEach(function (panel) {
+      panel.hidden = panel.getAttribute("data-split-panel") !== select.value;
+    });
+  }
+  select.addEventListener("change", sync);
+  sync();
+})();

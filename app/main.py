@@ -17,6 +17,7 @@ from app.config import Settings, get_settings
 from app.routes import auth as auth_routes
 from app.routes import bringlist as bringlist_routes
 from app.routes import chat as chat_routes
+from app.routes import expenses as expense_routes
 from app.routes import festivals as festival_routes
 from app.routes import forum as forum_routes
 from app.routes import invites as invite_routes
@@ -96,6 +97,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(profile_routes.router)
     app.include_router(pwa_routes.router)
     app.include_router(bringlist_routes.router)
+    app.include_router(expense_routes.router)
     app.include_router(transport_routes.router)
     app.include_router(poll_routes.router)
     app.include_router(chat_routes.router)

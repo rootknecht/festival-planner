@@ -1,0 +1,198 @@
+{% extends "festival_base.html" %}
+{% from "_icons.html" import icon %}
+{% block title %}{{ _("Expenses") }} — {{ festival.name }}{% endblock %}
+{% block content %}
+<div data-ws="/festivals/{{ festival.id }}/ws" data-tool="expenses" hidden></div>
+
+{% if error %}<p class="alert alert--error" role="alert">{{ error }}</p>{% endif %}
+
+{% macro money(cents) %}{{ "%.2f"|format(cents / 100) | replace(".", ",") }} €{% endmacro %}
+
+{# Your own position first: the question people open this page with is "what
+   do I owe and who owes me", not "what did the group spend". #}
+<section class="card">
+  <h2>{{ _("Your balance") }}</h2>
+  {% if balance.has_anything %}
+  <p class="balance">
+    {% if balance.net_cents > 0 %}
+    <span class="balance__net balance__net--plus">+ {{ money(balance.net_cents) }}</span>
+    <span class="hint">{{ _("in your favour") }}</span>
+    {% elif balance.net_cents < 0 %}
+    <span class="balance__net balance__net--minus">− {{ money(-balance.net_cents) }}</span>
+    <span class="hint">{{ _("you still owe") }}</span>
+    {% else %}
+    <span class="balance__net">{{ money(0) }}</span>
+    <span class="hint">{{ _("even, but some confirmations are missing") }}</span>
+    {% endif %}
+  </p>
+
+  {% if balance.owes %}
+  <h3>{{ _("You owe") }}</h3>
+  <ul class="debts">
+    {% for debt in balance.owes %}
+    <li class="debt{% if debt.state == 'paid' %} debt--waiting{% endif %}">
+      <span>{{ money(debt.cents) }} {{ _("to") }} <strong>{{ debt.other_name }}</strong>
+        <span class="hint">{{ debt.what }}</span></span>
+      {% if debt.state == 'paid' %}
+      <span class="pill">{{ _("waiting for confirmation") }}</span>
+      {% elif not festival.is_archived %}
+      <form method="post" action="/festivals/{{ festival.id }}/expenses/shares/{{ debt.share_id }}/paid" class="inline">
+        <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+        <button class="btn btn--small">{{ _("I paid this") }}</button>
+      </form>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  {% if balance.owed %}
+  <h3>{{ _("Owed to you") }}</h3>
+  <ul class="debts">
+    {% for debt in balance.owed %}
+    <li class="debt{% if debt.state == 'paid' %} debt--waiting{% endif %}">
+      <span>{{ money(debt.cents) }} {{ _("from") }} <strong>{{ debt.other_name }}</strong>
+        <span class="hint">{{ debt.what }}</span></span>
+      {% if debt.state == 'paid' and not festival.is_archived %}
+      {# Only you can close this out — that is the whole point of the two-step
+         handshake: nobody declares their own debt settled. #}
+      <form method="post" action="/festivals/{{ festival.id }}/expenses/shares/{{ debt.share_id }}/received" class="inline">
+        <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+        <button class="btn btn--small btn--primary">{{ _("Received") }}</button>
+      </form>
+      {% else %}
+      <span class="pill">{{ _("open") }}</span>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  {% else %}
+  <p class="hint">{{ _("Nothing outstanding. Either nobody has spent anything yet, or everything is settled.") }}</p>
+  {% endif %}
+</section>
+
+{% if not festival.is_archived and my_participant_id %}
+<section class="card">
+  <details class="reveal">
+    <summary class="btn btn--primary">{{ icon("plus") }} {{ _("Add a cost") }}</summary>
+    <form method="post" action="/festivals/{{ festival.id }}/expenses" class="stack">
+      <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+      {# Always your own name: one person must not be able to invent a debt for
+         somebody else. #}
+      <input type="hidden" name="payer_participant_id" value="{{ my_participant_id }}">
+      <label for="description">{{ _("What did you pay for?") }}</label>
+      <input id="description" name="description" type="text" maxlength="160" required
+             placeholder="{{ _('Crate of beer, firewood, fuel …') }}">
+      <label for="amount">{{ _("Amount in euro") }}</label>
+      <input id="amount" name="amount" type="text" inputmode="decimal" required
+             placeholder="12,50">
+      <label for="spent_on">{{ _("Date (optional)") }}</label>
+      <input id="spent_on" name="spent_on" type="date">
+
+      <label for="split_mode">{{ _("Split") }}</label>
+      <select id="split_mode" name="split_mode" data-split-mode>
+        <option value="equal">{{ _("Equally between everyone") }}</option>
+        <option value="selection">{{ _("Equally between a selection") }}</option>
+        <option value="exact">{{ _("A specific amount each") }}</option>
+      </select>
+
+      <div data-split-panel="selection" hidden>
+        <div class="row">
+          <button type="button" class="btn btn--small" data-select-all="#split-selection">{{ _("Select all") }}</button>
+          <button type="button" class="btn btn--small" data-select-none="#split-selection">{{ _("Select none") }}</button>
+        </div>
+        <ul class="checks" id="split-selection">
+          {% for participant in participants %}
+          <li><label class="check">
+            <input type="checkbox" name="share_ids" value="{{ participant.id }}" checked>
+            {{ participant.display_name }}
+          </label></li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <div data-split-panel="exact" hidden>
+        <ul class="checks">
+          {% for participant in participants %}
+          <li class="row row--between">
+            <label for="exact-{{ participant.id }}">{{ participant.display_name }}</label>
+            <input type="hidden" name="exact_participant_ids" value="{{ participant.id }}">
+            <input id="exact-{{ participant.id }}" name="exact_amounts" type="text"
+                   inputmode="decimal" class="exactfield" placeholder="0,00">
+          </li>
+          {% endfor %}
+        </ul>
+        <p class="hint">{{ _("These have to add up to the total — leave somebody empty if they owe nothing.") }}</p>
+      </div>
+
+      <label for="note">{{ _("Note (optional)") }}</label>
+      <input id="note" name="note" type="text" maxlength="400">
+      <button class="btn btn--primary">{{ _("Save cost") }}</button>
+    </form>
+  </details>
+</section>
+{% endif %}
+
+<section class="card">
+  <h2>{{ _("All costs") }}</h2>
+  {% if expenses %}
+  <ul class="expenses">
+    {% for expense in expenses %}
+    <li class="expense{% if expense.settled %} expense--settled{% endif %}">
+      <div class="row row--between">
+        <span>
+          <strong>{{ expense.description }}</strong> · {{ money(expense.amount_cents) }}
+          <span class="hint">{{ _("paid by") }} {{ expense.payer.display_name }}</span>
+          {% if expense.spent_on %}<span class="hint">{{ expense.spent_on.strftime("%d.%m.%Y") }}</span>{% endif %}
+        </span>
+        {% if not festival.is_archived and (membership.is_admin or expense.payer_participant_id == my_participant_id) %}
+        <form method="post" action="/festivals/{{ festival.id }}/expenses/{{ expense.id }}/delete" class="inline">
+          <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+          <button class="linkbtn" title="{{ _('Remove') }}">&#10005;</button>
+        </form>
+        {% endif %}
+      </div>
+      {% if expense.note %}<p class="hint">{{ expense.note }}</p>{% endif %}
+      <ul class="shares">
+        {% for share in expense.shares %}
+        {% if share.participant_id != expense.payer_participant_id %}
+        <li class="share share--{{ share.state }}">
+          {{ share.participant.display_name }} · {{ money(share.amount_cents) }}
+          {% if share.state == 'confirmed' %}<span class="pill">{{ _("settled") }}</span>
+          {% elif share.state == 'paid' %}<span class="pill">{{ _("paid, not confirmed") }}</span>
+          {% else %}<span class="pill">{{ _("open") }}</span>{% endif %}
+        </li>
+        {% endif %}
+        {% endfor %}
+      </ul>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="hint">{{ _("Nobody has entered a cost yet.") }}</p>
+  {% endif %}
+</section>
+
+<section class="card">
+  <h2>{{ _("Who stands where") }}</h2>
+  <ul class="names">
+    {% for participant in participants %}
+    {% set net = totals.get(participant.id, 0) %}
+    <li class="name">
+      {{ participant.display_name }} ·
+      {% if net > 0 %}<span class="balance__net--plus">+ {{ money(net) }}</span>
+      {% elif net < 0 %}<span class="balance__net--minus">− {{ money(-net) }}</span>
+      {% else %}<span class="hint">{{ _("even") }}</span>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  <p class="hint">{{ _("A plus means the group still owes this person.") }}</p>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/live.js" defer></script>
+<script src="/static/js/forms.js" defer></script>
+{% endblock %}

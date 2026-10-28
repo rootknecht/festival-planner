@@ -22,11 +22,17 @@ TEMPLATES: dict[str, str] = {
     "change.bring.assigned": N_("{actor} noted that you bring {item}."),
     "change.bring.changed": N_("{actor} changed your amount for {item}."),
     "change.bring.cleared": N_("{actor} cleared your entry for {item}."),
+    # Expenses. The amount is included because "you owe Kai something" is not
+    # actionable and the dashboard block has to stand on its own.
+    "change.expense.added": N_("{actor} paid for {what} — your share is {amount}."),
+    "change.expense.paid": N_("{actor} says they paid you {amount} for {what}."),
+    "change.expense.received": N_("{actor} confirmed your {amount} for {what}."),
 }
 
 TOOL_PATHS = {
     "transport": "transport",
     "bringlist": "bringlist",
+    "expenses": "expenses",
     "chat": "chat",
     "polls": "polls",
     "forum": "forum",

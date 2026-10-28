@@ -37,12 +37,10 @@
 
     {% if not entry.closed and not festival.is_archived %}
     <div class="row">
-      <button class="btn btn--primary">{{ _("Save my answer") }}</button>
-      {% if entry.poll.created_by == user.id or membership.is_admin %}
-      <button class="btn" formaction="/festivals/{{ festival.id }}/polls/{{ entry.poll.id }}/close">
-        {{ _("Close poll") }}
-      </button>
-      {% endif %}
+      {# No "Close poll" here any more: closing lives in the admin's "Edit
+         polls" panel, next to reopening and deleting, so one poll does not
+         offer the same action in two places. #}
+      <button class="btn btn--small btn--primary">{{ _("Save my answer") }}</button>
     </div>
     {% endif %}
   </form>
@@ -61,7 +59,7 @@
 <section class="card">
   <div class="row">
   <details class="reveal">
-    <summary class="btn btn--primary">{{ icon("plus") }} {{ _("New poll") }}</summary>
+    <summary class="btn btn--small btn--primary">{{ icon("plus") }} {{ _("New poll") }}</summary>
   <form method="post" action="/festivals/{{ festival.id }}/polls" class="stack">
     <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
     <label for="question">{{ _("Question") }}</label>

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Festival Planner VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-28 16:27+0100\n"
+"POT-Creation-Date: 2026-10-28 16:34+0100\n"
 "PO-Revision-Date: 2026-10-27 14:26+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: de\n"
@@ -270,7 +270,7 @@ msgstr "warte auf Bestätigung"
 
 #: app/templates/festivals/dashboard.html:51
 #: app/templates/tools/expenses.html:34 app/templates/tools/expenses.html:246
-#: app/templates/tools/polls.html:102
+#: app/templates/tools/polls.html:100
 msgid "open"
 msgstr "offen"
 
@@ -749,7 +749,7 @@ msgstr "Thema starten"
 msgid "This part is not built yet."
 msgstr "Dieser Teil ist noch nicht gebaut."
 
-#: app/templates/tools/polls.html:10 app/templates/tools/polls.html:102
+#: app/templates/tools/polls.html:10 app/templates/tools/polls.html:100
 msgid "closed"
 msgstr "geschlossen"
 
@@ -757,79 +757,75 @@ msgstr "geschlossen"
 msgid "votes"
 msgstr "Stimmen"
 
-#: app/templates/tools/polls.html:40
+#: app/templates/tools/polls.html:43
 msgid "Save my answer"
 msgstr "Antwort speichern"
 
-#: app/templates/tools/polls.html:43
-msgid "Close poll"
-msgstr "Abstimmung schließen"
-
-#: app/templates/tools/polls.html:51
+#: app/templates/tools/polls.html:49
 msgid "Still missing:"
 msgstr "Es fehlen noch:"
 
-#: app/templates/tools/polls.html:56
+#: app/templates/tools/polls.html:54
 msgid "No polls yet."
 msgstr "Noch keine Abstimmungen."
 
-#: app/templates/tools/polls.html:64
+#: app/templates/tools/polls.html:62
 msgid "New poll"
 msgstr "Neue Abstimmung"
 
-#: app/templates/tools/polls.html:67
+#: app/templates/tools/polls.html:65
 msgid "Question"
 msgstr "Frage"
 
-#: app/templates/tools/polls.html:69
+#: app/templates/tools/polls.html:67
 msgid "Options"
 msgstr "Optionen"
 
-#: app/templates/tools/polls.html:74
+#: app/templates/tools/polls.html:72
 msgid "First option"
 msgstr "Erste Option"
 
-#: app/templates/tools/polls.html:76
+#: app/templates/tools/polls.html:74
 msgid "Second option"
 msgstr "Zweite Option"
 
-#: app/templates/tools/polls.html:79
+#: app/templates/tools/polls.html:77
 msgid "Add option"
 msgstr "Option hinzufügen"
 
-#: app/templates/tools/polls.html:81
+#: app/templates/tools/polls.html:79
 msgid "Answers"
 msgstr "Antworten"
 
-#: app/templates/tools/polls.html:83
+#: app/templates/tools/polls.html:81
 msgid "One option only"
 msgstr "Nur eine Option"
 
-#: app/templates/tools/polls.html:84
+#: app/templates/tools/polls.html:82
 msgid "Several options allowed"
 msgstr "Mehrere Optionen erlaubt"
 
-#: app/templates/tools/polls.html:86
+#: app/templates/tools/polls.html:84
 msgid "Closes on (optional)"
 msgstr "Endet am (optional)"
 
-#: app/templates/tools/polls.html:88
+#: app/templates/tools/polls.html:86
 msgid "Ask everyone"
 msgstr "Alle fragen"
 
-#: app/templates/tools/polls.html:96
+#: app/templates/tools/polls.html:94
 msgid "Edit polls"
 msgstr "Umfragen bearbeiten"
 
-#: app/templates/tools/polls.html:108
+#: app/templates/tools/polls.html:106
 msgid "Reopen"
 msgstr "Wieder öffnen"
 
-#: app/templates/tools/polls.html:113
+#: app/templates/tools/polls.html:111
 msgid "Close"
 msgstr "Schließen"
 
-#: app/templates/tools/polls.html:118
+#: app/templates/tools/polls.html:116
 msgid "Delete this poll and every vote in it"
 msgstr "Umfrage mit allen Stimmen löschen"
 
@@ -1141,4 +1137,7 @@ msgstr "Gerade Linien zeigen die Reihenfolge der Halte, nicht den Straßenverlau
 
 #~ msgid "Add row"
 #~ msgstr "Zeile hinzufügen"
+
+#~ msgid "Close poll"
+#~ msgstr "Abstimmung schließen"
 

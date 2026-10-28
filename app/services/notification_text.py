@@ -27,6 +27,9 @@ TEMPLATES: dict[str, str] = {
     "change.expense.added": N_("{actor} paid for {what} — your share is {amount}."),
     "change.expense.paid": N_("{actor} says they paid you {amount} for {what}."),
     "change.expense.received": N_("{actor} confirmed your {amount} for {what}."),
+    # Settling happens per PERSON, so these carry a total instead of an item.
+    "change.expense.paid.total": N_("{actor} says they paid you {amount}."),
+    "change.expense.received.total": N_("{actor} confirmed receiving your {amount}."),
 }
 
 TOOL_PATHS = {

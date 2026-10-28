@@ -312,3 +312,49 @@ async def confirm_received(
         return _page(request, db, user, festival_id, error=exc.detail)
     notify_change(festival_id, "expenses")
     return RedirectResponse(f"/festivals/{festival_id}/expenses", status_code=303)
+
+
+@router.post("/festivals/{festival_id}/expenses/settle/{other_id}/paid")
+async def settle_paid(
+    request: Request,
+    festival_id: int,
+    other_id: int,
+    user: User = Depends(require_user),
+    db: DbSession = Depends(get_db),
+) -> Response:
+    """"I have paid this person everything I owe them." One transfer, one click."""
+    require_writable(require_membership(db, user, festival_id))
+    mine = _my_participant_id(db, festival_id, user)
+    if mine is None:
+        raise HTTPException(status_code=403, detail="not a participant")
+    try:
+        expenses.settle_with_person(
+            db, festival_id=festival_id, me=mine, other=other_id, actor=user
+        )
+    except expenses.ExpenseRefused as exc:
+        return _page(request, db, user, festival_id, error=exc.detail)
+    notify_change(festival_id, "expenses")
+    return RedirectResponse(f"/festivals/{festival_id}/expenses", status_code=303)
+
+
+@router.post("/festivals/{festival_id}/expenses/settle/{other_id}/received")
+async def settle_received(
+    request: Request,
+    festival_id: int,
+    other_id: int,
+    user: User = Depends(require_user),
+    db: DbSession = Depends(get_db),
+) -> Response:
+    """"Yes, their money arrived." Only the creditor can press this."""
+    require_writable(require_membership(db, user, festival_id))
+    mine = _my_participant_id(db, festival_id, user)
+    if mine is None:
+        raise HTTPException(status_code=403, detail="not a participant")
+    try:
+        expenses.confirm_from_person(
+            db, festival_id=festival_id, me=mine, other=other_id, actor=user
+        )
+    except expenses.ExpenseRefused as exc:
+        return _page(request, db, user, festival_id, error=exc.detail)
+    notify_change(festival_id, "expenses")
+    return RedirectResponse(f"/festivals/{festival_id}/expenses", status_code=303)

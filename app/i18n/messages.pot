@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Festival Planner VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-28 13:57+0100\n"
+"POT-Creation-Date: 2026-10-28 14:12+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -575,7 +575,7 @@ msgid "I paid this"
 msgstr ""
 
 #: app/templates/tools/expenses.html:54
-msgid "They settled up"
+msgid "Has been paid"
 msgstr ""
 
 #: app/templates/tools/expenses.html:62

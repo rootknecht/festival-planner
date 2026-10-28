@@ -29,9 +29,9 @@
       <span class="bar bar--{{ ((tally / leader * 10) | round(0, 'floor') | int) if leader else 0 }}{% if tally and tally == leader %} bar--leading{% endif %}"
             role="img" aria-label="{{ tally }} {{ _('votes') }}"></span>
       <span class="option__count">{{ tally }}</span>
-      {% if entry.votes.get(option.id) %}
-      <span class="hint">{{ entry.votes[option.id] | join(", ") }}</span>
-      {% endif %}
+      {# No voter names on the results: who voted for what is nobody's
+         business, and the bars are easier to read without them. Who has NOT
+         voted yet still shows below — that is the number that needs chasing. #}
     </label>
     {% endfor %}
 

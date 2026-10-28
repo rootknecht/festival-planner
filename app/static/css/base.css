@@ -85,6 +85,10 @@ a:focus-visible {
 
 .btn {
   display: inline-block;
+  /* A button label never wraps. In a narrow card "Save changes" split across
+     two lines and the button came out 51px tall next to a 30px Cancel — it
+     read as a different size when it was only a different shape. */
+  white-space: nowrap;
   padding: 0.65rem 1.1rem;
   border: 1px solid var(--fp-border);
   border-radius: var(--fp-radius-s);

@@ -127,7 +127,7 @@
         <option value="{{ participant.id }}">{{ participant.display_name }}</option>
         {% endfor %}
       </select>
-      <button class="btn">{{ _("Add passenger") }}</button>
+      <button class="btn btn--small">{{ _("Add passenger") }}</button>
     </form>
   </details>
   {% endif %}
@@ -167,7 +167,7 @@
           <option value="{{ seat.participant.id }}">{{ seat.participant.display_name }}</option>
           {% endfor %}
         </select>
-        <button class="btn">{{ _("Add stop") }}</button>
+        <button class="btn btn--small">{{ _("Add stop") }}</button>
       </form>
     </details>
 
@@ -208,7 +208,7 @@
           <input type="checkbox" name="clear_departure" value="1"> {{ _("Clear the departure time") }}
         </label>
         {% endif %}
-        <button class="btn btn--primary">{{ _("Save changes") }}</button>
+        <button class="btn btn--small btn--primary">{{ _("Save changes") }}</button>
       </form>
     </details>
   </div>
@@ -259,7 +259,7 @@
         <input id="when" name="departure_date" type="date" aria-label="{{ _('Departure date') }}">
         <input name="departure_time" type="time" step="300" aria-label="{{ _('Departure time') }}">
       </div>
-      <button class="btn btn--primary">{{ _("Add car") }}</button>
+      <button class="btn btn--small btn--primary">{{ _("Add car") }}</button>
     </form>
   </details>
   {% if membership.is_admin and not festival.is_archived and meeting_points | length < max_meeting_points %}
@@ -291,7 +291,7 @@
           {% endfor %}
         </ul>
         {% endif %}
-        <button class="btn btn--primary">{{ _("Add meeting point") }}</button>
+        <button class="btn btn--small btn--primary">{{ _("Add meeting point") }}</button>
       </form>
     </details>
   {% endif %}
@@ -350,7 +350,7 @@
           </label></li>
           {% endfor %}
         </ul>
-        <button class="btn btn--primary">{{ _("Save selection") }}</button>
+        <button class="btn btn--small btn--primary">{{ _("Save selection") }}</button>
       </form>
     </details>
     {% endif %}

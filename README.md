@@ -99,3 +99,45 @@ a consistent copy while the app is running; plain `cp` does not.
 ## Licence
 
 AGPL-3.0-or-later. See `LICENSE`.
+
+## Email
+
+The app never depends on email. Every invitation also yields a copy-paste link,
+and an admin can issue a password-reset link straight from the dashboard. Mail
+is a convenience, and the app is built so that losing it costs nobody access.
+
+Configure it with five values:
+
+    FP_SMTP_HOST, FP_SMTP_PORT, FP_SMTP_USER, FP_SMTP_PASSWORD, FP_SMTP_FROM
+
+and optionally `FP_SMTP_REPLY_TO`. Set that last one whenever `FP_SMTP_FROM` is
+a `noreply@` on a domain with no MX records: authenticating a domain for
+*sending* does not give it a mailbox, and people do reply to invitations.
+
+### If your host blocks outbound SMTP
+
+Many providers block ports 25, 465 and 587 outbound. Test from the machine that
+will actually send, not from your laptop:
+
+    timeout 6 bash -c 'cat < /dev/null > /dev/tcp/smtp.example.org/587' && echo open || echo blocked
+
+If they are blocked, a transactional relay on port 2525 is the usual way out.
+Check the relay's own documentation for which ports it offers.
+
+### Traps worth knowing before you debug the wrong thing
+
+- **"Unauthorized IP" arrives AFTER a successful login.** Several relays block
+  unknown source IPs by default, and the resulting error reads like a bad
+  password. Authorise the sending IP in the relay's security settings — and
+  note that a container usually egresses via its host's public address, not
+  its own, so check the real outbound IP rather than assuming.
+- **Relays may add a `List-Unsubscribe` header to transactional mail.** Gmail
+  and Apple Mail render it as an Unsubscribe button, and a recipient who taps
+  it on an *invitation* is then suppressed for *password resets* too — the
+  relay keeps accepting the message and silently drops it, so the application
+  sees success. Removing the header is often a paid-plan feature. This is the
+  main reason the copy-paste link exists on every invite; check the relay's
+  blocklist when somebody insists a mail never arrived.
+- **A multi-line secret cannot live in a `.env` file.** Shell-sourced env files
+  are line-based. The VAPID private key is therefore a *file path*
+  (`FP_VAPID_PRIVATE_KEY_FILE`), not a value.

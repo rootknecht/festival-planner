@@ -517,7 +517,7 @@ def test_the_dashboard_shows_the_total_balance(trip, factory) -> None:
     add_cost(kai, festival_id, people["Kai"].id, amount="30,00")
 
     kai_dashboard = kai.get(f"/festivals/{festival_id}").text
-    assert "Money" in kai_dashboard
+    assert "Finance" in kai_dashboard
     assert "10,00" in kai_dashboard           # per person, from each of two
     assert "from Anna" in kai_dashboard or "Anna" in kai_dashboard
     assert "owed to you" not in kai_dashboard  # the lump-sum block is gone
@@ -529,7 +529,7 @@ def test_the_dashboard_shows_the_total_balance(trip, factory) -> None:
 
 def test_the_dashboard_stays_quiet_when_nothing_is_owed(trip, factory) -> None:
     festival_id, owner, kai, anna = trip
-    assert "Money" not in kai.get(f"/festivals/{festival_id}").text
+    assert "Finance" not in kai.get(f"/festivals/{festival_id}").text
 
 
 def test_the_payer_can_correct_a_cost(trip, factory) -> None:

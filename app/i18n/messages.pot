@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Festival Planner VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-28 17:16+0100\n"
+"POT-Creation-Date: 2026-10-28 19:48+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -249,7 +249,7 @@ msgid "This festival is archived — it can be read but not changed."
 msgstr ""
 
 #: app/templates/festivals/dashboard.html:34
-msgid "Money"
+msgid "Finance"
 msgstr ""
 
 #: app/templates/festivals/dashboard.html:42

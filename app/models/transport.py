@@ -19,11 +19,28 @@ from app.db import Base
 from app.models.festival import Participant
 from app.models.user import utcnow
 
-#: Built-in icon set — no uploads, so no file validation, no EXIF, no quota.
-CAR_ICONS = ("hatchback", "estate", "van", "bus", "camper", "motorbike")
-CAR_COLORS = ("red", "black", "white", "blue", "green", "yellow", "orange", "purple")
+#: Colour names are TRANSLATED at display time (see app/services/transport.py).
+#: Storing the English key keeps the database language-neutral — a German label
+#: written into the rows would have to be migrated the day someone adds French.
+CAR_COLORS = (
+    "red",
+    "black",
+    "white",
+    "silver",
+    "grey",
+    "blue",
+    "green",
+    "yellow",
+    "orange",
+    "purple",
+)
 MIN_SEATS = 1
-MAX_SEATS = 5
+MAX_SEATS = 9
+#: Car size is expressed by the LENGTH of the drawn icon rather than by a
+#: separate "type" field: a 2-seater and an 8-seater look different because they
+#: ARE different, and one less thing to pick when adding a car.
+SEAT_WIDTH_PX = 16
+ICON_BASE_PX = 34
 
 
 class Car(Base):
@@ -33,9 +50,8 @@ class Car(Base):
     festival_id: Mapped[int] = mapped_column(
         ForeignKey("festival.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    icon: Mapped[str] = mapped_column(String(24), nullable=False, default="hatchback")
     color: Mapped[str] = mapped_column(String(16), nullable=False, default="red")
-    #: Total seats INCLUDING the driver, 1–5.
+    #: Total seats INCLUDING the driver.
     seats_total: Mapped[int] = mapped_column(Integer, nullable=False, default=5)
     driver_participant_id: Mapped[int | None] = mapped_column(
         ForeignKey("participant.id", ondelete="SET NULL"), nullable=True
@@ -43,6 +59,10 @@ class Car(Base):
     departure_address: Mapped[str | None] = mapped_column(Text, nullable=True)
     departure_lat: Mapped[float | None] = mapped_column(Float, nullable=True)
     departure_lon: Mapped[float | None] = mapped_column(Float, nullable=True)
+    #: When this car leaves. Date and time are kept together because "Friday"
+    #: without an hour is useless for arranging a pickup, and a time without a
+    #: date is ambiguous when people travel on different days.
+    departure_at: Mapped[dt.datetime | None] = mapped_column(DateTime, nullable=True)
     created_by: Mapped[int | None] = mapped_column(
         ForeignKey("user.id", ondelete="SET NULL"), nullable=True
     )
@@ -59,7 +79,7 @@ class Car(Base):
     @property
     def label(self) -> str:
         who = self.driver.display_name if self.driver else "no driver"
-        return f"{self.color} {self.icon} ({who})"
+        return f"{self.color} car ({who})"
 
     @property
     def occupied(self) -> int:
@@ -68,6 +88,15 @@ class Car(Base):
     @property
     def free_seats(self) -> int:
         return max(0, self.seats_total - self.occupied)
+
+    @property
+    def is_full(self) -> bool:
+        return self.free_seats == 0
+
+    @property
+    def icon_width_px(self) -> int:
+        """Drawn width, so a bigger car looks bigger in the list."""
+        return ICON_BASE_PX + SEAT_WIDTH_PX * max(0, self.seats_total - 1)
 
 
 class CarSeat(Base):
@@ -108,6 +137,64 @@ class CarStop(Base):
 
     car: Mapped[Car] = relationship(back_populates="stops")
     participant: Mapped[Participant | None] = relationship()
+
+
+class MeetingPoint(Base):
+    """A shared gathering spot on the way, usually just before the festival.
+
+    Why this is not simply a CarStop on every car: cars do not all join. Some
+    people arrive a day later and have no reason to detour to a meeting point
+    that happened yesterday. So an admin defines the point once and then picks
+    which cars are expected there — "select all", then deselect the latecomers.
+
+    Capped at MAX_MEETING_POINTS by the route layer, not by the schema: the cap
+    is a product decision ("one before the motorway, one at the gate"), and a
+    database constraint would make raising it a migration.
+    """
+
+    __tablename__ = "meeting_point"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    festival_id: Mapped[int] = mapped_column(
+        ForeignKey("festival.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    name: Mapped[str] = mapped_column(String(80), nullable=False)
+    address: Mapped[str] = mapped_column(Text, nullable=False)
+    lat: Mapped[float | None] = mapped_column(Float, nullable=True)
+    lon: Mapped[float | None] = mapped_column(Float, nullable=True)
+    #: Optional: a meeting point with no agreed time is a place, not a plan,
+    #: but forcing one would block creating the point before the time is known.
+    meet_at: Mapped[dt.datetime | None] = mapped_column(DateTime, nullable=True)
+    position: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime, nullable=False, default=utcnow)
+
+    cars: Mapped[list[MeetingPointCar]] = relationship(
+        back_populates="meeting_point", cascade="all, delete-orphan"
+    )
+
+    @property
+    def car_ids(self) -> set[int]:
+        return {link.car_id for link in self.cars}
+
+
+class MeetingPointCar(Base):
+    """Which cars are expected at a meeting point."""
+
+    __tablename__ = "meeting_point_car"
+    __table_args__ = (
+        UniqueConstraint("meeting_point_id", "car_id", name="uq_meeting_point_car"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    meeting_point_id: Mapped[int] = mapped_column(
+        ForeignKey("meeting_point.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    car_id: Mapped[int] = mapped_column(
+        ForeignKey("car.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+
+    meeting_point: Mapped[MeetingPoint] = relationship(back_populates="cars")
+    car: Mapped[Car] = relationship()
 
 
 class GeocodeCache(Base):

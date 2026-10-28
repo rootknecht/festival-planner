@@ -7,6 +7,7 @@ future client all inherit it.
 
 from __future__ import annotations
 
+import datetime as dt
 from dataclasses import dataclass
 
 from fastapi import HTTPException, status
@@ -17,16 +18,18 @@ from app.models.festival import Participant
 from app.models.notification import NotificationKind, Tool
 from app.models.transport import (
     CAR_COLORS,
-    CAR_ICONS,
     MAX_SEATS,
     MIN_SEATS,
     Car,
     CarSeat,
     CarStop,
+    MeetingPoint,
+    MeetingPointCar,
 )
 from app.models.user import User
 from app.services.bringlist import log
 from app.services.notifications import notify_participant
+from app.translations import N_
 
 
 class SeatRefused(HTTPException):
@@ -85,14 +88,12 @@ def add_car(
     db: DbSession,
     *,
     festival_id: int,
-    icon: str,
     color: str,
     seats_total: int,
     driver: Participant | None,
     actor: User,
+    departure_at: dt.datetime | None = None,
 ) -> Car:
-    if icon not in CAR_ICONS:
-        icon = CAR_ICONS[0]
     if color not in CAR_COLORS:
         color = CAR_COLORS[0]
     seats_total = max(MIN_SEATS, min(MAX_SEATS, int(seats_total)))
@@ -102,15 +103,56 @@ def add_car(
 
     car = Car(
         festival_id=festival_id,
-        icon=icon,
         color=color,
         seats_total=seats_total,
         driver_participant_id=driver.id if driver else None,
+        departure_at=departure_at,
         created_by=actor.id,
     )
     db.add(car)
     db.flush()
     log(db, festival_id, "car", car.id, actor, f"added {car.label}")
+    db.commit()
+    return car
+
+
+def edit_car(
+    db: DbSession,
+    *,
+    car: Car,
+    color: str | None = None,
+    seats_total: int | None = None,
+    departure_at: dt.datetime | None = None,
+    clear_departure_at: bool = False,
+    actor: User,
+) -> Car:
+    """Change a car after the fact. Shrinking below the people in it is refused.
+
+    A silent kick-out would be the alternative, and losing your seat without
+    being told is worse than the edit failing.
+    """
+    changes: list[str] = []
+    if color is not None and color in CAR_COLORS and color != car.color:
+        changes.append(f"colour {car.color} -> {color}")
+        car.color = color
+    if seats_total is not None:
+        wanted = max(MIN_SEATS, min(MAX_SEATS, int(seats_total)))
+        if wanted != car.seats_total:
+            if wanted < car.occupied:
+                raise SeatRefused(
+                    "that would leave fewer seats than there are people in the car"
+                )
+            changes.append(f"seats {car.seats_total} -> {wanted}")
+            car.seats_total = wanted
+    if clear_departure_at:
+        if car.departure_at is not None:
+            changes.append("departure cleared")
+            car.departure_at = None
+    elif departure_at is not None and departure_at != car.departure_at:
+        changes.append(f"departure {departure_at.isoformat(timespec='minutes')}")
+        car.departure_at = departure_at
+    if changes:
+        log(db, car.festival_id, "car", car.id, actor, "; ".join(changes))
     db.commit()
     return car
 
@@ -226,3 +268,144 @@ def map_points(car: Car, festival_lat: float | None, festival_lon: float | None)
     if festival_lat is not None and festival_lon is not None:
         points.append(MapPoint("festival", festival_lat, festival_lon, "festival"))
     return points
+
+
+# --- colour names -----------------------------------------------------------
+
+#: Hex values for the drawn car icons and the map legend. Kept here rather than
+#: in CSS because the map legend and the SVG both need the same value, and a
+#: CSS variable is not readable from the Leaflet layer.
+COLOR_HEX = {
+    "red": "#c81f2a",
+    "black": "#15161a",
+    "white": "#f1efeb",
+    "silver": "#c9ccd1",
+    "grey": "#7c8088",
+    "blue": "#2563c8",
+    "green": "#2f8f4e",
+    "yellow": "#e0bb28",
+    "orange": "#e07a1f",
+    "purple": "#7b3fbf",
+}
+
+
+def color_labels(translate) -> list[tuple[str, str]]:
+    """(key, translated name) pairs for the colour picker, in list order.
+
+    The English key is what the database stores; only the label is translated,
+    so switching the interface language does not rewrite anybody's car.
+    """
+    names = {
+        "red": N_("Red"),
+        "black": N_("Black"),
+        "white": N_("White"),
+        "silver": N_("Silver"),
+        "grey": N_("Grey"),
+        "blue": N_("Blue"),
+        "green": N_("Green"),
+        "yellow": N_("Yellow"),
+        "orange": N_("Orange"),
+        "purple": N_("Purple"),
+    }
+    return [(key, translate(names[key])) for key in CAR_COLORS]
+
+
+# --- meeting points ---------------------------------------------------------
+
+MAX_MEETING_POINTS = 2
+
+
+def meeting_points_of(db: DbSession, festival_id: int) -> list[MeetingPoint]:
+    return list(
+        db.scalars(
+            select(MeetingPoint)
+            .where(MeetingPoint.festival_id == festival_id)
+            .order_by(MeetingPoint.position, MeetingPoint.id)
+        ).all()
+    )
+
+
+def add_meeting_point(
+    db: DbSession,
+    *,
+    festival_id: int,
+    name: str,
+    address: str,
+    meet_at: dt.datetime | None,
+    car_ids: list[int],
+    actor: User,
+) -> MeetingPoint:
+    existing = meeting_points_of(db, festival_id)
+    if len(existing) >= MAX_MEETING_POINTS:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"at most {MAX_MEETING_POINTS} meeting points",
+        )
+    if not name.strip() or not address.strip():
+        raise HTTPException(status_code=400, detail="name and address are required")
+
+    point = MeetingPoint(
+        festival_id=festival_id,
+        name=name.strip()[:80],
+        address=address.strip(),
+        meet_at=meet_at,
+        position=len(existing),
+    )
+    db.add(point)
+    db.flush()
+    set_meeting_point_cars(db, point=point, car_ids=car_ids, actor=actor, commit=False)
+    log(db, festival_id, "meeting_point", point.id, actor, f"added meeting point {point.name}")
+    db.commit()
+    return point
+
+
+def set_meeting_point_cars(
+    db: DbSession,
+    *,
+    point: MeetingPoint,
+    car_ids: list[int],
+    actor: User,
+    commit: bool = True,
+) -> MeetingPoint:
+    """Replace the car selection wholesale.
+
+    A car id from another festival is dropped rather than refused: the form is
+    rendered from this festival's cars, so a foreign id means a tampered or
+    stale request, and silently ignoring it cannot leak the other festival's
+    existence.
+    """
+    allowed = {car.id for car in cars_of(db, point.festival_id)}
+    wanted = {cid for cid in car_ids if cid in allowed}
+    current = point.car_ids
+
+    for link in list(point.cars):
+        if link.car_id not in wanted:
+            db.delete(link)
+    for car_id in wanted - current:
+        db.add(MeetingPointCar(meeting_point_id=point.id, car_id=car_id))
+
+    if wanted != current:
+        log(
+            db,
+            point.festival_id,
+            "meeting_point",
+            point.id,
+            actor,
+            f"{point.name}: {len(wanted)} of {len(allowed)} cars expected",
+        )
+    if commit:
+        db.commit()
+    return point
+
+
+def delete_meeting_point(db: DbSession, *, point: MeetingPoint, actor: User) -> None:
+    log(
+        db,
+        point.festival_id,
+        "meeting_point",
+        point.id,
+        actor,
+        f"removed meeting point {point.name}",
+    )
+    db.delete(point)
+    db.commit()

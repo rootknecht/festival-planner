@@ -204,3 +204,69 @@ textarea { min-height: 4rem; resize: vertical; }
   color: var(--fp-accent); margin: 0;
 }
 .countdown__label { margin: .35rem 0 0; color: var(--fp-muted); }
+
+/* Reveal-on-click forms. A <details> needs no JavaScript, is keyboard and
+   screen-reader friendly, and the summary IS the small button that was asked
+   for: fields appear only after a click. */
+.reveal > summary { cursor: pointer; display: inline-flex; align-items: center; gap: .35rem; }
+.reveal > summary::-webkit-details-marker { display: none; }
+.reveal > summary::marker { content: ""; }
+.reveal[open] > summary { margin-bottom: .6rem; }
+.reveal > form { border-left: 2px solid var(--fp-border); padding-left: .7rem; }
+.reveal--inline { display: inline-block; }
+.btn--small { padding: .25rem .55rem; font-size: .85rem; }
+.reveal > summary .icon { width: 16px; height: 16px; }
+
+/* Car drawn as a bar: length = seats, so size is visible without a type. */
+.carbar { position: relative; height: 22px; display: inline-block; flex: 0 0 auto; }
+.carbar__body {
+  position: absolute; inset: 0 0 4px 0; border-radius: 7px 9px 5px 5px;
+  background: var(--car-color); border: 1px solid rgba(0, 0, 0, .35);
+}
+.carbar__wheel {
+  position: absolute; bottom: 0; width: 7px; height: 7px; border-radius: 50%;
+  background: #111; border: 1px solid rgba(255, 255, 255, .25);
+}
+.carbar__wheel--front { right: 14%; }
+.carbar__wheel--rear { left: 14%; }
+.carbar--full .carbar__body { opacity: .45; }
+
+.pill {
+  display: inline-block; padding: .05rem .4rem; border-radius: 999px;
+  border: 1px solid var(--fp-border); font-size: .8rem;
+}
+.pill--full { border-color: var(--fp-accent); color: var(--fp-accent); }
+.pill--free { border-color: #2f8f4e; color: #3ba75f; }
+
+.checks { list-style: none; margin: .3rem 0; padding: 0; }
+.check { display: flex; align-items: center; gap: .4rem; }
+.meetpoint { padding: .5rem 0; border-top: 1px solid var(--fp-border); }
+.meetpoint:first-of-type { border-top: 0; }
+
+.legend { list-style: none; display: flex; flex-wrap: wrap; gap: .5rem .9rem; padding: .5rem 0 0; margin: 0; }
+.legend__item { display: flex; align-items: center; gap: .35rem; font-size: .9rem; }
+.legend__swatch { width: 14px; height: 14px; border-radius: 3px; border: 1px solid rgba(0,0,0,.35); }
+.legend__swatch--meet { background: transparent; border: 2px dashed var(--fp-muted); }
+
+/* Car size and colour as classes — see the note in transport.html:
+   the CSP forbids inline styles, so these cannot be style attributes.
+   Generated from the model's own constants so they cannot drift. */
+.carbar--seats-1 { width: 34px; }
+.carbar--seats-2 { width: 50px; }
+.carbar--seats-3 { width: 66px; }
+.carbar--seats-4 { width: 82px; }
+.carbar--seats-5 { width: 98px; }
+.carbar--seats-6 { width: 114px; }
+.carbar--seats-7 { width: 130px; }
+.carbar--seats-8 { width: 146px; }
+.carbar--seats-9 { width: 162px; }
+.carcolor--red .carbar__body, .legend__swatch.carcolor--red { background: #c81f2a; }
+.carcolor--black .carbar__body, .legend__swatch.carcolor--black { background: #15161a; }
+.carcolor--white .carbar__body, .legend__swatch.carcolor--white { background: #f1efeb; }
+.carcolor--silver .carbar__body, .legend__swatch.carcolor--silver { background: #c9ccd1; }
+.carcolor--grey .carbar__body, .legend__swatch.carcolor--grey { background: #7c8088; }
+.carcolor--blue .carbar__body, .legend__swatch.carcolor--blue { background: #2563c8; }
+.carcolor--green .carbar__body, .legend__swatch.carcolor--green { background: #2f8f4e; }
+.carcolor--yellow .carbar__body, .legend__swatch.carcolor--yellow { background: #e0bb28; }
+.carcolor--orange .carbar__body, .legend__swatch.carcolor--orange { background: #e07a1f; }
+.carcolor--purple .carbar__body, .legend__swatch.carcolor--purple { background: #7b3fbf; }

@@ -10,7 +10,14 @@ from app.config import Settings
 from app.db import Base, reset_engine_for_tests
 from app.main import create_app
 from app.models.festival import Participant
-from app.models.transport import Car, CarSeat, CarStop, GeocodeCache
+from app.models.transport import (
+    MAX_SEATS,
+    Car,
+    CarSeat,
+    CarStop,
+    GeocodeCache,
+    MeetingPoint,
+)
 from app.models.user import User
 from app.security.csrf import CSRF_COOKIE
 from app.services import geocode as geocode_service
@@ -93,12 +100,12 @@ def people(factory, festival_id) -> dict[str, Participant]:
     return {row.display_name: row for row in rows}
 
 
-def add_car(client, festival_id, driver_id=None, seats=5, icon="van", color="blue"):
+def add_car(client, festival_id, driver_id=None, seats=5, color="blue", departure_at=""):
     return client.post(
         f"/festivals/{festival_id}/transport/cars",
         data={
-            "icon": icon,
             "color": color,
+            "departure_at": departure_at,
             "seats_total": seats,
             "driver_participant_id": str(driver_id or ""),
             "csrf_token": csrf(client),
@@ -146,7 +153,7 @@ def test_a_person_cannot_sit_in_two_cars(festival, factory) -> None:
     first = only_car(factory)
     seat(owner, festival_id, first.id, who["Kai"].id)
 
-    add_car(owner, festival_id, None, seats=5, icon="bus", color="green")
+    add_car(owner, festival_id, None, seats=5, color="green")
     with factory() as db:
         second = db.scalars(select(Car).order_by(Car.id.desc())).first()
     assert seat(owner, festival_id, second.id, who["Kai"].id).status_code == 409
@@ -156,13 +163,14 @@ def test_a_driver_of_one_car_cannot_drive_another(festival, factory) -> None:
     festival_id, owner = festival
     who = people(factory, festival_id)
     add_car(owner, festival_id, who["Owner"].id)
-    assert add_car(owner, festival_id, who["Owner"].id, icon="bus").status_code == 409
+    assert add_car(owner, festival_id, who["Owner"].id).status_code == 409
 
 
-def test_seat_limits_are_clamped_to_one_through_five(festival, factory) -> None:
+def test_seat_limits_are_clamped_to_the_allowed_range(festival, factory) -> None:
+    """A minibus is a real thing; 99 seats is a typo."""
     festival_id, owner = festival
     add_car(owner, festival_id, None, seats=99)
-    assert only_car(factory).seats_total == 5
+    assert only_car(factory).seats_total == MAX_SEATS
 
 
 def test_unassigned_people_are_listed_until_they_get_a_seat(festival, factory) -> None:
@@ -354,3 +362,208 @@ def test_the_venue_address_is_geocoded_when_it_changes(festival, factory,
               "csrf_token": csrf(owner)},
     )
     assert no_live_geocoding == ["Wacken, Germany"]
+
+
+# --- v0.2: departure time, editing, meeting points --------------------------
+
+
+def edit_car(client, festival_id, car_id, **fields):
+    data = {"csrf_token": csrf(client), **fields}
+    return client.post(f"/festivals/{festival_id}/transport/cars/{car_id}/edit", data=data)
+
+
+def add_meeting_point(client, festival_id, name="Gate services", address="Dinkelsbuehl",
+                      meet_at="", car_ids=None):
+    # Repeated form keys go in as a LIST VALUE. httpx rejects a list of tuples
+    # for data= and silently sends it as raw bytes, which then fails CSRF for
+    # reasons that look nothing like the real cause.
+    data = {
+        "csrf_token": csrf(client),
+        "name": name,
+        "address": address,
+        "meet_at": meet_at,
+        "car_ids": [str(car_id) for car_id in (car_ids or [])],
+    }
+    return client.post(f"/festivals/{festival_id}/transport/meeting-points", data=data)
+
+
+def test_a_car_can_carry_a_departure_time(festival, factory) -> None:
+    festival_id, owner = festival
+    add_car(owner, festival_id, None, departure_at="2027-08-18T06:30")
+    car = only_car(factory)
+    assert car.departure_at is not None
+    assert car.departure_at.strftime("%Y-%m-%d %H:%M") == "2027-08-18 06:30"
+
+
+def test_a_half_typed_departure_is_treated_as_unset_not_as_an_error(festival, factory) -> None:
+    """Losing the whole form over a bad date would be worse than no date."""
+    festival_id, owner = festival
+    assert add_car(owner, festival_id, None, departure_at="2027-08").status_code == 303
+    assert only_car(factory).departure_at is None
+
+
+def test_a_car_stays_editable_after_creation(festival, factory) -> None:
+    festival_id, owner = festival
+    add_car(owner, festival_id, None, seats=4, color="blue")
+    car = only_car(factory)
+    assert edit_car(owner, festival_id, car.id, color="grey", seats_total=7,
+                    departure_at="2027-08-17T18:00").status_code == 303
+    with factory() as db:
+        fresh = db.get(Car, car.id)
+        assert fresh.color == "grey"
+        assert fresh.seats_total == 7
+        assert fresh.departure_at.hour == 18
+
+
+def test_grey_is_an_available_colour(festival, factory) -> None:
+    festival_id, owner = festival
+    add_car(owner, festival_id, None, color="grey")
+    assert only_car(factory).color == "grey"
+
+
+def test_an_unknown_colour_falls_back_instead_of_failing(festival, factory) -> None:
+    festival_id, owner = festival
+    add_car(owner, festival_id, None, color="chartreuse")
+    assert only_car(factory).color in ("red",)
+
+
+def test_shrinking_a_car_below_its_passengers_is_refused(festival, factory) -> None:
+    """The alternative is throwing somebody out without telling them."""
+    festival_id, owner = festival
+    who = people(factory, festival_id)
+    add_car(owner, festival_id, who["Owner"].id, seats=4)
+    car = only_car(factory)
+    seat(owner, festival_id, car.id, who["Kai"].id)
+    seat(owner, festival_id, car.id, who["Sabine"].id)
+
+    response = edit_car(owner, festival_id, car.id, seats_total=2)
+    assert response.status_code == 200
+    assert "fewer seats than there are people" in response.text
+    with factory() as db:
+        assert db.get(Car, car.id).seats_total == 4
+
+
+def test_the_departure_time_can_be_cleared(festival, factory) -> None:
+    festival_id, owner = festival
+    add_car(owner, festival_id, None, departure_at="2027-08-18T06:30")
+    car = only_car(factory)
+    edit_car(owner, festival_id, car.id, clear_departure="1")
+    with factory() as db:
+        assert db.get(Car, car.id).departure_at is None
+
+
+def test_car_size_shows_as_icon_length(festival, factory) -> None:
+    """The vehicle-type picker is gone; length carries the information now."""
+    festival_id, owner = festival
+    add_car(owner, festival_id, None, seats=2)
+    small = only_car(factory).icon_width_px
+    with factory() as db:
+        car = db.get(Car, only_car(factory).id)
+        car.seats_total = 8
+        db.commit()
+        assert car.icon_width_px > small
+
+
+def test_a_full_car_says_so(festival, factory) -> None:
+    festival_id, owner = festival
+    who = people(factory, festival_id)
+    add_car(owner, festival_id, who["Owner"].id, seats=1)
+    page = owner.get(f"/festivals/{festival_id}/transport").text
+    assert "full" in page
+    with factory() as db:
+        assert db.scalars(select(Car)).one().is_full is True
+
+
+def test_an_admin_can_add_a_meeting_point_with_a_car_selection(festival, factory) -> None:
+    festival_id, owner = festival
+    who = people(factory, festival_id)
+    add_car(owner, festival_id, who["Owner"].id)
+    first = only_car(factory)
+    add_car(owner, festival_id, who["Kai"].id)
+
+    assert add_meeting_point(owner, festival_id, car_ids=[first.id]).status_code == 303
+    with factory() as db:
+        point = db.scalars(select(MeetingPoint)).one()
+        assert point.name == "Gate services"
+        assert point.car_ids == {first.id}
+
+
+def test_not_every_car_has_to_join_a_meeting_point(festival, factory) -> None:
+    """Latecomers must not be sent to a rendezvous that already happened."""
+    festival_id, owner = festival
+    who = people(factory, festival_id)  # noqa: F841 - seeds the participants
+    add_car(owner, festival_id, who["Owner"].id)
+    early = only_car(factory)
+    add_car(owner, festival_id, who["Kai"].id)
+    with factory() as db:
+        late = [c for c in db.scalars(select(Car)).all() if c.id != early.id][0].id
+
+    add_meeting_point(owner, festival_id, car_ids=[early.id, late])
+    with factory() as db:
+        point = db.scalars(select(MeetingPoint)).one()
+    owner.post(
+        f"/festivals/{festival_id}/transport/meeting-points/{point.id}/cars",
+        data={"csrf_token": csrf(owner), "car_ids": [str(early.id)]},
+    )
+    with factory() as db:
+        assert db.scalars(select(MeetingPoint)).one().car_ids == {early.id}
+
+
+def test_a_member_cannot_create_or_change_a_meeting_point(festival, factory, settings) -> None:
+    """A meeting point is a decision for the whole group, so admins only."""
+    festival_id, owner = festival
+    owner.post(
+        f"/festivals/{festival_id}/invites",
+        data={"email": "friend@example.org", "csrf_token": csrf(owner)},
+    )
+    token = capture_sink().sent[-1].body.split("/invite/")[1].split()[0]
+    member = client_for(settings, "friend@example.org")
+    member.get(f"/invite/{token}")
+    member.post(f"/invite/{token}", data={"csrf_token": csrf(member)})
+    assert add_meeting_point(member, festival_id).status_code == 403
+
+
+def test_at_most_two_meeting_points(festival, factory) -> None:
+    festival_id, owner = festival
+    assert add_meeting_point(owner, festival_id, name="One", address="A").status_code == 303
+    assert add_meeting_point(owner, festival_id, name="Two", address="B").status_code == 303
+    assert add_meeting_point(owner, festival_id, name="Three", address="C").status_code == 409
+
+
+def test_a_meeting_point_needs_a_name_and_an_address(festival, factory) -> None:
+    festival_id, owner = festival
+    assert add_meeting_point(owner, festival_id, name="", address="A").status_code == 400
+    assert add_meeting_point(owner, festival_id, name="A", address="").status_code == 400
+
+
+def test_a_car_from_another_festival_is_ignored_in_the_selection(festival, factory) -> None:
+    """A foreign id must not confirm that the other festival exists."""
+    festival_id, owner = festival
+    created = owner.post("/festivals", data={"name": "Other", "csrf_token": csrf(owner)})
+    other_id = int(created.headers["location"].rsplit("/", 1)[1])
+    add_car(owner, other_id, None)
+    with factory() as db:
+        foreign = db.scalars(select(Car).where(Car.festival_id == other_id)).one().id
+
+    add_meeting_point(owner, festival_id, car_ids=[foreign])
+    with factory() as db:
+        assert db.scalars(select(MeetingPoint)).one().car_ids == set()
+
+
+def test_the_map_legend_names_the_drivers(festival, factory) -> None:
+    festival_id, owner = festival
+    who = people(factory, festival_id)
+    add_car(owner, festival_id, who["Owner"].id, color="grey")
+    page = owner.get(f"/festivals/{festival_id}/transport").text
+    assert "legend__swatch" in page
+    # Colour arrives as a class, not an inline style: the CSP forbids inline
+    # styles, so a hex value in the HTML would be silently ignored.
+    assert "carcolor--grey" in page
+
+
+def test_the_add_car_form_is_hidden_behind_a_button(festival, factory) -> None:
+    """Every 'new X' form collapses until asked for — the whole point of v0.2."""
+    festival_id, owner = festival
+    page = owner.get(f"/festivals/{festival_id}/transport").text
+    assert "details class=\"reveal\"" in page or 'class="reveal"' in page
+    assert "Add a car" in page

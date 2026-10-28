@@ -128,7 +128,7 @@
 
       <label for="note">{{ _("Note (optional)") }}</label>
       <input id="note" name="note" type="text" maxlength="400">
-      <button class="btn btn--primary">{{ _("Save cost") }}</button>
+      <button class="btn btn--small btn--primary">{{ _("Save cost") }}</button>
     </form>
   </details>
 </section>
@@ -225,7 +225,7 @@
                 </ul>
               </fieldset>
               {% endif %}
-              <button class="btn btn--primary">{{ _("Save") }}</button>
+              <button class="btn btn--small btn--primary">{{ _("Save") }}</button>
             </form>
           </details>
           <form method="post" action="/festivals/{{ festival.id }}/expenses/{{ expense.id }}/delete" class="inline">

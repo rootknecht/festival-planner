@@ -16,7 +16,7 @@
   <meta name="csrf-token" content="{{ csrf_token }}">
   {% block head_extra %}{% endblock %}
 </head>
-<body hx-headers='{"X-CSRF-Token": "{{ csrf_token }}"}'>
+<body data-cancel-label="{{ _('Cancel') }}" hx-headers='{"X-CSRF-Token": "{{ csrf_token }}"}'>
   {% block chrome %}{% endblock %}
   <main class="content">
     {% block content %}{% endblock %}

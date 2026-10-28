@@ -65,6 +65,10 @@ class SmtpMailer(Mailer):
         email["From"] = self.settings.smtp_from
         email["To"] = message.to
         email["Subject"] = message.subject
+        # People DO reply to these mails — "when do we leave?" to an invite is
+        # the most natural thing in the world. Without this it lands nowhere.
+        if self.settings.smtp_reply_to:
+            email["Reply-To"] = self.settings.smtp_reply_to
         email.set_content(message.body)
 
         context = ssl.create_default_context()

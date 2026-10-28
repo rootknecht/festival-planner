@@ -45,6 +45,10 @@ class Settings(BaseSettings):
     smtp_user: str = ""
     smtp_password: str = ""
     smtp_from: str = ""
+    #: Where replies should go. The From address may well be a noreply on a
+    #: domain with no MX at all (authenticating a domain for sending does not
+    #: give it a mailbox), in which case a reply would bounce into nothing.
+    smtp_reply_to: str = ""
     smtp_starttls: bool = True
 
     # Nominatim geocoding (usage-policy compliant defaults)

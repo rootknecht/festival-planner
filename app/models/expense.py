@@ -90,6 +90,25 @@ class Expense(Base):
         return self.amount_cents / 100
 
     @property
+    def is_locked(self) -> bool:
+        """True once any share has left OPEN.
+
+        A share somebody marked paid is half of a completed handshake.
+        Re-dividing it would change the number the other person is about to
+        confirm, so the payer and the split freeze at that moment, while the
+        description, date, note and total stay editable.
+
+        The payer's OWN share does not count: it is created CONFIRMED on day
+        one, because nobody owes themselves anything. Counting it would have
+        locked every expense from birth.
+        """
+        return any(
+            share.state is not ShareState.OPEN
+            for share in self.shares
+            if share.participant_id != self.payer_participant_id
+        )
+
+    @property
     def settled(self) -> bool:
         """True when nothing is outstanding any more."""
         return all(

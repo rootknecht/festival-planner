@@ -34,10 +34,11 @@ def _page(request: Request, db: DbSession, user: User, festival_id: int, **extra
     membership = require_membership(db, user, festival_id)
     festival = membership.festival
     cars = transport.cars_of(db, festival_id)
+    points = transport.meeting_points_of(db, festival_id)
     routes = {
         car.id: [
             {"label": point.label, "lat": point.lat, "lon": point.lon, "kind": point.kind}
-            for point in transport.map_points(car, festival.lat, festival.lon)
+            for point in transport.map_points(car, festival.lat, festival.lon, points)
         ]
         for car in cars
     }
@@ -53,7 +54,7 @@ def _page(request: Request, db: DbSession, user: User, festival_id: int, **extra
             "unassigned": transport.unassigned(db, festival_id),
             "colors": transport.color_labels(gettext_for(language_for(request))),
             "color_hex": transport.COLOR_HEX,
-            "meeting_points": transport.meeting_points_of(db, festival_id),
+            "meeting_points": points,
             "max_meeting_points": transport.MAX_MEETING_POINTS,
             "routes_json": json.dumps(routes),
             "legend_json": json.dumps(

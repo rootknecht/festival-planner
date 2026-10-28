@@ -157,18 +157,26 @@ body:has(.toolbar) .content { margin-left: 5.5rem; }
 .log { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.25rem; font-size: 0.9rem; }
 
 /* Car sharing */
-.cars { display: grid; gap: var(--fp-gap-m); grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr)); }
+/* Every car card the same height, not just the ones that share a row.
+   A CSS grid sizes each ROW to its tallest item, so two cars side by side
+   matched but a third on the next row came out shorter — which is exactly
+   what it looked like. grid-auto-rows: 1fr makes all rows equal instead. */
+.cars {
+  display: grid; gap: var(--fp-gap-m);
+  grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
+  grid-auto-rows: 1fr;
+}
+.car { display: flex; flex-direction: column; }
+/* The generic ".card + .card { margin-top }" is for cards STACKED in a
+   column; inside a grid the gap already does that spacing, and the stray
+   margin pushed every card except the first one 16px down — which is what
+   made the boxes look unequal. */
+.cars > .card + .card { margin-top: 0; }
+/* The buttons sit at the bottom edge of every card, so the row of actions
+   lines up across cards even when one car has more passengers than another. */
+.car__actions { margin-top: auto; padding-top: var(--fp-gap-s); }
 .car.is-over { outline: 2px dashed var(--fp-accent); outline-offset: 3px; }
-.car__icon { width: 4rem; height: 2rem; }
-.car--red .car__icon { color: #c81f2a; }
-.car--black .car__icon { color: #2b2b31; }
-.car--white .car__icon { color: #e6e6e6; }
-.car--blue .car__icon { color: #2a56c8; }
-.car--green .car__icon { color: #2f8f3c; }
-.car--yellow .car__icon { color: #d7b32a; }
-.car--orange .car__icon { color: #d9772a; }
-.car--purple .car__icon { color: #7a3ec8; }
-.name--draggable { cursor: grab; }
+.car--red .car--black .car--white .car--blue .car--green .car--yellow .car--orange .car--purple .name--draggable { cursor: grab; }
 .name--draggable.is-dragging { opacity: 0.45; }
 .name--driver { border-color: var(--fp-accent); }
 .name--free { opacity: 0.5; border-style: dashed; }
@@ -360,3 +368,16 @@ textarea { min-height: 4rem; resize: vertical; }
 .legend__swatch.carcolor--orange { background: #e07a1f; }
 .carcolor--purple { --car-paint: #7b3fbf; --car-line: rgba(255,255,255,.85); --car-glass: rgba(255,255,255,.35); }
 .legend__swatch.carcolor--purple { background: #7b3fbf; }
+
+/* The dashboard one-liner: wraps on a phone instead of scrolling sideways. */
+.oneliner { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem .7rem; }
+.oneliner__item { display: inline-flex; align-items: center; gap: .35rem; white-space: nowrap; }
+.oneliner__item svg { width: 1.05rem; height: 1.05rem; }
+.oneliner__sep { color: var(--fp-muted); }
+.oneliner__item--days { color: var(--fp-accent); font-weight: 600; }
+
+/* Balance, one line per person. */
+.balance__people { list-style: none; margin: .3rem 0 .6rem; padding: 0; display: grid; gap: .3rem; }
+.balance__people li { display: flex; flex-wrap: wrap; align-items: baseline; gap: .4rem; }
+.balance__net--plus { color: var(--fp-ok); }
+.balance__net--minus { color: var(--fp-warn); }

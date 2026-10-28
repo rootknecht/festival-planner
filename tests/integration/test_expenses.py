@@ -1,5 +1,7 @@
 """Expenses: splitting, rounding, the settlement handshake and who may do what."""
 
+import re
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, select
@@ -11,6 +13,7 @@ from app.db import Base, reset_engine_for_tests
 from app.main import create_app
 from app.models.expense import Expense, ExpenseShare, ShareState
 from app.models.festival import Participant
+from app.models.notification import Notification
 from app.models.user import User
 from app.security.csrf import CSRF_COOKIE
 from app.services import expenses as service
@@ -378,9 +381,21 @@ def test_adding_a_cost_notifies_the_others_but_not_the_payer(trip, factory) -> N
     people = who(factory, festival_id)
     add_cost(kai, festival_id, people["Kai"].id, amount="30,00", description="Firewood")
 
+    # Assert on the notification rows, not on the page text. The dashboard
+    # also carries a balance summary that names the item, so "the word is on
+    # the page" stopped meaning "this person was notified".
+    with factory() as db:
+        notified = {
+            row.user_id
+            for row in db.scalars(select(Notification)).all()
+            if row.payload and "Firewood" in row.payload
+        }
+    assert people["Anna"].user_id in notified
+    assert people["Owner"].user_id in notified
+    assert people["Kai"].user_id not in notified
+
     assert "Firewood" in anna.get(f"/festivals/{festival_id}").text
     assert "Firewood" in owner.get(f"/festivals/{festival_id}").text
-    assert "Firewood" not in kai.get(f"/festivals/{festival_id}").text
 
 
 def test_paying_notifies_the_person_who_is_owed(trip, factory) -> None:
@@ -538,3 +553,139 @@ def test_a_bystander_cannot_edit_somebody_elses_cost(trip, factory) -> None:
         f"/festivals/{festival_id}/expenses/{expense_id}/edit",
         data={"csrf_token": csrf(anna), "description": "x", "amount": "5,00"},
     ).status_code == 403
+
+
+def test_an_untouched_expense_can_be_fully_re_split(trip, factory) -> None:
+    """Asked for directly: editing should include who pays and how it splits,
+    not only the harmless fields."""
+    festival_id, owner, kai, anna = trip
+    people = who(factory, festival_id)
+    add_cost(kai, festival_id, people["Kai"].id, amount="30,00")
+    with factory() as db:
+        expense_id = db.scalars(select(Expense)).one().id
+
+    response = kai.post(
+        f"/festivals/{festival_id}/expenses/{expense_id}/edit",
+        data={
+            "csrf_token": csrf(kai),
+            "description": "Crate of beer",
+            "amount": "30,00",
+            "payer_participant_id": people["Kai"].id,
+            "split_mode": "selection",
+            "share_ids": [people["Anna"].id],
+        },
+    )
+    assert response.status_code == 303, re.search(
+        r'alert--error[^>]*>([^<]+)', response.text).group(1) if "alert--error" in response.text else response.text[:300]
+    with factory() as db:
+        expense = db.get(Expense, expense_id)
+        shares = {s.participant_id: s.amount_cents for s in expense.shares}
+        # Anna alone now owes, and she owes the whole amount.
+        assert shares == {people["Anna"].id: 3000}
+
+
+def test_the_payer_can_be_corrected_while_nothing_is_settled(trip, factory) -> None:
+    festival_id, owner, kai, anna = trip
+    people = who(factory, festival_id)
+    add_cost(kai, festival_id, people["Kai"].id, amount="30,00")
+    with factory() as db:
+        expense_id = db.scalars(select(Expense)).one().id
+
+    response = owner.post(
+        f"/festivals/{festival_id}/expenses/{expense_id}/edit",
+        data={
+            "csrf_token": csrf(owner),
+            "description": "Beer",
+            "amount": "30,00",
+            "payer_participant_id": people["Anna"].id,
+            "split_mode": "equal",
+        },
+    )
+    assert response.status_code == 303
+    with factory() as db:
+        expense = db.get(Expense, expense_id)
+        assert expense.payer_participant_id == people["Anna"].id
+        # Anna is now the payer, so Anna does not owe herself.
+        assert people["Anna"].id not in {s.participant_id for s in expense.shares}
+
+
+def test_the_split_locks_once_somebody_claims_payment(trip, factory) -> None:
+    """The reason the split is not editable forever: the other side is in the
+    middle of confirming a specific number."""
+    festival_id, owner, kai, anna = trip
+    people = who(factory, festival_id)
+    add_cost(kai, festival_id, people["Kai"].id, amount="30,00")
+    share_id = _open_share(factory, people["Anna"].id)
+    anna.post(f"/festivals/{festival_id}/expenses/shares/{share_id}/paid",
+              data={"csrf_token": csrf(anna)})
+
+    with factory() as db:
+        expense_id = db.scalars(select(Expense)).one().id
+        assert db.get(Expense, expense_id).is_locked is True
+
+    response = kai.post(
+        f"/festivals/{festival_id}/expenses/{expense_id}/edit",
+        data={
+            "csrf_token": csrf(kai),
+            "description": "Beer",
+            "amount": "30,00",
+            "payer_participant_id": people["Kai"].id,
+            "split_mode": "selection",
+            "share_ids": [people["Owner"].id],
+        },
+    )
+    assert response.status_code == 200
+    assert "cannot be changed" in response.text
+    with factory() as db:
+        # Anna's claim survived untouched.
+        assert db.get(ExpenseShare, share_id).state is ShareState.PAID
+
+
+def test_the_harmless_fields_stay_editable_after_the_lock(trip, factory) -> None:
+    festival_id, owner, kai, anna = trip
+    people = who(factory, festival_id)
+    add_cost(kai, festival_id, people["Kai"].id, amount="30,00")
+    share_id = _open_share(factory, people["Anna"].id)
+    anna.post(f"/festivals/{festival_id}/expenses/shares/{share_id}/paid",
+              data={"csrf_token": csrf(anna)})
+    with factory() as db:
+        expense_id = db.scalars(select(Expense)).one().id
+
+    response = kai.post(
+        f"/festivals/{festival_id}/expenses/{expense_id}/edit",
+        data={"csrf_token": csrf(kai), "description": "Crate of beer", "amount": "30,00"},
+    )
+    assert response.status_code == 303
+    with factory() as db:
+        assert db.get(Expense, expense_id).description == "Crate of beer"
+
+
+def test_the_balance_groups_by_person_with_the_items_named(trip, factory) -> None:
+    """The requested shape: "69,75 € from Benne (beer, power station)"."""
+    festival_id, owner, kai, anna = trip
+    people = who(factory, festival_id)
+    add_cost(kai, festival_id, people["Kai"].id, amount="30,00", description="Dosenbier")
+    add_cost(kai, festival_id, people["Kai"].id, amount="60,00", description="Powerstation")
+
+    page = anna.get(f"/festivals/{festival_id}/expenses").text
+    assert "30,00" in page and "Kai" in page
+    with factory() as db:
+        balance = service.balance_for(db, festival_id, people["Anna"].id)
+    lines = balance.by_person
+    assert len(lines) == 1                    # one line, not one per expense
+    assert lines[0].name == "Kai"
+    assert lines[0].cents == -3000            # 10 + 20, owed BY Anna
+    assert lines[0].items == ["Dosenbier", "Powerstation"]
+
+
+def test_debts_in_both_directions_with_one_person_net_off(trip, factory) -> None:
+    """Two lines would invite two transfers for one relationship."""
+    festival_id, owner, kai, anna = trip
+    people = who(factory, festival_id)
+    add_cost(kai, festival_id, people["Kai"].id, amount="30,00", description="Beer")
+    add_cost(anna, festival_id, people["Anna"].id, amount="9,00", description="Ice")
+
+    with factory() as db:
+        balance = service.balance_for(db, festival_id, people["Anna"].id)
+    kai_line = next(line for line in balance.by_person if line.name == "Kai")
+    assert kai_line.cents == -1000 + 300      # Anna owes 10, Kai owes her 3

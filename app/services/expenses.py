@@ -86,6 +86,46 @@ def expenses_of(db: DbSession, festival_id: int) -> list[Expense]:
     )
 
 
+def _amounts_for(
+    *,
+    mode: SplitMode,
+    amount_cents: int,
+    everyone: dict[int, Participant],
+    share_ids: list[int],
+    exact_cents: dict[int, int] | None,
+) -> dict[int, int]:
+    """Who owes how much, for one split. Shared by creating and editing.
+
+    One implementation rather than two, so an edited expense divides by
+    exactly the same rules as a new one — including the cent-by-cent
+    remainder, which is what makes the shares add up to the total.
+    """
+    if mode is SplitMode.EQUAL:
+        return split_equally(amount_cents, list(everyone))
+    if mode is SplitMode.SELECTION:
+        chosen = [pid for pid in share_ids if pid in everyone]
+        if not chosen:
+            raise ExpenseRefused("pick at least one person to split this between")
+        return split_equally(amount_cents, chosen)
+
+    amounts = {
+        pid: cents
+        for pid, cents in (exact_cents or {}).items()
+        if pid in everyone and cents > 0
+    }
+    if not amounts:
+        raise ExpenseRefused("enter at least one amount")
+    total = sum(amounts.values())
+    if total != amount_cents:
+        # Refusing beats silently adjusting: a mismatch means the person
+        # mistyped either the total or a share, and only they know which.
+        raise ExpenseRefused(
+            "the individual amounts add up to "
+            f"{total / 100:.2f} instead of {amount_cents / 100:.2f}"
+        )
+    return amounts
+
+
 def add_expense(
     db: DbSession,
     *,
@@ -108,30 +148,13 @@ def add_expense(
     if payer.id not in everyone:
         raise ExpenseRefused("the payer is not in this festival")
 
-    if split_mode is SplitMode.EQUAL:
-        chosen = list(everyone)
-        amounts = split_equally(amount_cents, chosen)
-    elif split_mode is SplitMode.SELECTION:
-        chosen = [pid for pid in share_ids if pid in everyone]
-        if not chosen:
-            raise ExpenseRefused("pick at least one person to split this between")
-        amounts = split_equally(amount_cents, chosen)
-    else:
-        amounts = {
-            pid: cents
-            for pid, cents in (exact_cents or {}).items()
-            if pid in everyone and cents > 0
-        }
-        if not amounts:
-            raise ExpenseRefused("enter at least one amount")
-        total = sum(amounts.values())
-        if total != amount_cents:
-            # Refusing beats silently adjusting: a mismatch means the person
-            # mistyped either the total or a share, and only they know which.
-            raise ExpenseRefused(
-                "the individual amounts add up to "
-                f"{total / 100:.2f} instead of {amount_cents / 100:.2f}"
-            )
+    amounts = _amounts_for(
+        mode=split_mode,
+        amount_cents=amount_cents,
+        everyone=everyone,
+        share_ids=share_ids,
+        exact_cents=exact_cents,
+    )
 
     expense = Expense(
         festival_id=festival_id,
@@ -288,6 +311,26 @@ class Debt:
     def amount(self) -> float:
         return self.cents / 100
 
+    @property
+    def waiting(self) -> bool:
+        """Claimed as paid, not yet acknowledged by the other side."""
+        return self.state is ShareState.PAID
+
+
+@dataclass(frozen=True)
+class PersonTotal:
+    """What stands between you and one other person, netted."""
+
+    participant_id: int
+    name: str
+    cents: int           # positive: they owe you. negative: you owe them.
+    items: list[str]
+    waiting: bool        # at least one side has claimed payment, unconfirmed
+
+    @property
+    def euro(self) -> str:
+        return f"{abs(self.cents) / 100:.2f}".replace(".", ",")
+
 
 @dataclass(frozen=True)
 class Balance:
@@ -311,6 +354,64 @@ class Balance:
     @property
     def has_anything(self) -> bool:
         return bool(self.owes or self.owed)
+
+    @property
+    def by_person(self) -> list[PersonTotal]:
+        """One line per person: "69,75 € from Benne (beer, power station)".
+
+        Several debts with the same person collapse into one figure, because
+        that is how the money actually moves — one transfer, not one per
+        crate of beer. The items stay in the line so the number can be
+        checked without opening anything.
+
+        Debts in BOTH directions with the same person net off: if Benne owes
+        you 80 and you owe Benne 10, you are owed 70 and should not be shown
+        two lines that invite two transfers.
+        """
+        totals: dict[int, dict] = {}
+        for debt in self.owed:
+            entry = totals.setdefault(
+                debt.other_participant_id,
+                {"name": debt.other_name, "cents": 0, "what": [], "waiting": False},
+            )
+            entry["cents"] += debt.cents
+            entry["what"].append(debt.what)
+            entry["waiting"] = entry["waiting"] or debt.waiting
+        for debt in self.owes:
+            entry = totals.setdefault(
+                debt.other_participant_id,
+                {"name": debt.other_name, "cents": 0, "what": [], "waiting": False},
+            )
+            entry["cents"] -= debt.cents
+            entry["what"].append(debt.what)
+            entry["waiting"] = entry["waiting"] or debt.waiting
+
+        lines = [
+            PersonTotal(
+                participant_id=pid,
+                name=entry["name"],
+                cents=entry["cents"],
+                items=_dedupe(entry["what"]),
+                waiting=entry["waiting"],
+            )
+            for pid, entry in totals.items()
+            if entry["cents"] != 0 or entry["waiting"]
+        ]
+        # Largest amounts first, in both directions: the big ones are the
+        # ones worth chasing.
+        lines.sort(key=lambda line: (-abs(line.cents), line.name.lower()))
+        return lines
+
+
+def _dedupe(items: list[str]) -> list[str]:
+    """Keep order, drop repeats — two beer runs should not read "beer, beer"."""
+    seen: set[str] = set()
+    out: list[str] = []
+    for item in items:
+        if item not in seen:
+            seen.add(item)
+            out.append(item)
+    return out
 
 
 def balance_for(db: DbSession, festival_id: int, participant_id: int | None) -> Balance:
@@ -377,6 +478,18 @@ def totals_by_participant(db: DbSession, festival_id: int) -> dict[int, int]:
     return result
 
 
+def is_locked(expense: Expense) -> bool:
+    """True once any share other than the payer's has moved past OPEN.
+
+    While every share is still OPEN the expense is just a proposal and may be
+    re-divided freely. The moment one person has pressed "I paid this" the
+    split has become a conversation between two people about a specific
+    number, and quietly changing that number underneath them would turn a
+    completed handshake into a wrong one.
+    """
+    return expense.is_locked
+
+
 def edit_expense(
     db: DbSession,
     *,
@@ -386,24 +499,26 @@ def edit_expense(
     note: str | None,
     spent_on: dt.date | None,
     actor: User,
+    payer: Participant | None = None,
+    split_mode: SplitMode | None = None,
+    share_ids: list[int] | None = None,
+    exact_cents: dict[int, int] | None = None,
 ) -> Expense:
-    """Correct a cost after the fact.
+    """Correct a cost, including who pays and how it divides.
 
-    The SPLIT is deliberately not re-opened here. Re-dividing an expense whose
-    shares are part-settled would silently invalidate a handshake that two
-    people already completed — somebody's "received" would start meaning a
-    different number. Changing who pays what means deleting the cost and
-    entering it again, which forces both sides to agree afresh.
-
-    The amount is rescaled proportionally so the shares keep adding up to the
-    total; a settled share is left alone, because that money has already moved.
+    The full edit — payer and split included — is available while the expense
+    is untouched. Once any share has been marked paid or confirmed the split
+    locks and only the harmless fields (description, date, note) stay open;
+    the amount may then still change, and is re-divided across the shares
+    that are still open while settled ones keep the figure that was agreed.
     """
     description = (description or "").strip()
     if not description:
         raise ExpenseRefused("a description is required")
 
-    old_total = expense.amount_cents
+    locked = is_locked(expense)
     changes: list[str] = []
+
     if description != expense.description:
         changes.append(f"renamed {expense.description} -> {description}")
         expense.description = description[:160]
@@ -414,7 +529,57 @@ def edit_expense(
         expense.spent_on = spent_on
         changes.append("date changed")
 
-    if amount_cents != old_total:
+    wants_respit = split_mode is not None or payer is not None
+    if wants_respit and locked:
+        raise ExpenseRefused(
+            "someone has already marked part of this as paid, so the split "
+            "cannot be changed any more"
+        )
+
+    if wants_respit:
+        everyone = {p.id: p for p in participants_of(db, expense.festival_id)}
+        if payer is not None:
+            if payer.id not in everyone:
+                raise ExpenseRefused("the payer is not in this festival")
+            if payer.id != expense.payer_participant_id:
+                changes.append(
+                    f"payer {expense.payer.display_name} -> {payer.display_name}"
+                )
+                expense.payer_participant_id = payer.id
+
+        mode = split_mode or expense.split_mode
+        amounts = _amounts_for(
+            mode=mode,
+            amount_cents=amount_cents,
+            everyone=everyone,
+            share_ids=share_ids or [],
+            exact_cents=exact_cents,
+        )
+        amounts.pop(expense.payer_participant_id, None)
+
+        for share in list(expense.shares):
+            db.delete(share)
+        db.flush()
+        for participant_id, cents in amounts.items():
+            db.add(
+                ExpenseShare(
+                    expense_id=expense.id,
+                    participant_id=participant_id,
+                    amount_cents=cents,
+                    state=ShareState.OPEN,
+                )
+            )
+        expense.split_mode = mode
+        expense.amount_cents = amount_cents
+        changes.append(f"re-split, {amount_cents / 100:.2f} total")
+        if changes:
+            log(db, expense.festival_id, "expense", expense.id, actor, "; ".join(changes))
+        db.commit()
+        db.refresh(expense)
+        return expense
+
+    if amount_cents != expense.amount_cents:
+        old_total = expense.amount_cents
         open_shares = [s for s in expense.shares if s.state is not ShareState.CONFIRMED]
         settled = sum(
             s.amount_cents for s in expense.shares if s.state is ShareState.CONFIRMED

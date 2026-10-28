@@ -8,6 +8,7 @@ future client all inherit it.
 from __future__ import annotations
 
 import datetime as dt
+from collections.abc import Sequence
 from dataclasses import dataclass
 
 from fastapi import HTTPException, status
@@ -254,8 +255,20 @@ def delete_stop(db: DbSession, *, stop: CarStop, actor: User, festival_id: int) 
     db.commit()
 
 
-def map_points(car: Car, festival_lat: float | None, festival_lon: float | None) -> list[MapPoint]:
-    """Departure, then the stops in order, then the festival."""
+def map_points(
+    car: Car,
+    festival_lat: float | None,
+    festival_lon: float | None,
+    meeting_points: Sequence[MeetingPoint] = (),
+) -> list[MapPoint]:
+    """Departure, the car's own pickups, then any meeting point, then the site.
+
+    A meeting point this car joins is drawn as the LAST stop before the
+    festival, because that is what it is: the rendezvous happens near the
+    site, after everyone has collected their own passengers. Only the points
+    this car was ticked for appear on its line — a car arriving a day later
+    is not routed through yesterday's meeting.
+    """
     points: list[MapPoint] = []
     if car.departure_lat is not None and car.departure_lon is not None:
         points.append(
@@ -265,6 +278,17 @@ def map_points(car: Car, festival_lat: float | None, festival_lon: float | None)
     for stop in car.stops:
         if stop.lat is not None and stop.lon is not None:
             points.append(MapPoint(stop.address, stop.lat, stop.lon, "stop"))
+
+    for point in meeting_points:
+        if point.lat is None or point.lon is None:
+            continue
+        if car.id not in {c.id for c in point.cars}:
+            continue
+        label = point.name
+        if point.meet_at is not None:
+            label = f"{point.name} — {point.meet_at.strftime('%d.%m. %H:%M')}"
+        points.append(MapPoint(label, point.lat, point.lon, "meeting"))
+
     if festival_lat is not None and festival_lon is not None:
         points.append(MapPoint("festival", festival_lat, festival_lon, "festival"))
     return points

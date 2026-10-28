@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Festival Planner VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-28 14:12+0100\n"
+"POT-Creation-Date: 2026-10-28 14:33+0100\n"
 "PO-Revision-Date: 2026-10-27 14:26+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -512,7 +512,7 @@ msgid "Delete row"
 msgstr ""
 
 #: app/templates/tools/bringlist.html:151
-msgid "Add a row"
+msgid "Add an item"
 msgstr ""
 
 #: app/templates/tools/bringlist.html:154
@@ -532,7 +532,7 @@ msgid "With units the total adds up per unit, for example “80 L + 120 cans”.
 msgstr ""
 
 #: app/templates/tools/bringlist.html:159
-msgid "Add row"
+msgid "Add item"
 msgstr ""
 
 #: app/templates/tools/bringlist.html:170
@@ -1091,5 +1091,11 @@ msgstr ""
 #~ msgstr ""
 
 #~ msgid "They settled up"
+#~ msgstr ""
+
+#~ msgid "Add a row"
+#~ msgstr ""
+
+#~ msgid "Add row"
 #~ msgstr ""
 

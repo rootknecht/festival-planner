@@ -148,7 +148,7 @@
     {% endif %}
 
     <details class="reveal">
-      <summary class="btn btn--small">{{ icon("plus") }} {{ _("Add a row") }}</summary>
+      <summary class="btn btn--small">{{ icon("plus") }} {{ _("Add an item") }}</summary>
       <form method="post" action="/festivals/{{ festival.id }}/bringlist/rows" class="stack">
         <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
         <label for="label">{{ _("What has to come along?") }}</label>
@@ -156,7 +156,7 @@
         <label for="units">{{ _("Units (optional, comma separated)") }}</label>
         <input id="units" name="units" type="text" maxlength="200" placeholder="{{ _('L, cans, crates') }}">
         <p class="hint">{{ _("With units the total adds up per unit, for example “80 L + 120 cans”.") }}</p>
-        <button class="btn btn--primary">{{ _("Add row") }}</button>
+        <button class="btn btn--primary">{{ _("Add item") }}</button>
       </form>
     </details>
   </div>

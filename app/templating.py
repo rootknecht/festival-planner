@@ -41,6 +41,16 @@ templates.env.filters["long_date"] = _long_date
 templates.env.globals["date_range"] = _date_range
 
 
+def _short_date(value, language="en"):
+    from app.services.dates import format_short_date
+
+    return format_short_date(value, language)
+
+
+templates.env.globals["short_date"] = _short_date
+templates.env.filters["short_date"] = _short_date
+
+
 def language_for(request: Request) -> str:
     user = getattr(request.state, "user", None)
     if user is not None and user.language:

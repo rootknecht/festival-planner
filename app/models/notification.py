@@ -35,6 +35,7 @@ class Tool(enum.StrEnum):
 
     TRANSPORT = "transport"
     BRINGLIST = "bringlist"
+    EXPENSES = "expenses"
     CHAT = "chat"
     POLLS = "polls"
     FORUM = "forum"

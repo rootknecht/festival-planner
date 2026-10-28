@@ -1,11 +1,13 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
 
 {% set tools = [
-  ("transport", _("Transport")),
-  ("bringlist", _("Who brings what")),
-  ("chat", _("Chat")),
-  ("polls", _("Polls")),
-  ("forum", _("Forum")),
+  ("transport", _("Transport"), "car"),
+  ("bringlist", _("Who brings what"), "bottle"),
+  ("expenses", _("Expenses"), "cash"),
+  ("chat", _("Chat"), "chat"),
+  ("polls", _("Polls"), "chart"),
+  ("forum", _("Forum"), "forum"),
 ] %}
 
 {% block chrome %}
@@ -34,14 +36,14 @@
 <nav class="toolbar" aria-label="{{ _('Festival tools') }}">
   <a class="toolbar__item{% if active_tool == 'dashboard' %} is-active{% endif %}"
      href="/festivals/{{ festival.id }}">
-    <span class="toolbar__icon">&#9632;</span>
+    <span class="toolbar__icon">{{ icon("tent") }}</span>
     <span class="toolbar__label">{{ _("Dashboard") }}</span>
   </a>
-  {% for key, label in tools %}
+  {% for key, label, icon_name in tools %}
   <a class="toolbar__item{% if active_tool == key %} is-active{% endif %}"
      href="/festivals/{{ festival.id }}/{{ key }}">
     <span class="toolbar__icon">
-      {{ {'transport': '&#128663;', 'bringlist': '&#9776;', 'chat': '&#128172;', 'polls': '&#9745;', 'forum': '&#128196;'}[key] | safe }}
+      {{ icon(icon_name) }}
       {% if badges.get(key) %}<span class="dot" aria-label="{{ _('new') }}"></span>{% endif %}
     </span>
     <span class="toolbar__label">{{ label }}</span>

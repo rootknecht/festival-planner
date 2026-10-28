@@ -62,6 +62,20 @@ class Festival(Base):
             return self.start_date.isoformat()
         return ""
 
+    @property
+    def countdown_days(self) -> int | None:
+        """Whole days until camping opens (or the festival starts).
+
+        Camping arrival is the date that actually matters to this group: it is
+        when they leave, and it is usually a day or two before the first act.
+        Falls back to the festival start when no camping date is set, and
+        returns None when neither is known rather than inventing a number.
+        """
+        target = self.camp_arrival or self.start_date
+        if target is None:
+            return None
+        return (target - dt.date.today()).days
+
 
 class Participant(Base):
     """A person in a festival.

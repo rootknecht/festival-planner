@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Festival Planner VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-27 16:17+0100\n"
+"POT-Creation-Date: 2026-10-28 10:30+0100\n"
 "PO-Revision-Date: 2026-10-27 14:26+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: de\n"
@@ -72,55 +72,59 @@ msgstr "Jemand"
 msgid "Something changed that involves you."
 msgstr "Es hat sich etwas geändert, das dich betrifft."
 
-#: app/templates/festival_base.html:4 app/templates/tools/transport.html:2
+#: app/templates/festival_base.html:5 app/templates/tools/transport.html:2
 msgid "Transport"
 msgstr "Anfahrt"
 
-#: app/templates/festival_base.html:5 app/templates/tools/bringlist.html:2
+#: app/templates/festival_base.html:6 app/templates/tools/bringlist.html:2
 #: app/templates/tools/bringlist.html:9
 msgid "Who brings what"
 msgstr "Wer bringt was"
 
-#: app/templates/festival_base.html:6 app/templates/tools/chat.html:2
+#: app/templates/festival_base.html:7
+msgid "Expenses"
+msgstr "Ausgaben"
+
+#: app/templates/festival_base.html:8 app/templates/tools/chat.html:2
 #: app/templates/tools/chat.html:5
 msgid "Chat"
 msgstr "Chat"
 
-#: app/templates/festival_base.html:7 app/templates/tools/polls.html:2
+#: app/templates/festival_base.html:9 app/templates/tools/polls.html:2
 msgid "Polls"
 msgstr "Abstimmungen"
 
-#: app/templates/festival_base.html:8 app/templates/tools/forum.html:2
+#: app/templates/festival_base.html:10 app/templates/tools/forum.html:2
 #: app/templates/tools/forum.html:6
 msgid "Forum"
 msgstr "Forum"
 
-#: app/templates/festival_base.html:22
+#: app/templates/festival_base.html:24
 msgid "Switch language"
 msgstr "Sprache wechseln"
 
-#: app/templates/festival_base.html:24 app/templates/profile/index.html:2
+#: app/templates/festival_base.html:26 app/templates/profile/index.html:2
 #: app/templates/profile/index.html:5
 msgid "Profile"
 msgstr "Profil"
 
-#: app/templates/festival_base.html:26
+#: app/templates/festival_base.html:28
 msgid "Install app"
 msgstr "App installieren"
 
-#: app/templates/festival_base.html:29
+#: app/templates/festival_base.html:31
 msgid "Sign out"
 msgstr "Abmelden"
 
-#: app/templates/festival_base.html:34
+#: app/templates/festival_base.html:36
 msgid "Festival tools"
 msgstr "Festival-Werkzeuge"
 
-#: app/templates/festival_base.html:38
+#: app/templates/festival_base.html:40
 msgid "Dashboard"
-msgstr "Übersicht"
+msgstr "Dashboard"
 
-#: app/templates/festival_base.html:45
+#: app/templates/festival_base.html:47
 msgid "new"
 msgstr "neu"
 
@@ -148,31 +152,51 @@ msgstr ""
 "Dieses Festival ist archiviert – es kann gelesen, aber nicht geändert "
 "werden."
 
-#: app/templates/festivals/dashboard.html:11
+#: app/templates/festivals/dashboard.html:14
+msgid "days until camping starts"
+msgstr "Tage bis Campingbeginn"
+
+#: app/templates/festivals/dashboard.html:17
+msgid "day until camping starts"
+msgstr "Tag bis Campingbeginn"
+
+#: app/templates/festivals/dashboard.html:19
+msgid "Today!"
+msgstr "Heute!"
+
+#: app/templates/festivals/dashboard.html:20
+msgid "camping starts today"
+msgstr "Camping beginnt heute"
+
+#: app/templates/festivals/dashboard.html:23
+msgid "days since camping started"
+msgstr "Tage seit Campingbeginn"
+
+#: app/templates/festivals/dashboard.html:30
 msgid "Open for you"
 msgstr "Offen für dich"
 
-#: app/templates/festivals/dashboard.html:13
+#: app/templates/festivals/dashboard.html:32
 msgid "Settings"
 msgstr "Einstellungen"
 
-#: app/templates/festivals/dashboard.html:23
+#: app/templates/festivals/dashboard.html:42
 msgid "Open"
 msgstr "Öffnen"
 
-#: app/templates/festivals/dashboard.html:26
+#: app/templates/festivals/dashboard.html:45
 msgid "Got it"
 msgstr "Verstanden"
 
-#: app/templates/festivals/dashboard.html:33
+#: app/templates/festivals/dashboard.html:52
 msgid "Nothing needs your attention right now."
 msgstr "Im Moment ist nichts für dich offen."
 
-#: app/templates/festivals/dashboard.html:38
+#: app/templates/festivals/dashboard.html:57
 msgid "Who is coming"
 msgstr "Wer mitkommt"
 
-#: app/templates/festivals/dashboard.html:46
+#: app/templates/festivals/dashboard.html:65
 msgid "Dashed names have no account yet."
 msgstr "Gestrichelte Namen haben noch kein Konto."
 

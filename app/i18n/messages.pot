@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Festival Planner VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-27 16:17+0100\n"
+"POT-Creation-Date: 2026-10-28 10:30+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -71,55 +71,59 @@ msgstr ""
 msgid "Something changed that involves you."
 msgstr ""
 
-#: app/templates/festival_base.html:4 app/templates/tools/transport.html:2
+#: app/templates/festival_base.html:5 app/templates/tools/transport.html:2
 msgid "Transport"
 msgstr ""
 
-#: app/templates/festival_base.html:5 app/templates/tools/bringlist.html:2
+#: app/templates/festival_base.html:6 app/templates/tools/bringlist.html:2
 #: app/templates/tools/bringlist.html:9
 msgid "Who brings what"
 msgstr ""
 
-#: app/templates/festival_base.html:6 app/templates/tools/chat.html:2
+#: app/templates/festival_base.html:7
+msgid "Expenses"
+msgstr ""
+
+#: app/templates/festival_base.html:8 app/templates/tools/chat.html:2
 #: app/templates/tools/chat.html:5
 msgid "Chat"
 msgstr ""
 
-#: app/templates/festival_base.html:7 app/templates/tools/polls.html:2
+#: app/templates/festival_base.html:9 app/templates/tools/polls.html:2
 msgid "Polls"
 msgstr ""
 
-#: app/templates/festival_base.html:8 app/templates/tools/forum.html:2
+#: app/templates/festival_base.html:10 app/templates/tools/forum.html:2
 #: app/templates/tools/forum.html:6
 msgid "Forum"
 msgstr ""
 
-#: app/templates/festival_base.html:22
+#: app/templates/festival_base.html:24
 msgid "Switch language"
 msgstr ""
 
-#: app/templates/festival_base.html:24 app/templates/profile/index.html:2
+#: app/templates/festival_base.html:26 app/templates/profile/index.html:2
 #: app/templates/profile/index.html:5
 msgid "Profile"
 msgstr ""
 
-#: app/templates/festival_base.html:26
+#: app/templates/festival_base.html:28
 msgid "Install app"
 msgstr ""
 
-#: app/templates/festival_base.html:29
+#: app/templates/festival_base.html:31
 msgid "Sign out"
 msgstr ""
 
-#: app/templates/festival_base.html:34
+#: app/templates/festival_base.html:36
 msgid "Festival tools"
 msgstr ""
 
-#: app/templates/festival_base.html:38
+#: app/templates/festival_base.html:40
 msgid "Dashboard"
 msgstr ""
 
-#: app/templates/festival_base.html:45
+#: app/templates/festival_base.html:47
 msgid "new"
 msgstr ""
 
@@ -143,31 +147,51 @@ msgstr ""
 msgid "This festival is archived — it can be read but not changed."
 msgstr ""
 
-#: app/templates/festivals/dashboard.html:11
-msgid "Open for you"
+#: app/templates/festivals/dashboard.html:14
+msgid "days until camping starts"
 msgstr ""
 
-#: app/templates/festivals/dashboard.html:13
-msgid "Settings"
+#: app/templates/festivals/dashboard.html:17
+msgid "day until camping starts"
+msgstr ""
+
+#: app/templates/festivals/dashboard.html:19
+msgid "Today!"
+msgstr ""
+
+#: app/templates/festivals/dashboard.html:20
+msgid "camping starts today"
 msgstr ""
 
 #: app/templates/festivals/dashboard.html:23
+msgid "days since camping started"
+msgstr ""
+
+#: app/templates/festivals/dashboard.html:30
+msgid "Open for you"
+msgstr ""
+
+#: app/templates/festivals/dashboard.html:32
+msgid "Settings"
+msgstr ""
+
+#: app/templates/festivals/dashboard.html:42
 msgid "Open"
 msgstr ""
 
-#: app/templates/festivals/dashboard.html:26
+#: app/templates/festivals/dashboard.html:45
 msgid "Got it"
 msgstr ""
 
-#: app/templates/festivals/dashboard.html:33
+#: app/templates/festivals/dashboard.html:52
 msgid "Nothing needs your attention right now."
 msgstr ""
 
-#: app/templates/festivals/dashboard.html:38
+#: app/templates/festivals/dashboard.html:57
 msgid "Who is coming"
 msgstr ""
 
-#: app/templates/festivals/dashboard.html:46
+#: app/templates/festivals/dashboard.html:65
 msgid "Dashed names have no account yet."
 msgstr ""
 

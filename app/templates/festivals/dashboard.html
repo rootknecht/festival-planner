@@ -6,6 +6,25 @@
 <p class="alert" role="status">{{ _("This festival is archived — it can be read but not changed.") }}</p>
 {% endif %}
 
+{% set days = festival.countdown_days %}
+{% if days is not none %}
+<section class="card countdown">
+  {% if days > 1 %}
+  <p class="countdown__number">{{ days }}</p>
+  <p class="countdown__label">{{ _("days until camping starts") }}</p>
+  {% elif days == 1 %}
+  <p class="countdown__number">1</p>
+  <p class="countdown__label">{{ _("day until camping starts") }}</p>
+  {% elif days == 0 %}
+  <p class="countdown__number">{{ _("Today!") }}</p>
+  <p class="countdown__label">{{ _("camping starts today") }}</p>
+  {% else %}
+  <p class="countdown__number">{{ -days }}</p>
+  <p class="countdown__label">{{ _("days since camping started") }}</p>
+  {% endif %}
+</section>
+{% endif %}
+
 <section class="card">
   <div class="row row--between">
     <h2>{{ _("Open for you") }}</h2>

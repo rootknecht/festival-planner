@@ -1,0 +1,52 @@
+{# Monochrome inline SVG icons.
+
+   These replace emoji in the toolbar. Emoji render as full-colour pictures on
+   most platforms, which clashed with the dark themes and was specifically
+   rejected for the car; they also look different on every OS and cannot be
+   recoloured. Inline SVG inherits currentColor, so one icon follows the active
+   theme and the active/inactive state without a second asset.
+
+   Each icon is drawn on a 24x24 grid with stroke-based geometry so it stays
+   legible at toolbar size on a phone. #}
+
+{% macro icon(name, title="") -%}
+<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+     stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"
+     aria-hidden="{{ 'false' if title else 'true' }}"
+     {% if title %}role="img" aria-label="{{ title }}"{% endif %}>
+  {%- if name == "tent" -%}
+    {# Dashboard: the festival is a camping trip, and the headline number on
+       that page is now the countdown to the first camping day. #}
+    <path d="M12 3 3 20h18L12 3Z"/><path d="M12 3v17"/><path d="M8.5 20 12 12l3.5 8"/>
+  {%- elif name == "car" -%}
+    <path d="M4 16v-3.2L5.8 8h8.9l3.1 4.3 2.2.6V16"/>
+    <path d="M3 16h18"/><circle cx="7.5" cy="17.6" r="1.6"/><circle cx="16.5" cy="17.6" r="1.6"/>
+    <path d="M9.6 8v4.3"/>
+  {%- elif name == "bottle" -%}
+    {# Who brings what: beer bottle, as requested. #}
+    <path d="M10 2h4v3.2c0 .9.4 1.3 1 2 .8 1 1.2 1.9 1.2 3.1V21a1 1 0 0 1-1 1H8.8a1 1 0 0 1-1-1v-10.7c0-1.2.4-2.1 1.2-3.1.6-.7 1-1.1 1-2V2Z"/>
+    <path d="M7.8 13h8.4"/>
+  {%- elif name == "chat" -%}
+    <path d="M21 12a8 8 0 0 1-8 8H7l-4 2 1.4-4A8 8 0 1 1 21 12Z"/>
+    <path d="M8 10h8"/><path d="M8 14h5"/>
+  {%- elif name == "chart" -%}
+    {# Polls: bar chart, as requested — and it matches the graphical results. #}
+    <path d="M3 21h18"/><rect x="5" y="12" width="3.6" height="7"/>
+    <rect x="10.2" y="7" width="3.6" height="12"/><rect x="15.4" y="15" width="3.6" height="4"/>
+  {%- elif name == "forum" -%}
+    <path d="M4 5h16v10H9l-5 4V5Z"/><path d="M8 9h8"/><path d="M8 12h5"/>
+  {%- elif name == "cash" -%}
+    {# Expenses: a note plus a coin, which reads as money at 20px where a
+       plain banknote reads as a document. #}
+    <rect x="2.5" y="6" width="14" height="9" rx="1.4"/>
+    <circle cx="9.5" cy="10.5" r="2.2"/>
+    <circle cx="17" cy="16" r="4.6"/><path d="M17 13.6v4.8"/><path d="M15.4 15.1h3.2"/>
+  {%- elif name == "pin" -%}
+    <path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11Z"/><circle cx="12" cy="10" r="2.4"/>
+  {%- elif name == "plus" -%}
+    <path d="M12 5v14"/><path d="M5 12h14"/>
+  {%- elif name == "pencil" -%}
+    <path d="M4 20h4L19.5 8.5a2.1 2.1 0 0 0-3-3L5 17v3Z"/><path d="M14.5 5.5l4 4"/>
+  {%- endif -%}
+</svg>
+{%- endmacro %}

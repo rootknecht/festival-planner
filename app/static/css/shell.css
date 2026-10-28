@@ -190,3 +190,17 @@ body:has(.toolbar) .content { margin-left: 5.5rem; }
 .mention { color: var(--fp-accent); font-weight: 600; }
 .mention--all { text-decoration: underline; }
 textarea { min-height: 4rem; resize: vertical; }
+
+/* Monochrome toolbar icons. They inherit currentColor so the active state and
+   every theme recolour them for free — the point of dropping emoji. */
+.icon { width: 22px; height: 22px; display: block; }
+.toolbar__icon .icon { margin: 0 auto; }
+
+/* Countdown: the first thing you want to know on the dashboard is how long
+   until you leave, so it is one big number and nothing else. */
+.countdown { text-align: center; padding: 1.1rem 1rem; }
+.countdown__number {
+  font-size: 2.6rem; line-height: 1; font-weight: 700;
+  color: var(--fp-accent); margin: 0;
+}
+.countdown__label { margin: .35rem 0 0; color: var(--fp-muted); }

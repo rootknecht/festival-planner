@@ -148,7 +148,7 @@
     {% endif %}
 
     <details class="reveal">
-      <summary class="btn btn--primary">{{ icon("plus") }} {{ _("Add a row") }}</summary>
+      <summary class="btn btn--small">{{ icon("plus") }} {{ _("Add a row") }}</summary>
       <form method="post" action="/festivals/{{ festival.id }}/bringlist/rows" class="stack">
         <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
         <label for="label">{{ _("What has to come along?") }}</label>

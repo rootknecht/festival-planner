@@ -51,7 +51,7 @@
          would stay open forever. Closing it is the creditor's own call. #}
       <form method="post" action="/festivals/{{ festival.id }}/expenses/settle/{{ line.participant_id }}/received" class="inline">
         <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
-        <button class="btn btn--small">{{ _("They settled up") }}</button>
+        <button class="btn btn--small">{{ _("Has been paid") }}</button>
       </form>
       {% endif %}
       {% if line.can_confirm %}

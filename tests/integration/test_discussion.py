@@ -575,3 +575,25 @@ def test_a_socket_only_joins_its_own_festivals_channel(festival, settings) -> No
     with owner.websocket_connect(f"/festivals/{other_id}/ws"):
         assert hub.connection_count(other_id) == 1
         assert hub.connection_count(festival_id) == 0
+
+
+def test_poll_results_do_not_name_who_voted_for_what(festival, factory) -> None:
+    """Requested: results show counts only.
+
+    Who has NOT voted yet is still listed — that is the number worth chasing,
+    and it says nothing about anybody's opinion.
+    """
+    festival_id, owner, friend = festival
+    create_poll(owner, festival_id)
+    pid = poll_id(factory)
+    options = option_ids(factory, pid)
+    owner.post(
+        f"/festivals/{festival_id}/polls/{pid}/vote",
+        data={"option_id": options[0], "csrf_token": csrf(owner)},
+    )
+
+    page = owner.get(f"/festivals/{festival_id}/polls").text
+    before_pending = page.split("Still missing")[0]
+    assert "Owner" not in before_pending      # no voter names beside the bars
+    assert "Still missing" in page            # the pending list survives
+    assert "Friend" in page.split("Still missing")[1]

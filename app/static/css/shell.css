@@ -386,9 +386,14 @@ textarea { min-height: 4rem; resize: vertical; }
    The items are short words, so the default table padding spread them so far
    apart that a phone showed two columns and a lot of nothing. The vertical
    line does the separating that the whitespace used to. */
-.grid--matrix th, .grid--matrix td { padding-left: .3rem; padding-right: .3rem; }
+.grid--matrix th, .grid--matrix td { padding-left: .18rem; padding-right: .18rem; }
+/* A rule between every pair of neighbouring cells, INCLUDING the one between
+   the names column and the first item — that edge is a th followed by a td,
+   so the td + td rule alone skipped exactly the line you notice most. */
 .grid--matrix thead th + th,
+.grid--matrix tbody th + td,
 .grid--matrix tbody td + td,
+.grid--matrix tfoot th + td,
 .grid--matrix tfoot th + th,
 .grid--matrix tfoot td + td { border-left: 1px solid var(--fp-border); }
 .grid--matrix thead th { font-size: .86rem; line-height: 1.15; vertical-align: bottom; }

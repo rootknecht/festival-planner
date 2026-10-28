@@ -270,3 +270,40 @@ textarea { min-height: 4rem; resize: vertical; }
 .carcolor--yellow .carbar__body, .legend__swatch.carcolor--yellow { background: #e0bb28; }
 .carcolor--orange .carbar__body, .legend__swatch.carcolor--orange { background: #e07a1f; }
 .carcolor--purple .carbar__body, .legend__swatch.carcolor--purple { background: #7b3fbf; }
+
+/* Click-to-edit cell: the value is a summary, the input appears on click. */
+.cell > summary { cursor: pointer; list-style: none; }
+.cell > summary::-webkit-details-marker { display: none; }
+.cell > summary::marker { content: ""; }
+.cell__value { display: inline-block; min-width: 2.2rem; }
+.cell[open] > summary { color: var(--fp-accent); }
+.grid--matrix tfoot th, .grid--matrix tfoot td {
+  border-top: 2px solid var(--fp-border); font-weight: 600;
+}
+
+/* Poll result bars. Width as a class, not an inline style: the CSP
+   forbids inline styles and drops them without a word. */
+.bar { display: inline-block; height: 8px; border-radius: 4px;
+       background: var(--fp-border); min-width: 2px; }
+.bar--leading { background: var(--fp-accent); }
+.option { display: grid; grid-template-columns: auto 1fr 5rem 2.5rem; gap: .5rem;
+          align-items: center; }
+.optionfield { display: block; width: 100%; margin-bottom: .35rem; }
+.bar--0 { width: 0%; }
+.bar--1 { width: 10%; }
+.bar--2 { width: 20%; }
+.bar--3 { width: 30%; }
+.bar--4 { width: 40%; }
+.bar--5 { width: 50%; }
+.bar--6 { width: 60%; }
+.bar--7 { width: 70%; }
+.bar--8 { width: 80%; }
+.bar--9 { width: 90%; }
+.bar--10 { width: 100%; }
+
+/* A link the admin has to copy by hand: must wrap, must be selectable. */
+.copybox {
+  display: block; padding: .5rem; border: 1px solid var(--fp-border);
+  border-radius: 6px; word-break: break-all; user-select: all;
+  background: var(--fp-input-bg, transparent);
+}

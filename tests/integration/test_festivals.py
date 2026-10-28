@@ -347,3 +347,107 @@ def test_invites_are_scoped_to_their_festival(factory, settings) -> None:
         f"/festivals/{second}/invites/{invite.id}/revoke", data={"csrf_token": owner_csrf}
     )
     assert response.status_code == 404
+
+
+# --- admin-issued password reset links --------------------------------------
+# This host cannot send mail: the provider blocks outbound SMTP, so "click the
+# link in your email" is advice nobody here can follow. Without an admin-issued
+# link, a forgotten password means an unrecoverable account and the invite-only
+# design turns into a lockout.
+
+
+def _join_as_member(owner, owner_csrf, festival_id, settings, email="friend@example.org"):
+    owner.post(
+        f"/festivals/{festival_id}/invites",
+        data={"email": email, "csrf_token": owner_csrf},
+    )
+    token = capture_sink().sent[-1].body.split("/invite/")[1].split()[0]
+    member = make_client(settings)
+    member.get(f"/invite/{token}")
+    member.post(f"/invite/{token}", data={"csrf_token": member.cookies[CSRF_COOKIE]})
+    login(member, email)
+    return member
+
+
+def test_an_admin_can_issue_a_reset_link_that_actually_works(factory, settings) -> None:
+    owner = make_client(settings)
+    owner_csrf = login(owner, "owner@example.org")
+    festival_id = create_festival(owner, owner_csrf)
+    _join_as_member(owner, owner_csrf, festival_id, settings)
+
+    with factory() as db:
+        friend = db.scalars(
+            select(Participant).where(Participant.display_name == "Friend")
+        ).one()
+
+    response = owner.post(
+        f"/festivals/{festival_id}/participants/{friend.id}/reset-link",
+        data={"csrf_token": owner.cookies[CSRF_COOKIE]},
+    )
+    assert response.status_code == 200
+    assert "/reset/" in response.text
+
+    token = response.text.split("/reset/")[1].split("<")[0].strip()
+    stranger = make_client(settings)
+    assert stranger.get(f"/reset/{token}").status_code == 200
+    done = stranger.post(
+        f"/reset/{token}",
+        data={
+            "password": "a-brand-new-password",
+            "password_repeat": "a-brand-new-password",
+            "csrf_token": stranger.cookies[CSRF_COOKIE],
+        },
+    )
+    assert done.status_code in (200, 303)
+
+    # The new password works and the old one does not.
+    after = make_client(settings)
+    after.get("/login")
+    signed_in = after.post(
+        "/login",
+        data={
+            "email": "friend@example.org",
+            "password": "a-brand-new-password",
+            "csrf_token": after.cookies[CSRF_COOKIE],
+        },
+    )
+    assert signed_in.status_code == 303
+
+
+def test_a_member_cannot_issue_reset_links(factory, settings) -> None:
+    """Otherwise any member could quietly take over anybody else's account."""
+    owner = make_client(settings)
+    owner_csrf = login(owner, "owner@example.org")
+    festival_id = create_festival(owner, owner_csrf)
+    member = _join_as_member(owner, owner_csrf, festival_id, settings)
+
+    with factory() as db:
+        target = db.scalars(
+            select(Participant).where(Participant.display_name == "Owner")
+        ).one()
+
+    refused = member.post(
+        f"/festivals/{festival_id}/participants/{target.id}/reset-link",
+        data={"csrf_token": member.cookies[CSRF_COOKIE]},
+    )
+    assert refused.status_code == 403
+
+
+def test_no_reset_link_for_a_placeholder(factory, settings) -> None:
+    """A placeholder has no account, so it needs an invitation, not a reset."""
+    owner = make_client(settings)
+    owner_csrf = login(owner, "owner@example.org")
+    festival_id = create_festival(owner, owner_csrf)
+    owner.post(
+        f"/festivals/{festival_id}/participants",
+        data={"display_name": "Sabine", "csrf_token": owner_csrf},
+    )
+    with factory() as db:
+        placeholder = db.scalars(
+            select(Participant).where(Participant.display_name == "Sabine")
+        ).one()
+    response = owner.post(
+        f"/festivals/{festival_id}/participants/{placeholder.id}/reset-link",
+        data={"csrf_token": owner.cookies[CSRF_COOKIE]},
+    )
+    assert response.status_code == 400

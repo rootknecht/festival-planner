@@ -53,12 +53,29 @@
   {% endif %}
 </section>
 
+{% if reset_link %}
+{# Shown once, never mailed and never in a redirect URL. Outbound mail is not
+   available on this host, so an admin hands the link over directly. #}
+<section class="card">
+  <h2>{{ _("Password reset link for %(name)s") % {"name": reset_for} }}</h2>
+  <p class="hint">{{ _("Pass this on directly. It can be used once and expires by itself.") }}</p>
+  <p><code class="copybox">{{ reset_link }}</code></p>
+</section>
+{% endif %}
+
 <section class="card">
   <h2>{{ _("Who is coming") }}</h2>
   <ul class="names">
     {% for participant in participants %}
     <li class="name{% if participant.is_placeholder %} name--placeholder{% endif %}">
       {{ participant.display_name }}{% if participant.is_admin %} &#9733;{% endif %}
+      {% if membership.is_admin and not participant.is_placeholder and not festival.is_archived %}
+      <form method="post" class="inline"
+            action="/festivals/{{ festival.id }}/participants/{{ participant.id }}/reset-link">
+        <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+        <button class="linkbtn" title="{{ _('Create a password reset link') }}">&#8634;</button>
+      </form>
+      {% endif %}
     </li>
     {% endfor %}
   </ul>

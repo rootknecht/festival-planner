@@ -18,6 +18,7 @@ from app.models.festival import (
     Participant,
     ParticipantRole,
 )
+from app.models.password_reset import PasswordReset
 from app.models.user import User, utcnow
 from app.services import notifications
 from app.services.access import (
@@ -114,13 +115,19 @@ async def create_festival(
     return RedirectResponse(f"/festivals/{festival.id}", status_code=303)
 
 
-@router.get("/festivals/{festival_id}")
-async def festival_dashboard(
+def _dashboard(
     request: Request,
+    db: DbSession,
+    user: User,
     festival_id: int,
-    user: User = Depends(require_user),
-    db: DbSession = Depends(get_db),
+    **extra,
 ) -> Response:
+    """Render the dashboard. Shared so a POST can answer with it directly.
+
+    An admin-issued reset link has to be SHOWN once and never stored in a
+    redirect target or the browser history, so the handler answers with the
+    page itself rather than redirecting.
+    """
     membership = require_membership(db, user, festival_id)
     participants = db.scalars(
         select(Participant)
@@ -142,8 +149,19 @@ async def festival_dashboard(
             "notifications": blocks,
             "badges": notifications.badges(db, user.id, festival_id),
             "active_tool": "dashboard",
+            **extra,
         },
     )
+
+
+@router.get("/festivals/{festival_id}")
+async def festival_dashboard(
+    request: Request,
+    festival_id: int,
+    user: User = Depends(require_user),
+    db: DbSession = Depends(get_db),
+) -> Response:
+    return _dashboard(request, db, user, festival_id)
 
 
 @router.post("/festivals/{festival_id}/notifications/{notification_id}/clear")
@@ -408,3 +426,58 @@ async def unarchive(
         membership.festival.status = FestivalStatus.ACTIVE.value
         db.commit()
     return RedirectResponse(f"/festivals/{festival_id}", status_code=303)
+
+
+@router.post("/festivals/{festival_id}/participants/{participant_id}/reset-link")
+async def issue_reset_link(
+    request: Request,
+    festival_id: int,
+    participant_id: int,
+    user: User = Depends(require_user),
+    db: DbSession = Depends(get_db),
+) -> Response:
+    """Admin-issued password reset link, handed over out of band.
+
+    WHY THIS EXISTS: mail is not a dependency this deployment can rely on —
+    the host's provider blocks outbound SMTP, so "click the link in your
+    email" is advice nobody can follow. Without this, a forgotten password
+    means an account nobody can recover, and the whole invite-only design
+    turns into a lockout.
+
+    The admin gets a one-time link to pass on by whatever channel they
+    already use. It is the SAME token machinery as the mailed reset: single
+    use, hashed in the database, and expiring on its own.
+    """
+    membership = require_writable(require_membership(db, user, festival_id))
+    if not membership.is_admin:
+        raise HTTPException(status_code=403, detail="admins only")
+
+    participant = db.get(Participant, participant_id)
+    if participant is None or participant.festival_id != festival_id:
+        raise HTTPException(status_code=404, detail="not found")
+    if participant.user_id is None:
+        # A placeholder has no account yet, so there is no password to reset;
+        # that person needs an invitation, not a reset.
+        raise HTTPException(status_code=400, detail="this person has no account yet")
+
+    target = db.get(User, participant.user_id)
+    settings = getattr(request.app.state, "settings", None) or get_settings()
+    token = generate_token()
+    db.add(
+        PasswordReset(
+            user_id=target.id,
+            token_hash=hash_token(token),
+            expires_at=utcnow() + dt.timedelta(seconds=settings.reset_lifetime),
+        )
+    )
+    db.commit()
+
+    link = f"{settings.base_url.rstrip('/')}/reset/{token}"
+    return _dashboard(
+        request,
+        db,
+        user,
+        festival_id,
+        reset_link=link,
+        reset_for=participant.display_name,
+    )

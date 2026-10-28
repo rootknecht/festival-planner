@@ -1,4 +1,5 @@
 {% extends "festival_base.html" %}
+{% from "_icons.html" import icon %}
 {% block title %}{{ _("Polls") }} — {{ festival.name }}{% endblock %}
 {% block content %}
 
@@ -11,13 +12,23 @@
 
   <form method="post" action="/festivals/{{ festival.id }}/polls/{{ entry.poll.id }}/vote" class="stack">
     <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+    {% set counts = [] %}
+    {% for option in entry.poll.options %}{% set _ = counts.append(entry.votes.get(option.id, []) | length) %}{% endfor %}
+    {% set leader = counts | max if counts else 0 %}
     {% for option in entry.poll.options %}
+    {% set tally = entry.votes.get(option.id, []) | length %}
     <label class="option">
       <input type="{{ 'checkbox' if entry.poll.is_multi else 'radio' }}" name="option_id"
              value="{{ option.id }}" {% if option.id in entry.mine %}checked{% endif %}
              {% if entry.closed or festival.is_archived %}disabled{% endif %}>
       <span class="option__label">{{ option.label }}</span>
-      <span class="option__count">{{ entry.votes.get(option.id, []) | length }}</span>
+      {# Graphical result: a bar scaled to the leading option, drawn with a
+         width class rather than an inline style because the CSP forbids
+         inline styles (it silently drops them). Ten steps is enough to read
+         a result at a glance and keeps the class list small. #}
+      <span class="bar bar--{{ ((tally / leader * 10) | round(0, 'floor') | int) if leader else 0 }}{% if tally and tally == leader %} bar--leading{% endif %}"
+            role="img" aria-label="{{ tally }} {{ _('votes') }}"></span>
+      <span class="option__count">{{ tally }}</span>
       {% if entry.votes.get(option.id) %}
       <span class="hint">{{ entry.votes[option.id] | join(", ") }}</span>
       {% endif %}
@@ -48,13 +59,24 @@
 
 {% if not festival.is_archived %}
 <section class="card">
-  <h2>{{ _("New poll") }}</h2>
+  <details class="reveal">
+    <summary class="btn btn--primary">{{ icon("plus") }} {{ _("New poll") }}</summary>
   <form method="post" action="/festivals/{{ festival.id }}/polls" class="stack">
     <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
     <label for="question">{{ _("Question") }}</label>
     <input id="question" name="question" type="text" required maxlength="500">
-    <label for="options">{{ _("Options, one per line") }}</label>
-    <textarea id="options" name="options" rows="4" required></textarea>
+    <label>{{ _("Options") }}</label>
+    {# Two fields to begin with, more on demand. Without JavaScript the two
+       are still there and still submit, which is the fallback that matters. #}
+    <div data-option-list>
+      <input class="optionfield" name="options" type="text" maxlength="200" required
+             placeholder="{{ _('First option') }}">
+      <input class="optionfield" name="options" type="text" maxlength="200" required
+             placeholder="{{ _('Second option') }}">
+    </div>
+    <button type="button" class="btn btn--small" data-add-option="[data-option-list]">
+      {{ _("Add option") }}
+    </button>
     <label for="mode">{{ _("Answers") }}</label>
     <select id="mode" name="mode">
       <option value="single">{{ _("One option only") }}</option>
@@ -64,6 +86,11 @@
     <input id="closes_on" name="closes_on" type="date">
     <button class="btn btn--primary">{{ _("Ask everyone") }}</button>
   </form>
+  </details>
 </section>
 {% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/forms.js" defer></script>
 {% endblock %}

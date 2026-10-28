@@ -38,3 +38,24 @@
     });
   });
 })();
+
+// "Add option" for the poll form: clone the last field rather than building
+// markup here, so the name, classes and validation attributes can only ever
+// match the server's expectations.
+(function () {
+  "use strict";
+  document.querySelectorAll("[data-add-option]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      var list = document.querySelector(button.getAttribute("data-add-option"));
+      if (!list) return;
+      var fields = list.querySelectorAll("input[name=options]");
+      if (fields.length >= 20) return;            // a poll, not a ballot paper
+      var copy = fields[fields.length - 1].cloneNode(true);
+      copy.value = "";
+      copy.required = false;                       // extra options stay optional
+      copy.placeholder = "";
+      list.appendChild(copy);
+      copy.focus();
+    });
+  });
+})();

@@ -75,7 +75,11 @@ async def create(
     request: Request,
     festival_id: int,
     question: str = Form(...),
-    options: str = Form(...),
+    # One input per option ("options" repeated), which is what the form now
+    # sends. A textarea needed people to understand that newlines separate
+    # options; separate fields need no explanation and work on a phone
+    # keyboard that has no comfortable Enter.
+    options: list[str] = Form(default=[]),
     mode: str = Form(default="single"),
     closes_on: str = Form(default=""),
     user: User = Depends(require_user),
@@ -92,7 +96,7 @@ async def create(
         db,
         festival_id=festival_id,
         question=question,
-        options=options.splitlines(),
+        options=options,
         mode=mode,
         closes_at=closes_at,
         actor=user,

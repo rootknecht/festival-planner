@@ -152,13 +152,59 @@ def test_a_row_without_units_sums_plain_numbers(festival, factory) -> None:
     assert ">3<" in owner.get(f"/festivals/{festival_id}/bringlist").text.replace(" ", "")
 
 
-def test_any_participant_may_edit_any_cell(festival, factory) -> None:
+def test_you_may_fill_in_your_own_cell(festival, factory) -> None:
+    festival_id, owner, friend = festival
+    add_row(owner, festival_id, "Firewood")
+    rows, people = ids(factory, festival_id)
+    friend_p = next(p for p in people if p.display_name == "Friend")
+    assert set_cell(friend, festival_id, rows[0].id, friend_p.id, "3").status_code == 303
+
+
+def test_a_member_cannot_put_an_item_on_somebody_else(festival, factory) -> None:
+    """Otherwise you discover you are responsible for a pavilion you never
+    agreed to, which is how this rule got requested."""
     festival_id, owner, friend = festival
     add_row(owner, festival_id, "Firewood")
     rows, people = ids(factory, festival_id)
     owner_p = next(p for p in people if p.display_name == "Owner")
-    # the friend fills in the owner's cell — allowed by design
-    assert set_cell(friend, festival_id, rows[0].id, owner_p.id, "3").status_code == 303
+    assert set_cell(friend, festival_id, rows[0].id, owner_p.id, "3").status_code == 403
+
+
+def test_an_admin_may_assign_an_item_to_anybody(festival, factory) -> None:
+    festival_id, owner, friend = festival
+    add_row(owner, festival_id, "Firewood")
+    rows, people = ids(factory, festival_id)
+    friend_p = next(p for p in people if p.display_name == "Friend")
+    assert set_cell(owner, festival_id, rows[0].id, friend_p.id, "3").status_code == 303
+
+
+def test_only_people_who_bring_something_appear_in_the_table(festival, factory) -> None:
+    festival_id, owner, friend = festival
+    add_row(owner, festival_id, "Firewood")
+    rows, people = ids(factory, festival_id)
+    owner_p = next(p for p in people if p.display_name == "Owner")
+    set_cell(owner, festival_id, rows[0].id, owner_p.id, "4")
+
+    page = owner.get(f"/festivals/{festival_id}/bringlist").text
+    table = page.split("<tbody>")[1].split("</tbody>")[0]
+    assert "Owner" in table
+    assert "Friend" not in table           # brings nothing yet -> no row
+    assert "Not bringing anything yet" in page
+    assert "Friend" in page                # but still named, so nobody is lost
+
+
+def test_items_are_the_columns_and_people_the_rows(festival, factory) -> None:
+    """The axes are swapped: twenty columns of names was unusable on a phone."""
+    festival_id, owner, friend = festival
+    add_row(owner, festival_id, "Firewood")
+    rows, people = ids(factory, festival_id)
+    owner_p = next(p for p in people if p.display_name == "Owner")
+    set_cell(owner, festival_id, rows[0].id, owner_p.id, "4")
+
+    page = owner.get(f"/festivals/{festival_id}/bringlist").text
+    header = page.split("<thead>")[1].split("</thead>")[0]
+    assert "Firewood" in header            # item in the header row
+    assert "Owner" not in header           # people are no longer columns
 
 
 def test_only_an_admin_may_delete_a_row(festival, factory) -> None:

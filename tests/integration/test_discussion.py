@@ -153,13 +153,14 @@ def test_an_unknown_mention_matches_nobody() -> None:
 # ---------------------------------------------------------------- polls ----
 
 
-def create_poll(client, festival_id, question="Arrival?", options="Friday\nSaturday",
+def create_poll(client, festival_id, question="Arrival?", options=("Friday", "Saturday"),
                 mode="single", closes_on=""):
     return client.post(
         f"/festivals/{festival_id}/polls",
         data={
             "question": question,
-            "options": options,
+            # One form field per option now, so a list value.
+            "options": list(options) if not isinstance(options, str) else [options],
             "mode": mode,
             "closes_on": closes_on,
             "csrf_token": csrf(client),
@@ -181,7 +182,7 @@ def option_ids(factory, pid) -> list[int]:
 def test_a_poll_needs_a_question_and_two_options(festival) -> None:
     festival_id, owner, _ = festival
     assert create_poll(owner, festival_id, question="  ").status_code == 400
-    assert create_poll(owner, festival_id, options="only one").status_code == 400
+    assert create_poll(owner, festival_id, options=["only one"]).status_code == 400
 
 
 def test_creating_a_poll_asks_everyone_except_the_author(festival, factory) -> None:
@@ -225,7 +226,7 @@ def test_voting_clears_the_block_and_counts_once(festival, factory) -> None:
 
 def test_single_choice_keeps_only_one_option(festival, factory) -> None:
     festival_id, owner, friend = festival
-    create_poll(owner, festival_id, options="A\nB\nC", mode="single")
+    create_poll(owner, festival_id, options=["A", "B", "C"], mode="single")
     pid = poll_id(factory)
     options = option_ids(factory, pid)
     friend.post(
@@ -238,7 +239,7 @@ def test_single_choice_keeps_only_one_option(festival, factory) -> None:
 
 def test_multi_choice_keeps_every_option(festival, factory) -> None:
     festival_id, owner, friend = festival
-    create_poll(owner, festival_id, options="A\nB\nC", mode="multi")
+    create_poll(owner, festival_id, options=["A", "B", "C"], mode="multi")
     pid = poll_id(factory)
     options = option_ids(factory, pid)
     friend.post(

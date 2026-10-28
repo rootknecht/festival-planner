@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Festival Planner VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-28 10:44+0100\n"
+"POT-Creation-Date: 2026-10-28 11:09+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -115,8 +115,8 @@ msgstr ""
 msgid "Transport"
 msgstr ""
 
-#: app/templates/festival_base.html:6 app/templates/tools/bringlist.html:2
-#: app/templates/tools/bringlist.html:9
+#: app/templates/festival_base.html:6 app/templates/tools/bringlist.html:3
+#: app/templates/tools/bringlist.html:10
 msgid "Who brings what"
 msgstr ""
 
@@ -129,7 +129,7 @@ msgstr ""
 msgid "Chat"
 msgstr ""
 
-#: app/templates/festival_base.html:9 app/templates/tools/polls.html:2
+#: app/templates/festival_base.html:9 app/templates/tools/polls.html:3
 msgid "Polls"
 msgstr ""
 
@@ -227,11 +227,24 @@ msgstr ""
 msgid "Nothing needs your attention right now."
 msgstr ""
 
-#: app/templates/festivals/dashboard.html:57
+#: app/templates/festivals/dashboard.html:60
+#, python-format
+msgid "Password reset link for %(name)s"
+msgstr ""
+
+#: app/templates/festivals/dashboard.html:61
+msgid "Pass this on directly. It can be used once and expires by itself."
+msgstr ""
+
+#: app/templates/festivals/dashboard.html:67
 msgid "Who is coming"
 msgstr ""
 
-#: app/templates/festivals/dashboard.html:65
+#: app/templates/festivals/dashboard.html:76
+msgid "Create a password reset link"
+msgstr ""
+
+#: app/templates/festivals/dashboard.html:82
 msgid "Dashed names have no account yet."
 msgstr ""
 
@@ -263,8 +276,9 @@ msgstr ""
 msgid "Follow the festival's theme"
 msgstr ""
 
-#: app/templates/profile/index.html:33 app/templates/tools/bringlist.html:51
-#: app/templates/tools/transport.html:128
+#: app/templates/profile/index.html:33 app/templates/tools/bringlist.html:74
+#: app/templates/tools/bringlist.html:128
+#: app/templates/tools/transport.html:131
 msgid "Save"
 msgstr ""
 
@@ -369,59 +383,83 @@ msgstr ""
 msgid "Cancel"
 msgstr ""
 
-#: app/templates/tools/bringlist.html:16
-msgid "Item"
+#: app/templates/tools/bringlist.html:23
+msgid "Who"
 msgstr ""
 
-#: app/templates/tools/bringlist.html:20
-msgid "Total"
-msgstr ""
-
-#: app/templates/tools/bringlist.html:45
-msgid "Unit"
-msgstr ""
-
-#: app/templates/tools/bringlist.html:54
-msgid "by"
-msgstr ""
-
-#: app/templates/tools/bringlist.html:64
+#: app/templates/tools/bringlist.html:31
 msgid "Delete row"
 msgstr ""
 
-#: app/templates/tools/bringlist.html:74
-msgid "Nothing on the list yet. Add the first thing somebody has to bring."
+#: app/templates/tools/bringlist.html:59
+msgid "Click to change"
 msgstr ""
 
-#: app/templates/tools/bringlist.html:80
-msgid "Add a row"
+#: app/templates/tools/bringlist.html:68 app/templates/tools/bringlist.html:123
+msgid "Unit"
 msgstr ""
 
-#: app/templates/tools/bringlist.html:83
-msgid "What has to come along?"
-msgstr ""
-
-#: app/templates/tools/bringlist.html:84
-msgid "Pavilion, beer, camping table …"
-msgstr ""
-
-#: app/templates/tools/bringlist.html:85
-msgid "Units (optional, comma separated)"
-msgstr ""
-
-#: app/templates/tools/bringlist.html:86
-msgid "L, cans, crates"
-msgstr ""
-
-#: app/templates/tools/bringlist.html:87
-msgid "With units the total adds up per unit, for example “80 L + 120 cans”."
+#: app/templates/tools/bringlist.html:78
+msgid "by"
 msgstr ""
 
 #: app/templates/tools/bringlist.html:88
-msgid "Add row"
+msgid "Total"
 msgstr ""
 
 #: app/templates/tools/bringlist.html:95
+msgid "Nobody has entered anything yet."
+msgstr ""
+
+#: app/templates/tools/bringlist.html:97
+msgid "Nothing on the list yet. Add the first thing somebody has to bring."
+msgstr ""
+
+#: app/templates/tools/bringlist.html:102
+msgid "Not bringing anything yet:"
+msgstr ""
+
+#: app/templates/tools/bringlist.html:113
+msgid "Add what I bring"
+msgstr ""
+
+#: app/templates/tools/bringlist.html:117
+msgid "What"
+msgstr ""
+
+#: app/templates/tools/bringlist.html:121
+msgid "How much"
+msgstr ""
+
+#: app/templates/tools/bringlist.html:137
+msgid "Add a row"
+msgstr ""
+
+#: app/templates/tools/bringlist.html:140
+msgid "What has to come along?"
+msgstr ""
+
+#: app/templates/tools/bringlist.html:141
+msgid "Pavilion, beer, camping table …"
+msgstr ""
+
+#: app/templates/tools/bringlist.html:142
+msgid "Units (optional, comma separated)"
+msgstr ""
+
+#: app/templates/tools/bringlist.html:143
+msgid "L, cans, crates"
+msgstr ""
+
+#: app/templates/tools/bringlist.html:144
+msgid "With units the total adds up per unit, for example “80 L + 120 cans”."
+msgstr ""
+
+#: app/templates/tools/bringlist.html:145
+msgid "Add row"
+msgstr ""
+
+#: app/templates/tools/bringlist.html:153
 msgid "Recent changes"
 msgstr ""
 
@@ -481,55 +519,71 @@ msgstr ""
 msgid "This part is not built yet."
 msgstr ""
 
-#: app/templates/tools/polls.html:9
+#: app/templates/tools/polls.html:10
 msgid "closed"
 msgstr ""
 
-#: app/templates/tools/polls.html:29
-msgid "Save my answer"
-msgstr ""
-
-#: app/templates/tools/polls.html:32
-msgid "Close poll"
+#: app/templates/tools/polls.html:30
+msgid "votes"
 msgstr ""
 
 #: app/templates/tools/polls.html:40
-msgid "Still missing:"
+msgid "Save my answer"
 msgstr ""
 
-#: app/templates/tools/polls.html:45
-msgid "No polls yet."
+#: app/templates/tools/polls.html:43
+msgid "Close poll"
 msgstr ""
 
 #: app/templates/tools/polls.html:51
-msgid "New poll"
-msgstr ""
-
-#: app/templates/tools/polls.html:54
-msgid "Question"
+msgid "Still missing:"
 msgstr ""
 
 #: app/templates/tools/polls.html:56
-msgid "Options, one per line"
-msgstr ""
-
-#: app/templates/tools/polls.html:58
-msgid "Answers"
-msgstr ""
-
-#: app/templates/tools/polls.html:60
-msgid "One option only"
-msgstr ""
-
-#: app/templates/tools/polls.html:61
-msgid "Several options allowed"
+msgid "No polls yet."
 msgstr ""
 
 #: app/templates/tools/polls.html:63
+msgid "New poll"
+msgstr ""
+
+#: app/templates/tools/polls.html:66
+msgid "Question"
+msgstr ""
+
+#: app/templates/tools/polls.html:68
+msgid "Options"
+msgstr ""
+
+#: app/templates/tools/polls.html:73
+msgid "First option"
+msgstr ""
+
+#: app/templates/tools/polls.html:75
+msgid "Second option"
+msgstr ""
+
+#: app/templates/tools/polls.html:78
+msgid "Add option"
+msgstr ""
+
+#: app/templates/tools/polls.html:80
+msgid "Answers"
+msgstr ""
+
+#: app/templates/tools/polls.html:82
+msgid "One option only"
+msgstr ""
+
+#: app/templates/tools/polls.html:83
+msgid "Several options allowed"
+msgstr ""
+
+#: app/templates/tools/polls.html:85
 msgid "Closes on (optional)"
 msgstr ""
 
-#: app/templates/tools/polls.html:65
+#: app/templates/tools/polls.html:87
 msgid "Ask everyone"
 msgstr ""
 
@@ -549,219 +603,219 @@ msgstr ""
 msgid "Reply"
 msgstr ""
 
-#: app/templates/tools/transport.html:16
+#: app/templates/tools/transport.html:19
 msgid "seats"
 msgstr ""
 
-#: app/templates/tools/transport.html:16 app/templates/tools/transport.html:53
+#: app/templates/tools/transport.html:19 app/templates/tools/transport.html:56
 msgid "full"
 msgstr ""
 
-#: app/templates/tools/transport.html:28
+#: app/templates/tools/transport.html:31
 msgid "Car-sharing"
 msgstr ""
 
-#: app/templates/tools/transport.html:31
+#: app/templates/tools/transport.html:34
 msgid "Not in a car yet — drag a name onto a car, or use the buttons below it."
 msgstr ""
 
-#: app/templates/tools/transport.html:39
+#: app/templates/tools/transport.html:42
 msgid "Everybody has a seat."
 msgstr ""
 
-#: app/templates/tools/transport.html:50 app/templates/tools/transport.html:298
-#: app/templates/tools/transport.html:334
-#: app/templates/tools/transport.html:356
+#: app/templates/tools/transport.html:53 app/templates/tools/transport.html:301
+#: app/templates/tools/transport.html:337
+#: app/templates/tools/transport.html:359
 msgid "No driver yet"
 msgstr ""
 
-#: app/templates/tools/transport.html:55
+#: app/templates/tools/transport.html:58
 msgid "free"
 msgstr ""
 
-#: app/templates/tools/transport.html:57
+#: app/templates/tools/transport.html:60
 msgid "seats taken"
 msgstr ""
 
-#: app/templates/tools/transport.html:59
+#: app/templates/tools/transport.html:62
 msgid "leaves"
 msgstr ""
 
-#: app/templates/tools/transport.html:67
+#: app/templates/tools/transport.html:70
 msgid "Remove car"
 msgstr ""
 
-#: app/templates/tools/transport.html:75
+#: app/templates/tools/transport.html:78
 msgid "driving"
 msgstr ""
 
-#: app/templates/tools/transport.html:80 app/templates/tools/transport.html:92
+#: app/templates/tools/transport.html:83 app/templates/tools/transport.html:95
 msgid "Take out"
 msgstr ""
 
-#: app/templates/tools/transport.html:98
+#: app/templates/tools/transport.html:101
 msgid "free seat"
 msgstr ""
 
-#: app/templates/tools/transport.html:105
-#: app/templates/tools/transport.html:110
+#: app/templates/tools/transport.html:108
+#: app/templates/tools/transport.html:113
 msgid "Add passenger"
 msgstr ""
 
-#: app/templates/tools/transport.html:120
+#: app/templates/tools/transport.html:123
 msgid "From"
 msgstr ""
 
-#: app/templates/tools/transport.html:121
-#: app/templates/tools/transport.html:152
-#: app/templates/tools/transport.html:264
+#: app/templates/tools/transport.html:124
+#: app/templates/tools/transport.html:155
+#: app/templates/tools/transport.html:267
 msgid "not found on the map"
 msgstr ""
 
-#: app/templates/tools/transport.html:124
+#: app/templates/tools/transport.html:127
 msgid "Change departure"
 msgstr ""
 
-#: app/templates/tools/transport.html:134
 #: app/templates/tools/transport.html:137
+#: app/templates/tools/transport.html:140
 msgid "Departure address"
 msgstr ""
 
-#: app/templates/tools/transport.html:139
+#: app/templates/tools/transport.html:142
 msgid "Town is enough"
 msgstr ""
 
-#: app/templates/tools/transport.html:140
+#: app/templates/tools/transport.html:143
 msgid "Save departure"
 msgstr ""
 
-#: app/templates/tools/transport.html:167
+#: app/templates/tools/transport.html:170
 msgid "Pickup on the way"
 msgstr ""
 
-#: app/templates/tools/transport.html:170
-#: app/templates/tools/transport.html:321
+#: app/templates/tools/transport.html:173
+#: app/templates/tools/transport.html:324
 msgid "Address"
 msgstr ""
 
-#: app/templates/tools/transport.html:172
+#: app/templates/tools/transport.html:175
 msgid "Picking up (optional)"
 msgstr ""
 
-#: app/templates/tools/transport.html:179
+#: app/templates/tools/transport.html:182
 msgid "Add stop"
 msgstr ""
 
-#: app/templates/tools/transport.html:187
+#: app/templates/tools/transport.html:190
 msgid "Edit car"
 msgstr ""
 
-#: app/templates/tools/transport.html:190
-#: app/templates/tools/transport.html:240
+#: app/templates/tools/transport.html:193
+#: app/templates/tools/transport.html:243
 msgid "Colour"
 msgstr ""
 
-#: app/templates/tools/transport.html:196
-#: app/templates/tools/transport.html:234
+#: app/templates/tools/transport.html:199
+#: app/templates/tools/transport.html:237
 msgid "Seats in total, driver included"
 msgstr ""
 
-#: app/templates/tools/transport.html:202
-#: app/templates/tools/transport.html:244
+#: app/templates/tools/transport.html:205
+#: app/templates/tools/transport.html:247
 msgid "Departure"
 msgstr ""
 
-#: app/templates/tools/transport.html:207
+#: app/templates/tools/transport.html:210
 msgid "Clear the departure time"
 msgstr ""
 
-#: app/templates/tools/transport.html:210
+#: app/templates/tools/transport.html:213
 msgid "Save changes"
 msgstr ""
 
-#: app/templates/tools/transport.html:224
+#: app/templates/tools/transport.html:227
 msgid "Add a car"
 msgstr ""
 
-#: app/templates/tools/transport.html:227
+#: app/templates/tools/transport.html:230
 msgid "Who drives?"
 msgstr ""
 
-#: app/templates/tools/transport.html:229
+#: app/templates/tools/transport.html:232
 msgid "Decide later"
 msgstr ""
 
-#: app/templates/tools/transport.html:246
+#: app/templates/tools/transport.html:249
 msgid "Add car"
 msgstr ""
 
-#: app/templates/tools/transport.html:256
+#: app/templates/tools/transport.html:259
 msgid "Meeting points"
 msgstr ""
 
-#: app/templates/tools/transport.html:269
+#: app/templates/tools/transport.html:272
 msgid "Remove"
 msgstr ""
 
-#: app/templates/tools/transport.html:276
+#: app/templates/tools/transport.html:279
 msgid "Expected:"
 msgstr ""
 
-#: app/templates/tools/transport.html:278
+#: app/templates/tools/transport.html:281
 msgid "car"
 msgstr ""
 
-#: app/templates/tools/transport.html:281
+#: app/templates/tools/transport.html:284
 msgid "No car is expected here yet."
 msgstr ""
 
-#: app/templates/tools/transport.html:286
+#: app/templates/tools/transport.html:289
 msgid "Choose cars"
 msgstr ""
 
-#: app/templates/tools/transport.html:290
-#: app/templates/tools/transport.html:327
+#: app/templates/tools/transport.html:293
+#: app/templates/tools/transport.html:330
 msgid "Select all"
 msgstr ""
 
-#: app/templates/tools/transport.html:291
-#: app/templates/tools/transport.html:328
+#: app/templates/tools/transport.html:294
+#: app/templates/tools/transport.html:331
 msgid "Select none"
 msgstr ""
 
-#: app/templates/tools/transport.html:303
+#: app/templates/tools/transport.html:306
 msgid "Save selection"
 msgstr ""
 
-#: app/templates/tools/transport.html:310
+#: app/templates/tools/transport.html:313
 msgid "No meeting point yet."
 msgstr ""
 
-#: app/templates/tools/transport.html:315
+#: app/templates/tools/transport.html:318
 msgid "Add a meeting point"
 msgstr ""
 
-#: app/templates/tools/transport.html:318
+#: app/templates/tools/transport.html:321
 msgid "Name"
 msgstr ""
 
-#: app/templates/tools/transport.html:320
+#: app/templates/tools/transport.html:323
 msgid "Last services before the gate"
 msgstr ""
 
-#: app/templates/tools/transport.html:323
+#: app/templates/tools/transport.html:326
 msgid "Meet at"
 msgstr ""
 
-#: app/templates/tools/transport.html:339
+#: app/templates/tools/transport.html:342
 msgid "Add meeting point"
 msgstr ""
 
-#: app/templates/tools/transport.html:346
+#: app/templates/tools/transport.html:349
 msgid "On the map"
 msgstr ""
 
-#: app/templates/tools/transport.html:366
+#: app/templates/tools/transport.html:369
 msgid "Straight lines show the order of the stops, not the road route."
 msgstr ""
 

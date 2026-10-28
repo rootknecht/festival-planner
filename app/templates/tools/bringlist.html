@@ -1,4 +1,5 @@
 {% extends "festival_base.html" %}
+{% from "_icons.html" import icon %}
 {% block title %}{{ _("Who brings what") }} — {{ festival.name }}{% endblock %}
 {% block content %}
 <div data-ws="/festivals/{{ festival.id }}/ws" data-tool="bringlist" hidden></div>
@@ -8,85 +9,142 @@
 <section class="card">
   <h2>{{ _("Who brings what") }}</h2>
 
-  {% if rows %}
+  {# AXES SWAPPED: items are the columns, people are the rows. With twenty
+     people the old layout was twenty columns wide and unusable on a phone;
+     this way the table grows downwards, which phones do natively.
+
+     Only people who actually bring something get a row. Everyone else is named
+     once underneath, so nobody is forgotten but the table stays short. #}
+  {% if rows and bringers %}
   <div class="tablewrap">
     <table class="grid grid--matrix">
       <thead>
         <tr>
-          <th class="sticky-col">{{ _("Item") }}</th>
-          {% for participant in participants %}
-          <th class="{% if participant.is_placeholder %}is-placeholder{% endif %}">{{ participant.display_name }}</th>
+          <th class="sticky-col">{{ _("Who") }}</th>
+          {% for row in rows %}
+          <th>
+            {{ row.label }}
+            {% if row.units %}<span class="hint">{{ row.units | join(" / ") }}</span>{% endif %}
+            {% if membership.is_admin and not festival.is_archived %}
+            <form method="post" action="/festivals/{{ festival.id }}/bringlist/rows/{{ row.id }}/delete" class="inline">
+              <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+              <button class="linkbtn" title="{{ _('Delete row') }}">&#10005;</button>
+            </form>
+            {% endif %}
+          </th>
           {% endfor %}
-          <th>{{ _("Total") }}</th>
-          {% if membership.is_admin and not festival.is_archived %}<th></th>{% endif %}
         </tr>
       </thead>
       <tbody>
-        {% for row in rows %}
+        {% for participant in bringers %}
         <tr>
-          <th class="sticky-col">
-            {{ row.label }}
-            {% if row.units %}<span class="hint">{{ row.units | join(" / ") }}</span>{% endif %}
+          <th class="sticky-col {% if participant.is_placeholder %}is-placeholder{% endif %}">
+            {{ participant.display_name }}
           </th>
-          {% for participant in participants %}
+          {% for row in rows %}
           {% set cell = row.cells.get(participant.id) %}
+          {% set editable = participant.id == my_participant_id or membership.is_admin %}
           <td>
-            {% if festival.is_archived %}
-            {{ cell.display if cell else "" }}
+            {% if festival.is_archived or not editable %}
+            {# Only your own column is editable; an admin may edit anyone's.
+               Somebody else quietly deciding what you bring is exactly the
+               surprise this rule exists to prevent. #}
+            {{ cell.display if cell else "—" }}
             {% else %}
-            <form method="post" action="/festivals/{{ festival.id }}/bringlist/cells" class="cellform">
-              <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
-              <input type="hidden" name="row_id" value="{{ row.id }}">
-              <input type="hidden" name="participant_id" value="{{ participant.id }}">
-              <input class="cellinput" name="amount" type="number" min="0" step="any" inputmode="decimal"
-                     value="{{ cell.amount | round(2) | int if cell and cell.amount == cell.amount | round(0) else (cell.amount if cell else '') }}"
-                     aria-label="{{ row.label }} — {{ participant.display_name }}">
-              {% if row.units %}
-              <select class="cellunit" name="unit" aria-label="{{ _('Unit') }}">
-                {% for unit in row.units %}
-                <option value="{{ unit }}" {% if cell and cell.unit == unit %}selected{% endif %}>{{ unit }}</option>
-                {% endfor %}
-              </select>
-              {% endif %}
-              <button class="cellsave" title="{{ _('Save') }}">&#10003;</button>
-            </form>
+            {# Click to edit: the number field and its stepper arrows appear
+               only after a click. Permanently visible steppers made the table
+               look like a spreadsheet and were easy to nudge by accident while
+               scrolling on a phone. #}
+            <details class="cell">
+              <summary class="cell__value" title="{{ _('Click to change') }}">{{ cell.display if cell else "—" }}</summary>
+              <form method="post" action="/festivals/{{ festival.id }}/bringlist/cells" class="cellform">
+                <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+                <input type="hidden" name="row_id" value="{{ row.id }}">
+                <input type="hidden" name="participant_id" value="{{ participant.id }}">
+                <input class="cellinput" name="amount" type="number" min="0" step="any" inputmode="decimal"
+                       value="{{ cell.amount | round(2) | int if cell and cell.amount == cell.amount | round(0) else (cell.amount if cell else '') }}"
+                       aria-label="{{ row.label }} — {{ participant.display_name }}">
+                {% if row.units %}
+                <select class="cellunit" name="unit" aria-label="{{ _('Unit') }}">
+                  {% for unit in row.units %}
+                  <option value="{{ unit }}" {% if cell and cell.unit == unit %}selected{% endif %}>{{ unit }}</option>
+                  {% endfor %}
+                </select>
+                {% endif %}
+                <button class="cellsave" title="{{ _('Save') }}">&#10003;</button>
+              </form>
+            </details>
             {% if cell and cell.updated_by_name %}
             <span class="hint hint--tiny">{{ _("by") }} {{ cell.updated_by_name }}</span>
             {% endif %}
             {% endif %}
           </td>
           {% endfor %}
-          <td class="total">{{ row.total }}</td>
-          {% if membership.is_admin and not festival.is_archived %}
-          <td>
-            <form method="post" action="/festivals/{{ festival.id }}/bringlist/rows/{{ row.id }}/delete">
-              <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
-              <button class="btn" title="{{ _('Delete row') }}">&#10005;</button>
-            </form>
-          </td>
-          {% endif %}
         </tr>
         {% endfor %}
       </tbody>
+      <tfoot>
+        <tr>
+          <th class="sticky-col">{{ _("Total") }}</th>
+          {% for row in rows %}<td class="total">{{ row.total }}</td>{% endfor %}
+        </tr>
+      </tfoot>
     </table>
   </div>
+  {% elif rows %}
+  <p class="hint">{{ _("Nobody has entered anything yet.") }}</p>
   {% else %}
   <p class="hint">{{ _("Nothing on the list yet. Add the first thing somebody has to bring.") }}</p>
+  {% endif %}
+
+  {% if not_bringing %}
+  <p class="hint">
+    {{ _("Not bringing anything yet:") }}
+    {% for participant in not_bringing %}
+    <span class="pill">{{ participant.display_name }}</span>
+    {% endfor %}
+  </p>
+  {% endif %}
+
+  {% if my_participant_id and rows and not festival.is_archived %}
+  {# A direct way into your own column, needed because you have no row in the
+     table until you bring something. #}
+  <details class="reveal">
+    <summary class="btn btn--small">{{ icon("plus") }} {{ _("Add what I bring") }}</summary>
+    <form method="post" action="/festivals/{{ festival.id }}/bringlist/cells" class="stack">
+      <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+      <input type="hidden" name="participant_id" value="{{ my_participant_id }}">
+      <label for="my-row">{{ _("What") }}</label>
+      <select id="my-row" name="row_id">
+        {% for row in rows %}<option value="{{ row.id }}">{{ row.label }}</option>{% endfor %}
+      </select>
+      <label for="my-amount">{{ _("How much") }}</label>
+      <input id="my-amount" name="amount" type="number" min="0" step="any" inputmode="decimal" required>
+      <label for="my-unit">{{ _("Unit") }}</label>
+      <select id="my-unit" name="unit">
+        <option value="">—</option>
+        {% for unit in all_units %}<option value="{{ unit }}">{{ unit }}</option>{% endfor %}
+      </select>
+      <button class="btn btn--primary">{{ _("Save") }}</button>
+    </form>
+  </details>
   {% endif %}
 </section>
 
 {% if not festival.is_archived %}
 <section class="card">
-  <h2>{{ _("Add a row") }}</h2>
-  <form method="post" action="/festivals/{{ festival.id }}/bringlist/rows" class="stack">
-    <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
-    <label for="label">{{ _("What has to come along?") }}</label>
-    <input id="label" name="label" type="text" maxlength="120" required placeholder="{{ _('Pavilion, beer, camping table …') }}">
-    <label for="units">{{ _("Units (optional, comma separated)") }}</label>
-    <input id="units" name="units" type="text" maxlength="200" placeholder="{{ _('L, cans, crates') }}">
-    <p class="hint">{{ _("With units the total adds up per unit, for example “80 L + 120 cans”.") }}</p>
-    <button class="btn btn--primary">{{ _("Add row") }}</button>
-  </form>
+  <details class="reveal">
+    <summary class="btn btn--primary">{{ icon("plus") }} {{ _("Add a row") }}</summary>
+    <form method="post" action="/festivals/{{ festival.id }}/bringlist/rows" class="stack">
+      <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+      <label for="label">{{ _("What has to come along?") }}</label>
+      <input id="label" name="label" type="text" maxlength="120" required placeholder="{{ _('Pavilion, beer, camping table …') }}">
+      <label for="units">{{ _("Units (optional, comma separated)") }}</label>
+      <input id="units" name="units" type="text" maxlength="200" placeholder="{{ _('L, cans, crates') }}">
+      <p class="hint">{{ _("With units the total adds up per unit, for example “80 L + 120 cans”.") }}</p>
+      <button class="btn btn--primary">{{ _("Add row") }}</button>
+    </form>
+  </details>
 </section>
 {% endif %}
 
@@ -104,4 +162,5 @@
 
 {% block scripts %}
 <script src="/static/js/live.js" defer></script>
+<script src="/static/js/forms.js" defer></script>
 {% endblock %}

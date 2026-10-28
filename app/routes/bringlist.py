@@ -20,6 +20,16 @@ router = APIRouter(tags=["bringlist"])
 
 def _page(request: Request, db: DbSession, user: User, festival_id: int, **extra) -> Response:
     membership = require_membership(db, user, festival_id)
+    participants = bringlist.participants_of(db, festival_id)
+    rows = bringlist.build_table(db, festival_id)
+    bringing_ids = {
+        participant_id
+        for row in rows
+        for participant_id, cell in row.cells.items()
+        if cell and cell.amount
+    }
+    bringers = [p for p in participants if p.id in bringing_ids]
+    mine = next((p for p in participants if p.user_id == user.id), None)
     return render(
         request,
         "tools/bringlist.html",
@@ -28,8 +38,14 @@ def _page(request: Request, db: DbSession, user: User, festival_id: int, **extra
             "membership": membership,
             "badges": notifications.badges(db, user.id, festival_id),
             "active_tool": "bringlist",
-            "participants": bringlist.participants_of(db, festival_id),
-            "rows": bringlist.build_table(db, festival_id),
+            "participants": participants,
+            # Only people who actually bring something appear as rows; the
+            # rest are named once underneath so nobody is forgotten.
+            "bringers": bringers,
+            "not_bringing": [p for p in participants if p.id not in bringing_ids],
+            "my_participant_id": mine.id if mine else None,
+            "rows": rows,
+            "all_units": sorted({unit for row in rows for unit in row.units}),
             "changes": bringlist.recent_changes(db, festival_id),
             **extra,
         },
@@ -100,13 +116,23 @@ async def set_cell(
     user: User = Depends(require_user),
     db: DbSession = Depends(get_db),
 ) -> Response:
-    require_writable(require_membership(db, user, festival_id))
+    membership = require_writable(require_membership(db, user, festival_id))
     row = db.get(BringRow, row_id)
     participant = db.get(Participant, participant_id)
     if row is None or row.festival_id != festival_id:
         raise HTTPException(status_code=404, detail="not found")
     if participant is None or participant.festival_id != festival_id:
         raise HTTPException(status_code=404, detail="not found")
+
+    # Assigning an item to SOMEBODY ELSE is an admin's job now. Previously
+    # anyone could write into anyone's column, which is how you end up
+    # responsible for a pavilion you never agreed to. Your own column stays
+    # yours, and placeholders (no account) can only be filled in by an admin
+    # because nobody else can act for them.
+    if not membership.is_admin and participant.user_id != user.id:
+        raise HTTPException(
+            status_code=403, detail="only an admin can enter this for somebody else"
+        )
 
     try:
         value = float((amount or "0").replace(",", "."))

@@ -143,3 +143,47 @@ async def close(
     polls.close_poll(db, poll)
     notify_change(festival_id, Tool.POLLS.value)
     return RedirectResponse(f"/festivals/{festival_id}/polls", status_code=303)
+
+
+@router.post("/festivals/{festival_id}/polls/{poll_id}/reopen")
+async def reopen(
+    request: Request,
+    festival_id: int,
+    poll_id: int,
+    user: User = Depends(require_user),
+    db: DbSession = Depends(get_db),
+) -> Response:
+    """Put a closed poll back in play. Same rule as closing it."""
+    membership = require_writable(require_membership(db, user, festival_id))
+    poll = _poll_of(db, festival_id, poll_id)
+    if poll.created_by != user.id and not membership.is_admin:
+        raise HTTPException(
+            status_code=403, detail="only the creator or an admin may reopen this"
+        )
+    polls.reopen_poll(db, poll, user)
+    notify_change(festival_id, Tool.POLLS.value)
+    return RedirectResponse(f"/festivals/{festival_id}/polls", status_code=303)
+
+
+@router.post("/festivals/{festival_id}/polls/{poll_id}/delete")
+async def delete(
+    request: Request,
+    festival_id: int,
+    poll_id: int,
+    user: User = Depends(require_user),
+    db: DbSession = Depends(get_db),
+) -> Response:
+    """Remove a poll and every vote in it.
+
+    Admins only, deliberately stricter than closing: closing preserves the
+    result for anyone who wants to look, deleting destroys other people's
+    answers. The creator can close their own poll, but throwing away a dozen
+    votes is a decision for whoever runs the festival.
+    """
+    membership = require_writable(require_membership(db, user, festival_id))
+    if not membership.is_admin:
+        raise HTTPException(status_code=403, detail="only an admin may delete a poll")
+    poll = _poll_of(db, festival_id, poll_id)
+    polls.delete_poll(db, poll)
+    notify_change(festival_id, Tool.POLLS.value)
+    return RedirectResponse(f"/festivals/{festival_id}/polls", status_code=303)

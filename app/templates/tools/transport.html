@@ -114,6 +114,7 @@
     {% endfor %}
   </ul>
 
+  <div class="car__actions row">
   {% if unassigned and car.free_seats and not festival.is_archived %}
   {# The name list only appears once asked for; it was permanently open on
      every car and pushed the cars themselves off the screen. #}
@@ -212,6 +213,7 @@
     </details>
   </div>
   {% endif %}
+  </div>
 </section>
 {% endfor %}
 </div>

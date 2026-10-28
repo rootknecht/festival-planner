@@ -140,7 +140,15 @@ def _dashboard(
         for item in notifications.open_for(db, user.id, festival_id)
     ]
     from app.services import expenses as expense_service
+    from app.services import transport as transport_service
 
+    summary = {
+        # "Drinkers" counts everybody on the list, placeholders included:
+        # somebody without an account still drinks and still needs a seat.
+        "people": len(participants),
+        "cars": len(transport_service.cars_of(db, festival_id)),
+        "days": membership.festival.countdown_days,
+    }
     mine = next((p for p in participants if p.user_id == user.id), None)
     balance = expense_service.balance_for(db, festival_id, mine.id if mine else None)
     return render(
@@ -154,6 +162,7 @@ def _dashboard(
             "badges": notifications.badges(db, user.id, festival_id),
             "active_tool": "dashboard",
             "balance": balance,
+            "summary": summary,
             **extra,
         },
     )

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Festival Planner VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-28 12:03+0100\n"
+"POT-Creation-Date: 2026-10-28 12:40+0100\n"
 "PO-Revision-Date: 2026-10-27 14:26+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -87,43 +87,43 @@ msgstr ""
 msgid "Something changed that involves you."
 msgstr ""
 
-#: app/services/transport.py:299
+#: app/services/transport.py:323
 msgid "Red"
 msgstr ""
 
-#: app/services/transport.py:300
+#: app/services/transport.py:324
 msgid "Black"
 msgstr ""
 
-#: app/services/transport.py:301
+#: app/services/transport.py:325
 msgid "White"
 msgstr ""
 
-#: app/services/transport.py:302
+#: app/services/transport.py:326
 msgid "Silver"
 msgstr ""
 
-#: app/services/transport.py:303
+#: app/services/transport.py:327
 msgid "Grey"
 msgstr ""
 
-#: app/services/transport.py:304
+#: app/services/transport.py:328
 msgid "Blue"
 msgstr ""
 
-#: app/services/transport.py:305
+#: app/services/transport.py:329
 msgid "Green"
 msgstr ""
 
-#: app/services/transport.py:306
+#: app/services/transport.py:330
 msgid "Yellow"
 msgstr ""
 
-#: app/services/transport.py:307
+#: app/services/transport.py:331
 msgid "Orange"
 msgstr ""
 
-#: app/services/transport.py:308
+#: app/services/transport.py:332
 msgid "Purple"
 msgstr ""
 
@@ -136,7 +136,7 @@ msgstr ""
 msgid "Who brings what"
 msgstr ""
 
-#: app/templates/festival_base.html:7 app/templates/festivals/dashboard.html:17
+#: app/templates/festival_base.html:7 app/templates/festivals/dashboard.html:35
 #: app/templates/tools/expenses.html:3
 msgid "Expenses"
 msgstr ""
@@ -155,41 +155,32 @@ msgstr ""
 msgid "Forum"
 msgstr ""
 
-#: app/templates/festival_base.html:23
-#, python-format
-msgid "in %(days)s days"
-msgstr ""
-
-#: app/templates/festival_base.html:25
-msgid "today!"
-msgstr ""
-
-#: app/templates/festival_base.html:34
+#: app/templates/festival_base.html:27
 msgid "Switch language"
 msgstr ""
 
-#: app/templates/festival_base.html:36 app/templates/profile/index.html:2
+#: app/templates/festival_base.html:29 app/templates/profile/index.html:2
 #: app/templates/profile/index.html:5
 msgid "Profile"
 msgstr ""
 
-#: app/templates/festival_base.html:38
+#: app/templates/festival_base.html:31
 msgid "Install app"
 msgstr ""
 
-#: app/templates/festival_base.html:41
+#: app/templates/festival_base.html:34
 msgid "Sign out"
 msgstr ""
 
-#: app/templates/festival_base.html:46
+#: app/templates/festival_base.html:39
 msgid "Festival tools"
 msgstr ""
 
-#: app/templates/festival_base.html:50
+#: app/templates/festival_base.html:43
 msgid "Dashboard"
 msgstr ""
 
-#: app/templates/festival_base.html:57
+#: app/templates/festival_base.html:50
 msgid "new"
 msgstr ""
 
@@ -209,66 +200,113 @@ msgstr ""
 msgid "Try again"
 msgstr ""
 
-#: app/templates/festivals/dashboard.html:6
+#: app/templates/festivals/dashboard.html:8
+msgid "location to be announced"
+msgstr ""
+
+#: app/templates/festivals/dashboard.html:10
+#, python-format
+msgid "%(n)s drinker"
+msgid_plural "%(n)s drinkers"
+msgstr[0] ""
+msgstr[1] ""
+
+#: app/templates/festivals/dashboard.html:12
+#, python-format
+msgid "%(n)s car"
+msgid_plural "%(n)s cars"
+msgstr[0] ""
+msgstr[1] ""
+
+#: app/templates/festivals/dashboard.html:16
+#, python-format
+msgid "in %(days)s days"
+msgstr ""
+
+#: app/templates/festivals/dashboard.html:17
+msgid "today!"
+msgstr ""
+
+#: app/templates/festivals/dashboard.html:18
+msgid "it is over"
+msgstr ""
+
+#: app/templates/festivals/dashboard.html:24
 msgid "This festival is archived — it can be read but not changed."
 msgstr ""
 
-#: app/templates/festivals/dashboard.html:16
+#: app/templates/festivals/dashboard.html:34
 msgid "Money"
 msgstr ""
 
-#: app/templates/festivals/dashboard.html:23
+#: app/templates/festivals/dashboard.html:42
+#: app/templates/tools/expenses.html:23 app/templates/tools/expenses.html:73
+#: app/templates/tools/transport.html:64
+msgid "from"
+msgstr ""
+
+#: app/templates/festivals/dashboard.html:45
+#: app/templates/tools/expenses.html:26 app/templates/tools/expenses.html:53
+msgid "to"
+msgstr ""
+
+#: app/templates/festivals/dashboard.html:48
+#: app/templates/tools/expenses.html:29 app/templates/tools/expenses.html:56
+msgid "waiting for confirmation"
+msgstr ""
+
+#: app/templates/festivals/dashboard.html:56
 msgid "owed to you"
 msgstr ""
 
-#: app/templates/festivals/dashboard.html:26
-#: app/templates/tools/expenses.html:22
+#: app/templates/festivals/dashboard.html:59
+#: app/templates/tools/expenses.html:41
 msgid "you still owe"
 msgstr ""
 
-#: app/templates/festivals/dashboard.html:29
-#: app/templates/tools/expenses.html:25
+#: app/templates/festivals/dashboard.html:62
+#: app/templates/tools/expenses.html:44
 msgid "even, but some confirmations are missing"
 msgstr ""
 
-#: app/templates/festivals/dashboard.html:37
+#: app/templates/festivals/dashboard.html:70
 msgid "Open for you"
 msgstr ""
 
-#: app/templates/festivals/dashboard.html:39
+#: app/templates/festivals/dashboard.html:72
 msgid "Settings"
 msgstr ""
 
-#: app/templates/festivals/dashboard.html:49
+#: app/templates/festivals/dashboard.html:82
 msgid "Open"
 msgstr ""
 
-#: app/templates/festivals/dashboard.html:52
+#: app/templates/festivals/dashboard.html:85
 msgid "Got it"
 msgstr ""
 
-#: app/templates/festivals/dashboard.html:59
+#: app/templates/festivals/dashboard.html:92
 msgid "Nothing needs your attention right now."
 msgstr ""
 
-#: app/templates/festivals/dashboard.html:67
+#: app/templates/festivals/dashboard.html:100
 #, python-format
 msgid "Password reset link for %(name)s"
 msgstr ""
 
-#: app/templates/festivals/dashboard.html:68
+#: app/templates/festivals/dashboard.html:101
 msgid "Pass this on directly. It can be used once and expires by itself."
 msgstr ""
 
-#: app/templates/festivals/dashboard.html:74
+#: app/templates/festivals/dashboard.html:107
 msgid "Who is coming"
 msgstr ""
 
-#: app/templates/festivals/dashboard.html:83
+#: app/templates/festivals/dashboard.html:116
 msgid "Create a password reset link"
 msgstr ""
 
-#: app/templates/festivals/dashboard.html:89
+#: app/templates/festivals/dashboard.html:122
 msgid "Dashed names have no account yet."
 msgstr ""
 
@@ -302,7 +340,7 @@ msgstr ""
 
 #: app/templates/profile/index.html:33 app/templates/tools/bringlist.html:70
 #: app/templates/tools/bringlist.html:123
-#: app/templates/tools/bringlist.html:141 app/templates/tools/expenses.html:169
+#: app/templates/tools/bringlist.html:141 app/templates/tools/expenses.html:248
 msgid "Save"
 msgstr ""
 
@@ -528,151 +566,144 @@ msgstr ""
 msgid "Your balance"
 msgstr ""
 
-#: app/templates/tools/expenses.html:19
+#: app/templates/tools/expenses.html:38
 msgid "in your favour"
 msgstr ""
 
-#: app/templates/tools/expenses.html:30
+#: app/templates/tools/expenses.html:49
 msgid "You owe"
 msgstr ""
 
-#: app/templates/tools/expenses.html:34
-msgid "to"
-msgstr ""
-
-#: app/templates/tools/expenses.html:37
-msgid "waiting for confirmation"
-msgstr ""
-
-#: app/templates/tools/expenses.html:41
+#: app/templates/tools/expenses.html:60
 msgid "I paid this"
 msgstr ""
 
-#: app/templates/tools/expenses.html:50
+#: app/templates/tools/expenses.html:69
 msgid "Owed to you"
 msgstr ""
 
-#: app/templates/tools/expenses.html:54 app/templates/tools/transport.html:64
-msgid "from"
-msgstr ""
-
-#: app/templates/tools/expenses.html:61
+#: app/templates/tools/expenses.html:80
 msgid "Received"
 msgstr ""
 
-#: app/templates/tools/expenses.html:64 app/templates/tools/expenses.html:187
+#: app/templates/tools/expenses.html:83 app/templates/tools/expenses.html:266
 msgid "open"
 msgstr ""
 
-#: app/templates/tools/expenses.html:72
+#: app/templates/tools/expenses.html:91
 msgid ""
 "Nothing outstanding. Either nobody has spent anything yet, or everything "
 "is settled."
 msgstr ""
 
-#: app/templates/tools/expenses.html:79
+#: app/templates/tools/expenses.html:98
 msgid "Add a cost"
 msgstr ""
 
-#: app/templates/tools/expenses.html:85 app/templates/tools/expenses.html:156
+#: app/templates/tools/expenses.html:104 app/templates/tools/expenses.html:175
 msgid "What did you pay for?"
 msgstr ""
 
-#: app/templates/tools/expenses.html:87
+#: app/templates/tools/expenses.html:106
 msgid "Crate of beer, firewood, fuel …"
 msgstr ""
 
-#: app/templates/tools/expenses.html:88 app/templates/tools/expenses.html:159
+#: app/templates/tools/expenses.html:107 app/templates/tools/expenses.html:178
 msgid "Amount in euro"
 msgstr ""
 
-#: app/templates/tools/expenses.html:91 app/templates/tools/expenses.html:162
+#: app/templates/tools/expenses.html:110 app/templates/tools/expenses.html:181
 msgid "Date (optional)"
 msgstr ""
 
-#: app/templates/tools/expenses.html:94
+#: app/templates/tools/expenses.html:113 app/templates/tools/expenses.html:205
 msgid "Split"
 msgstr ""
 
-#: app/templates/tools/expenses.html:96
+#: app/templates/tools/expenses.html:115 app/templates/tools/expenses.html:211
 msgid "Equally between everyone"
 msgstr ""
 
-#: app/templates/tools/expenses.html:97
+#: app/templates/tools/expenses.html:116 app/templates/tools/expenses.html:217
 msgid "Equally between a selection"
 msgstr ""
 
-#: app/templates/tools/expenses.html:98
+#: app/templates/tools/expenses.html:117 app/templates/tools/expenses.html:232
 msgid "A specific amount each"
 msgstr ""
 
-#: app/templates/tools/expenses.html:103 app/templates/tools/transport.html:280
-#: app/templates/tools/transport.html:338
+#: app/templates/tools/expenses.html:122 app/templates/tools/transport.html:282
+#: app/templates/tools/transport.html:340
 msgid "Select all"
 msgstr ""
 
-#: app/templates/tools/expenses.html:104 app/templates/tools/transport.html:281
-#: app/templates/tools/transport.html:339
+#: app/templates/tools/expenses.html:123 app/templates/tools/transport.html:283
+#: app/templates/tools/transport.html:341
 msgid "Select none"
 msgstr ""
 
-#: app/templates/tools/expenses.html:127
+#: app/templates/tools/expenses.html:146
 msgid ""
 "These have to add up to the total — leave somebody empty if they owe "
 "nothing."
 msgstr ""
 
-#: app/templates/tools/expenses.html:130 app/templates/tools/expenses.html:165
+#: app/templates/tools/expenses.html:149 app/templates/tools/expenses.html:184
 msgid "Note (optional)"
 msgstr ""
 
-#: app/templates/tools/expenses.html:132
+#: app/templates/tools/expenses.html:151
 msgid "Save cost"
 msgstr ""
 
-#: app/templates/tools/expenses.html:139
+#: app/templates/tools/expenses.html:158
 msgid "All costs"
 msgstr ""
 
-#: app/templates/tools/expenses.html:147
+#: app/templates/tools/expenses.html:166
 msgid "paid by"
 msgstr ""
 
-#: app/templates/tools/expenses.html:153
+#: app/templates/tools/expenses.html:172
 msgid "Edit"
 msgstr ""
 
-#: app/templates/tools/expenses.html:168
+#: app/templates/tools/expenses.html:191
 msgid ""
-"Changing the total re-divides what is still open. To change WHO pays, "
-"delete this and enter it again."
+"Someone has already marked part of this as paid, so who pays and how it "
+"splits are fixed now. Changing the total re-divides only what is still "
+"open."
 msgstr ""
 
-#: app/templates/tools/expenses.html:174 app/templates/tools/transport.html:317
+#: app/templates/tools/expenses.html:193
+msgid "Who paid?"
+msgstr ""
+
+#: app/templates/tools/expenses.html:253 app/templates/tools/transport.html:319
 msgid "Remove"
 msgstr ""
 
-#: app/templates/tools/expenses.html:185
+#: app/templates/tools/expenses.html:264
 msgid "settled"
 msgstr ""
 
-#: app/templates/tools/expenses.html:186
+#: app/templates/tools/expenses.html:265
 msgid "paid, not confirmed"
 msgstr ""
 
-#: app/templates/tools/expenses.html:196
+#: app/templates/tools/expenses.html:275
 msgid "Nobody has entered a cost yet."
 msgstr ""
 
-#: app/templates/tools/expenses.html:201
+#: app/templates/tools/expenses.html:280
 msgid "Who stands where"
 msgstr ""
 
-#: app/templates/tools/expenses.html:209
+#: app/templates/tools/expenses.html:288
 msgid "even"
 msgstr ""
 
-#: app/templates/tools/expenses.html:213
+#: app/templates/tools/expenses.html:292
 msgid "A plus means the group still owes this person."
 msgstr ""
 
@@ -808,9 +839,9 @@ msgstr ""
 msgid "Everybody has a seat."
 msgstr ""
 
-#: app/templates/tools/transport.html:63 app/templates/tools/transport.html:287
-#: app/templates/tools/transport.html:346
-#: app/templates/tools/transport.html:375
+#: app/templates/tools/transport.html:63 app/templates/tools/transport.html:289
+#: app/templates/tools/transport.html:348
+#: app/templates/tools/transport.html:377
 msgid "No driver yet"
 msgstr ""
 
@@ -842,158 +873,158 @@ msgstr ""
 msgid "free seat"
 msgstr ""
 
-#: app/templates/tools/transport.html:121
-#: app/templates/tools/transport.html:124
-#: app/templates/tools/transport.html:129
+#: app/templates/tools/transport.html:122
+#: app/templates/tools/transport.html:125
+#: app/templates/tools/transport.html:130
 msgid "Add passenger"
 msgstr ""
 
-#: app/templates/tools/transport.html:142
-#: app/templates/tools/transport.html:312
+#: app/templates/tools/transport.html:143
+#: app/templates/tools/transport.html:314
 msgid "not found on the map"
 msgstr ""
 
-#: app/templates/tools/transport.html:157
+#: app/templates/tools/transport.html:158
 msgid "Pickup on the way"
 msgstr ""
 
-#: app/templates/tools/transport.html:160
-#: app/templates/tools/transport.html:271
+#: app/templates/tools/transport.html:161
+#: app/templates/tools/transport.html:273
 msgid "Address"
 msgstr ""
 
-#: app/templates/tools/transport.html:162
+#: app/templates/tools/transport.html:163
 msgid "Picking up (optional)"
 msgstr ""
 
-#: app/templates/tools/transport.html:169
+#: app/templates/tools/transport.html:170
 msgid "Add stop"
 msgstr ""
 
-#: app/templates/tools/transport.html:177
+#: app/templates/tools/transport.html:178
 msgid "Edit car"
 msgstr ""
 
-#: app/templates/tools/transport.html:180
-#: app/templates/tools/transport.html:243
+#: app/templates/tools/transport.html:181
+#: app/templates/tools/transport.html:245
 msgid "Colour"
 msgstr ""
 
-#: app/templates/tools/transport.html:186
-#: app/templates/tools/transport.html:237
+#: app/templates/tools/transport.html:187
+#: app/templates/tools/transport.html:239
 msgid "Seats in total, driver included"
 msgstr ""
 
-#: app/templates/tools/transport.html:192
-#: app/templates/tools/transport.html:247
+#: app/templates/tools/transport.html:193
+#: app/templates/tools/transport.html:249
 msgid "Departure address"
 msgstr ""
 
-#: app/templates/tools/transport.html:195
-#: app/templates/tools/transport.html:249
+#: app/templates/tools/transport.html:196
+#: app/templates/tools/transport.html:251
 msgid "Town is enough"
 msgstr ""
 
-#: app/templates/tools/transport.html:196
-#: app/templates/tools/transport.html:250
+#: app/templates/tools/transport.html:197
+#: app/templates/tools/transport.html:252
 msgid "Departure"
 msgstr ""
 
-#: app/templates/tools/transport.html:199
-#: app/templates/tools/transport.html:257
+#: app/templates/tools/transport.html:200
+#: app/templates/tools/transport.html:259
 msgid "Departure date"
 msgstr ""
 
-#: app/templates/tools/transport.html:202
-#: app/templates/tools/transport.html:258
+#: app/templates/tools/transport.html:203
+#: app/templates/tools/transport.html:260
 msgid "Departure time"
 msgstr ""
 
-#: app/templates/tools/transport.html:207
+#: app/templates/tools/transport.html:208
 msgid "Clear the departure time"
 msgstr ""
 
-#: app/templates/tools/transport.html:210
+#: app/templates/tools/transport.html:211
 msgid "Save changes"
 msgstr ""
 
-#: app/templates/tools/transport.html:227
+#: app/templates/tools/transport.html:229
 msgid "Add a car"
 msgstr ""
 
-#: app/templates/tools/transport.html:230
+#: app/templates/tools/transport.html:232
 msgid "Who drives?"
 msgstr ""
 
-#: app/templates/tools/transport.html:232
+#: app/templates/tools/transport.html:234
 msgid "Decide later"
 msgstr ""
 
-#: app/templates/tools/transport.html:260
+#: app/templates/tools/transport.html:262
 msgid "Add car"
 msgstr ""
 
-#: app/templates/tools/transport.html:265
+#: app/templates/tools/transport.html:267
 msgid "Add a meeting point"
 msgstr ""
 
-#: app/templates/tools/transport.html:268
+#: app/templates/tools/transport.html:270
 msgid "Name"
 msgstr ""
 
-#: app/templates/tools/transport.html:270
+#: app/templates/tools/transport.html:272
 msgid "Last services before the gate"
 msgstr ""
 
-#: app/templates/tools/transport.html:273
+#: app/templates/tools/transport.html:275
 msgid "Meet at"
 msgstr ""
 
-#: app/templates/tools/transport.html:275
+#: app/templates/tools/transport.html:277
 msgid "Meeting date"
 msgstr ""
 
-#: app/templates/tools/transport.html:276
+#: app/templates/tools/transport.html:278
 msgid "Meeting time"
 msgstr ""
 
-#: app/templates/tools/transport.html:292
+#: app/templates/tools/transport.html:294
 msgid "Add meeting point"
 msgstr ""
 
-#: app/templates/tools/transport.html:304
+#: app/templates/tools/transport.html:306
 msgid "Meeting points"
 msgstr ""
 
-#: app/templates/tools/transport.html:324
+#: app/templates/tools/transport.html:326
 msgid "Expected:"
 msgstr ""
 
-#: app/templates/tools/transport.html:326
+#: app/templates/tools/transport.html:328
 msgid "car"
 msgstr ""
 
-#: app/templates/tools/transport.html:329
+#: app/templates/tools/transport.html:331
 msgid "No car is expected here yet."
 msgstr ""
 
-#: app/templates/tools/transport.html:334
+#: app/templates/tools/transport.html:336
 msgid "Choose cars"
 msgstr ""
 
-#: app/templates/tools/transport.html:351
+#: app/templates/tools/transport.html:353
 msgid "Save selection"
 msgstr ""
 
-#: app/templates/tools/transport.html:358
+#: app/templates/tools/transport.html:360
 msgid "No meeting point yet."
 msgstr ""
 
-#: app/templates/tools/transport.html:365
+#: app/templates/tools/transport.html:367
 msgid "On the map"
 msgstr ""
 
-#: app/templates/tools/transport.html:385
+#: app/templates/tools/transport.html:387
 msgid "Straight lines show the order of the stops, not the road route."
 msgstr ""
 
@@ -1034,5 +1065,17 @@ msgstr ""
 #~ msgstr ""
 
 #~ msgid "Save departure"
+#~ msgstr ""
+
+#~ msgid "in %(days)s days"
+#~ msgstr ""
+
+#~ msgid "today!"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Changing the total re-divides what "
+#~ "is still open. To change WHO pays,"
+#~ " delete this and enter it again."
 #~ msgstr ""
 

@@ -15,7 +15,7 @@ from starlette.requests import Request
 
 from app.config import get_settings
 from app.security.csrf import CSRF_FIELD
-from app.translations import SUPPORTED_LANGUAGES, gettext_for, normalise
+from app.translations import SUPPORTED_LANGUAGES, gettext_for, ngettext_for, normalise
 
 TEMPLATE_DIR = Path(__file__).parent / "templates"
 
@@ -68,6 +68,7 @@ def render(request: Request, name: str, context: dict[str, Any] | None = None, *
         "user": getattr(request.state, "user", None),
         "language": language,
         "_": gettext_for(language),
+        "ngettext": ngettext_for(language),
         "theme": theme_for(request, context.get("festival")),
     }
     data.update(context)

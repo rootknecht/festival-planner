@@ -12,6 +12,25 @@
    do I owe and who owes me", not "what did the group spend". #}
 <section class="card">
   <h2>{{ _("Your balance") }}</h2>
+  {% if balance.by_person %}
+  {# One line per person rather than one per expense: a single transfer
+     settles everything between two people, so that is the unit that matters. #}
+  <ul class="balance__people">
+    {% for line in balance.by_person %}
+    <li>
+      {% if line.cents > 0 %}
+      <strong class="balance__net--plus">{{ line.euro }} €</strong>
+      <span>{{ _("from") }} {{ line.name }}</span>
+      {% else %}
+      <strong class="balance__net--minus">{{ line.euro }} €</strong>
+      <span>{{ _("to") }} {{ line.name }}</span>
+      {% endif %}
+      {% if line.items %}<span class="hint">({{ line.items | join(", ") }})</span>{% endif %}
+      {% if line.waiting %}<span class="pill pill--wait">{{ _("waiting for confirmation") }}</span>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
   {% if balance.has_anything %}
   <p class="balance">
     {% if balance.net_cents > 0 %}
@@ -165,7 +184,67 @@
               <label for="ed-note-{{ expense.id }}">{{ _("Note (optional)") }}</label>
               <input id="ed-note-{{ expense.id }}" name="note" type="text" maxlength="400"
                      value="{{ expense.note or '' }}">
-              <p class="hint">{{ _("Changing the total re-divides what is still open. To change WHO pays, delete this and enter it again.") }}</p>
+
+              {% if expense.is_locked %}
+              {# Locked, because a handshake is already under way on this
+                 money. Everything above stays editable. #}
+              <p class="hint">{{ _("Someone has already marked part of this as paid, so who pays and how it splits are fixed now. Changing the total re-divides only what is still open.") }}</p>
+              {% else %}
+              <label for="ed-payer-{{ expense.id }}">{{ _("Who paid?") }}</label>
+              <select id="ed-payer-{{ expense.id }}" name="payer_participant_id">
+                {% for person in participants %}
+                {% if person.user_id == current_user_id or not person.user_id or membership.is_admin %}
+                <option value="{{ person.id }}" {{ "selected" if person.id == expense.payer_participant_id }}>
+                  {{ person.display_name }}
+                </option>
+                {% endif %}
+                {% endfor %}
+              </select>
+
+              <fieldset class="split">
+                <legend>{{ _("Split") }}</legend>
+                {% set shared_with = expense.shares | map(attribute="participant_id") | list %}
+                <label class="check">
+                  <input type="radio" name="split_mode" value="equal"
+                         {{ "checked" if expense.split_mode.value == "equal" }}
+                         data-split-mode data-panel="#ed-sel-{{ expense.id }}">
+                  {{ _("Equally between everyone") }}
+                </label>
+                <label class="check">
+                  <input type="radio" name="split_mode" value="selection"
+                         {{ "checked" if expense.split_mode.value == "selection" }}
+                         data-split-mode data-panel="#ed-sel-{{ expense.id }}">
+                  {{ _("Equally between a selection") }}
+                </label>
+                <ul class="checks" id="ed-sel-{{ expense.id }}">
+                  {% for person in participants %}
+                  <li><label class="check">
+                    <input type="checkbox" name="share_ids" value="{{ person.id }}"
+                           {{ "checked" if person.id in shared_with }}>
+                    {{ person.display_name }}
+                  </label></li>
+                  {% endfor %}
+                </ul>
+                <label class="check">
+                  <input type="radio" name="split_mode" value="exact"
+                         {{ "checked" if expense.split_mode.value == "exact" }}
+                         data-split-mode data-panel="#ed-exact-{{ expense.id }}">
+                  {{ _("A specific amount each") }}
+                </label>
+                <ul class="checks" id="ed-exact-{{ expense.id }}">
+                  {% for person in participants %}
+                  {% set existing = expense.shares | selectattr("participant_id", "equalto", person.id) | first %}
+                  <li class="row">
+                    <input type="hidden" name="exact_participant_ids" value="{{ person.id }}">
+                    <label for="ed-ex-{{ expense.id }}-{{ person.id }}">{{ person.display_name }}</label>
+                    <input id="ed-ex-{{ expense.id }}-{{ person.id }}" name="exact_amounts"
+                           type="text" inputmode="decimal"
+                           value="{{ ("%.2f"|format(existing.amount_cents / 100) | replace(".", ",")) if existing else "" }}">
+                  </li>
+                  {% endfor %}
+                </ul>
+              </fieldset>
+              {% endif %}
               <button class="btn btn--primary">{{ _("Save") }}</button>
             </form>
           </details>

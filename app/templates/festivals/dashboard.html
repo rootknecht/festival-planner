@@ -1,6 +1,24 @@
 {% extends "festival_base.html" %}
 {% block title %}{{ festival.name }} — Festival Planner{% endblock %}
 {% block content %}
+{# One line, four facts: where, how many of us, how many cars, how long.
+   This replaces the countdown that sat in the title bar — the header is for
+   identifying the festival, not for carrying statistics. #}
+<section class="card oneliner">
+  <span class="oneliner__item">{{ icon("tent") }} {{ festival.location or _("location to be announced") }}</span>
+  <span class="oneliner__sep">—</span>
+  <span class="oneliner__item">{{ icon("beer") }} {{ ngettext("%(n)s drinker", "%(n)s drinkers", summary.people) % {"n": summary.people} }}</span>
+  <span class="oneliner__sep">—</span>
+  <span class="oneliner__item">{{ icon("car") }} {{ ngettext("%(n)s car", "%(n)s cars", summary.cars) % {"n": summary.cars} }}</span>
+  {% if summary.days is not none %}
+  <span class="oneliner__sep">—</span>
+  <span class="oneliner__item oneliner__item--days">
+    {%- if summary.days > 0 %}{{ _("in %(days)s days") % {"days": summary.days} }}
+    {%- elif summary.days == 0 %}{{ _("today!") }}
+    {%- else %}{{ _("it is over") }}{% endif -%}
+  </span>
+  {% endif %}
+</section>
 
 {% if festival.is_archived %}
 <p class="alert" role="status">{{ _("This festival is archived — it can be read but not changed.") }}</p>
@@ -16,6 +34,21 @@
     <h2>{{ _("Money") }}</h2>
     <a class="btn btn--small" href="/festivals/{{ festival.id }}/expenses">{{ _("Expenses") }}</a>
   </div>
+  <ul class="balance__people">
+    {% for line in balance.by_person %}
+    <li>
+      {% if line.cents > 0 %}
+      <strong class="balance__net--plus">{{ line.euro }} €</strong>
+      <span>{{ _("from") }} {{ line.name }}</span>
+      {% else %}
+      <strong class="balance__net--minus">{{ line.euro }} €</strong>
+      <span>{{ _("to") }} {{ line.name }}</span>
+      {% endif %}
+      {% if line.items %}<span class="hint">({{ line.items | join(", ") }})</span>{% endif %}
+      {% if line.waiting %}<span class="pill pill--wait">{{ _("waiting for confirmation") }}</span>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
   <p class="balance">
     {% set net = balance.net_cents %}
     {% if net > 0 %}

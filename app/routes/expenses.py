@@ -164,10 +164,20 @@ async def edit(
     amount: str = Form(default=""),
     note: str = Form(default=""),
     spent_on: str = Form(default=""),
+    payer_participant_id: int | None = Form(default=None),
+    split_mode: str = Form(default=""),
+    share_ids: list[int] = Form(default=[]),
+    exact_participant_ids: list[int] = Form(default=[]),
+    exact_amounts: list[str] = Form(default=[]),
     user: User = Depends(require_user),
     db: DbSession = Depends(get_db),
 ) -> Response:
-    """Correct a cost. The payer or an admin, same rule as deleting."""
+    """Correct a cost. The payer or an admin, same rule as deleting.
+
+    While nothing is settled this is a full edit, payer and split included.
+    Once somebody has pressed "I paid this" the split locks — see
+    expenses.edit_expense for why.
+    """
     membership = require_writable(require_membership(db, user, festival_id))
     expense = db.get(Expense, expense_id)
     if expense is None or expense.festival_id != festival_id:
@@ -183,6 +193,32 @@ async def edit(
         except ValueError:
             when = None
 
+    payer = None
+    mode = None
+    exact_cents = None
+    if split_mode:
+        try:
+            mode = expenses.SplitMode(split_mode)
+        except ValueError:
+            mode = expenses.SplitMode.EQUAL
+        if payer_participant_id is not None:
+            payer = db.get(Participant, payer_participant_id)
+            if payer is None or payer.festival_id != festival_id:
+                raise HTTPException(status_code=404, detail="not found")
+        if mode is expenses.SplitMode.EXACT:
+            exact_cents = {}
+            for pid, raw in zip(exact_participant_ids, exact_amounts, strict=False):
+                text = (raw or "").strip()
+                if not text:
+                    continue
+                try:
+                    exact_cents[pid] = expenses.parse_amount(text)
+                except expenses.ExpenseRefused:
+                    return _page(
+                        request, db, user, festival_id,
+                        error="One of the amounts is not a number.",
+                    )
+
     try:
         expenses.edit_expense(
             db,
@@ -192,6 +228,10 @@ async def edit(
             note=note,
             spent_on=when,
             actor=user,
+            payer=payer,
+            split_mode=mode,
+            share_ids=list(share_ids),
+            exact_cents=exact_cents,
         )
     except expenses.ExpenseRefused as exc:
         return _page(request, db, user, festival_id, error=exc.detail)

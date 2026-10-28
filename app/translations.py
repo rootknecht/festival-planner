@@ -51,5 +51,15 @@ def gettext_for(language: str | None):
     return get_translations(language).gettext
 
 
+def ngettext_for(language: str | None):
+    """Plural-aware lookup.
+
+    German and English both have two plural forms, but not every language
+    does, and gettext already knows each language's rule — so the count goes
+    to the catalogue rather than being decided with an if in a template.
+    """
+    return get_translations(language).ngettext
+
+
 def clear_cache() -> None:
     _cache.clear()

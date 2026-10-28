@@ -29,12 +29,15 @@
       var latlng = [point.lat, point.lon];
       line.push(latlng);
       bounds.push(latlng);
+      // A meeting point is drawn as a ringed square-ish marker so it reads as
+      // "everybody here" rather than as one more private pickup.
       L.circleMarker(latlng, {
-        radius: point.kind === "festival" ? 9 : 6,
-        color: point.kind === "festival" ? "#ffffff" : colour,
+        radius: point.kind === "festival" ? 9 : (point.kind === "meeting" ? 8 : 6),
+        color: (point.kind === "festival" || point.kind === "meeting") ? "#ffffff" : colour,
         fillColor: colour,
         fillOpacity: 0.9,
-        weight: 2
+        weight: point.kind === "meeting" ? 3 : 2,
+        dashArray: point.kind === "meeting" ? "3 3" : null
       })
         .addTo(map)
         .bindPopup(point.label);

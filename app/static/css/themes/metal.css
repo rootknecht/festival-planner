@@ -1,3 +1,20 @@
+/* Grenze, SIL OFL 1.1 — the TEXT companion to Grenze Gotisch above, drawn
+   by the same project. That is why it is here rather than some other serif:
+   the body echoes the wordmark because they are literally relatives, not
+   because two faces happened to look similar in a specimen.
+   400 and 700 are both shipped — a real bold beats the browser's synthetic
+   smear, which looks worst on exactly this kind of face. 8KB each, subset. */
+@font-face {
+  font-family: "Grenze";
+  src: url("/static/fonts/Grenze-400.woff2") format("woff2");
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Grenze";
+  src: url("/static/fonts/Grenze-700.woff2") format("woff2");
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+
 /* Grenze Gotisch, SIL OFL 1.1 — self-hosted, licence beside the file in
    app/static/fonts/. No font CDN: it would be an extra origin in the CSP, a
    third party watching every page load, and a hard dependency for an app
@@ -60,8 +77,8 @@
   --fp-gap-m: 1rem;
   --fp-gap-l: 1.5rem;
   --fp-gap-xl: 3rem;
-  --fp-font-body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --fp-font-display: "Trebuchet MS", system-ui, sans-serif;
+  --fp-font-body: "Grenze", Georgia, "Times New Roman", serif;
+  --fp-font-display: "Grenze", "Trebuchet MS", system-ui, sans-serif;
   --fp-display-tracking: 0.12em;
   --fp-brand-transform: uppercase;
 }

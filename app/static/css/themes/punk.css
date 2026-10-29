@@ -1,3 +1,20 @@
+/* Oswald, SIL OFL 1.1 — the condensed grotesque of gig posters and flyers.
+   Black Ops One has no text sibling, so this is a cousin rather than a
+   relative: it keeps the shouted-poster rhythm at a size you can read a
+   forum thread in. Special Elite (battered typewriter) was the more punk
+   choice and was not taken — it is markedly harder to read in long
+   messages, and body text is every word in the app. 8KB per weight. */
+@font-face {
+  font-family: "Oswald";
+  src: url("/static/fonts/Oswald-400.woff2") format("woff2");
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Oswald";
+  src: url("/static/fonts/Oswald-600.woff2") format("woff2");
+  font-weight: 600; font-style: normal; font-display: swap;
+}
+
 /* Black Ops One, SIL OFL 1.1 — self-hosted, licence beside the file in
    app/static/fonts/. No font CDN, for the same reasons as the metal theme.
 
@@ -59,8 +76,8 @@
   --fp-gap-m: 1rem;
   --fp-gap-l: 1.5rem;
   --fp-gap-xl: 3rem;
-  --fp-font-body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --fp-font-display: "Arial Black", "Helvetica Neue", Impact, sans-serif;
+  --fp-font-body: "Oswald", "Arial Narrow", system-ui, sans-serif;
+  --fp-font-display: "Oswald", "Arial Black", Impact, sans-serif;
   --fp-display-tracking: 0.02em;
   --fp-brand-transform: uppercase;
 }

@@ -506,7 +506,7 @@ textarea { min-height: 4rem; resize: vertical; }
   --card-bg: #0b0b0b;
   --card-fg: #f4f4f2;
   --card-radius: 0px;
-  --card-font: "Rubik Dirt", "Arial Black", Impact, sans-serif;
+  --card-font: "Rubik Dirt", "Special Elite", "Arial Black", monospace;
 }
 
 .cardtheme {

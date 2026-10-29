@@ -36,10 +36,11 @@
 /* Theme: Punk — black, bleached white and one electric cyan, after the
    Spirit Festival poster.
 
-   That poster is almost entirely black and white and then spends its whole
-   colour budget on a single turquoise. Copying it means being disciplined:
-   ONE accent, used loudly, and everything else monochrome. A second colour
-   would turn it from a punk flyer into a theme.
+   The poster spends its whole colour budget on a single turquoise. This
+   theme deliberately does NOT: the accent is the same pale steel the metal
+   theme uses, so the two themes are recognisably one application wearing
+   different clothes. What makes it punk is the texture — photocopy stripes,
+   torn-paper rules, typewriter type, zero corner radius — not the colour.
 
    The texture is photocopy — hard edges, no soft shadows, no rounded
    corners, type set in capitals. Rounding is zero rather than small: a
@@ -61,13 +62,17 @@
   --fp-muted: #9b9b97;
   --fp-border: #343434;
 
-  --fp-accent: #16b6cc;
+  /* Bleached paper-white rather than the poster's turquoise, to match the
+     steel accent in the metal theme. Pure #fff was not used: on a black
+     field it glares and the hairline borders disappear into it, so this is
+     the same near-white the body text already uses. */
+  --fp-accent: #b9c4d4;
   --fp-accent-fg: #000000;
 
   --fp-danger: #e23b3b;
   --fp-danger-bg: #1d0c0c;
   --fp-danger-fg: #ffd0d0;
-  --fp-ok: #16b6cc;
+  --fp-ok: #6f9f7a;
   --fp-warn: #e8c33b;
 
   /* No rounding anywhere. See above: this is the single decision that keeps
@@ -97,8 +102,8 @@
 }
 
 /* The accent is a highlighter pen, not a tint: the active tool in the bar
-   gets a solid cyan block with black text, the way the poster boxes a band
-   name it wants you to see. */
+   gets a solid block with black text, the way the poster boxes a band name
+   it wants you to see. */
 [data-theme="punk"] .toolbar a[aria-current="page"] {
   background: var(--fp-accent);
   color: var(--fp-accent-fg);

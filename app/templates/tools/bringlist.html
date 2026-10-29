@@ -67,7 +67,7 @@
                   {% endfor %}
                 </select>
                 {% endif %}
-                <button class="cellsave" title="{{ _('Save') }}">&#10003;</button>
+                <button class="cellsave" title="{{ _('Save') }}" aria-label="{{ _('Save') }}">{{ icon("check") }}</button>
               </form>
             </details>
             {% endif %}
@@ -140,7 +140,7 @@
                  placeholder="{{ _('L, cans, crates') }}" aria-label="{{ _('Units') }}">
           <button class="btn btn--small">{{ _("Save") }}</button>
           <button class="linkbtn" formaction="/festivals/{{ festival.id }}/bringlist/rows/{{ row.id }}/delete"
-                  title="{{ _('Delete row') }}">&#10005;</button>
+                  title="{{ _('Delete row') }}">{{ icon("close") }}</button>
         </form>
         {% endfor %}
       </div>

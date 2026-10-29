@@ -113,7 +113,7 @@
           {% endif %}
           <form method="post" action="/festivals/{{ festival.id }}/polls/{{ entry.poll.id }}/delete" class="inline">
             <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
-            <button class="linkbtn" title="{{ _('Delete this poll and every vote in it') }}">&#10005;</button>
+            <button class="linkbtn" title="{{ _('Delete this poll and every vote in it') }}">{{ icon("close") }}</button>
           </form>
         </span>
       </div>

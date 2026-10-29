@@ -88,7 +88,7 @@
       <form method="post" class="inline" action="/festivals/{{ festival.id }}/transport/cars/{{ car.id }}/seats/remove">
         <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
         <input type="hidden" name="participant_id" value="{{ car.driver.id }}">
-        <button class="linkbtn" title="{{ _('Take out') }}">&#10005;</button>
+        <button class="linkbtn" title="{{ _('Take out') }}">{{ icon("close") }}</button>
       </form>
       {% endif %}
     </li>
@@ -100,7 +100,7 @@
       <form method="post" class="inline" action="/festivals/{{ festival.id }}/transport/cars/{{ car.id }}/seats/remove">
         <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
         <input type="hidden" name="participant_id" value="{{ seat.participant.id }}">
-        <button class="linkbtn" title="{{ _('Take out') }}">&#10005;</button>
+        <button class="linkbtn" title="{{ _('Take out') }}">{{ icon("close") }}</button>
       </form>
       {% endif %}
     </li>
@@ -127,7 +127,7 @@
       {% if not festival.is_archived %}
       <form method="post" class="inline" action="/festivals/{{ festival.id }}/transport/stops/{{ stop.id }}/delete">
         <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
-        <button class="linkbtn">&#10005;</button>
+        <button class="linkbtn">{{ icon("close") }}</button>
       </form>
       {% endif %}
     </li>
@@ -268,7 +268,7 @@
         {% if membership.is_admin or (car.driver and car.driver.user_id == user.id) %}
         <form method="post" action="/festivals/{{ festival.id }}/transport/cars/{{ car.id }}/delete" class="inline">
           <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
-          <button class="linkbtn" title="{{ _('Remove this car and free its passengers') }}">&#10005;</button>
+          <button class="linkbtn" title="{{ _('Remove this car and free its passengers') }}">{{ icon("close") }}</button>
         </form>
         {% endif %}
       </div>
@@ -331,7 +331,7 @@
       {% if membership.is_admin and not festival.is_archived %}
       <form method="post" action="/festivals/{{ festival.id }}/transport/meeting-points/{{ point.id }}/delete" class="inline">
         <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
-        <button class="linkbtn" title="{{ _('Remove') }}">&#10005;</button>
+        <button class="linkbtn" title="{{ _('Remove') }}">{{ icon("close") }}</button>
       </form>
       {% endif %}
     </div>

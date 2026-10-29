@@ -221,6 +221,21 @@ textarea { min-height: 4rem; resize: vertical; }
    every theme recolour them for free — the point of dropping emoji. */
 .icon { width: 22px; height: 22px; display: block; }
 .toolbar__icon .icon { margin: 0 auto; }
+/* Icons that sit INSIDE a line of text — the admin star on a name, the reset
+   arrow, the delete cross, the cell tick — must be inline and sized to the
+   text, not 22px blocks. The default above is for the tool rail and the
+   title bar, where an icon IS the whole control. Getting this wrong pushes
+   the glyph onto its own line and inflates whatever contains it. */
+.name .icon,
+.linkbtn .icon,
+.cellsave .icon,
+.adminstar .icon {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.15em;
+}
+.adminstar { display: inline-block; line-height: 1; }
 
 /* Countdown: the first thing you want to know on the dashboard is how long
    until you leave, so it is one big number and nothing else. */

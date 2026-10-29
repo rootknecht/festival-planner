@@ -174,3 +174,30 @@ def test_the_profile_offers_following_the_festival_as_the_first_choice() -> None
     page = (Path(__file__).resolve().parents[2] / "app" / "templates" / "profile" / "index.html").read_text()
     first = page.index('name="theme_override"')
     assert 'value=""' in page[first:first + 400], "the empty 'follow the festival' option must come first"
+
+
+def test_no_theme_rewrites_the_festival_name() -> None:
+    """A theme chooses the face, the colour and the spacing — never the
+    capitalisation of somebody's festival.
+
+    Three themes set brand-transform: uppercase, so "RockHarz 2027" was
+    displayed as "ROCKHARZ 2027" however carefully it had been typed. The
+    overview cards never did this, which is how the inconsistency showed.
+    Section headings may still shout: those are labels, not names.
+    """
+    import re
+
+    for name in THEMES:
+        css = (THEME_DIR / f"{name}.css").read_text()
+        transform = re.search(r"--fp-brand-transform:\s*([^;]+);", css)
+        if transform:
+            assert transform.group(1).strip() == "none", (
+                f"{name}.css rewrites the festival name as {transform.group(1).strip()}"
+            )
+        wordmark = re.search(
+            rf'\[data-theme="{name}"\][^{{]*\.titlebar__name\s*\{{(.*?)\}}', css, re.S
+        )
+        if wordmark:
+            assert "text-transform: uppercase" not in wordmark.group(1), (
+                f"{name}.css uppercases the wordmark directly"
+            )

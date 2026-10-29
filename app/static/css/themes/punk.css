@@ -1,0 +1,83 @@
+/* Theme: Punk — black, bleached white and one electric cyan, after the
+   Spirit Festival poster.
+
+   That poster is almost entirely black and white and then spends its whole
+   colour budget on a single turquoise. Copying it means being disciplined:
+   ONE accent, used loudly, and everything else monochrome. A second colour
+   would turn it from a punk flyer into a theme.
+
+   The texture is photocopy — hard edges, no soft shadows, no rounded
+   corners, type set in capitals. Rounding is zero rather than small: a
+   4px radius is the visual difference between a flyer and a dashboard. */
+:root {
+  --fp-bg: #000000;
+  --fp-bg-image:
+    repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.022) 0px,
+      rgba(255, 255, 255, 0.022) 1px,
+      rgba(0, 0, 0, 0) 1px,
+      rgba(0, 0, 0, 0) 3px
+    );
+  --fp-surface: #0b0b0b;
+  --fp-surface-2: #141414;
+  --fp-input-bg: #000000;
+  --fp-fg: #f4f4f2;
+  --fp-muted: #9b9b97;
+  --fp-border: #343434;
+
+  --fp-accent: #16b6cc;
+  --fp-accent-fg: #000000;
+
+  --fp-danger: #e23b3b;
+  --fp-danger-bg: #1d0c0c;
+  --fp-danger-fg: #ffd0d0;
+  --fp-ok: #16b6cc;
+  --fp-warn: #e8c33b;
+
+  /* No rounding anywhere. See above: this is the single decision that keeps
+     it looking printed rather than designed. */
+  --fp-radius: 0px;
+  --fp-radius-s: 0px;
+  --fp-shadow: none;
+  --fp-gap-s: 0.5rem;
+  --fp-gap-m: 1rem;
+  --fp-gap-l: 1.5rem;
+  --fp-gap-xl: 3rem;
+  --fp-font-body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --fp-font-display: "Arial Black", "Helvetica Neue", Impact, sans-serif;
+  --fp-display-tracking: 0.02em;
+  --fp-brand-transform: uppercase;
+}
+
+/* Headings are stencilled: heavy, tight, shouted. */
+[data-theme="punk"] h1,
+[data-theme="punk"] h2,
+[data-theme="punk"] .titlebar__name {
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  font-weight: 900;
+}
+
+/* The accent is a highlighter pen, not a tint: the active tool in the bar
+   gets a solid cyan block with black text, the way the poster boxes a band
+   name it wants you to see. */
+[data-theme="punk"] .toolbar a[aria-current="page"] {
+  background: var(--fp-accent);
+  color: var(--fp-accent-fg);
+  border-color: var(--fp-accent);
+}
+
+/* Cards are cut rectangles with a hard white hairline on top, echoing the
+   torn-paper strips the poster uses to separate its blocks. */
+[data-theme="punk"] .card {
+  border-top: 2px solid var(--fp-fg);
+}
+
+/* Primary buttons are blocks of pure accent, no gradient, no shadow. */
+[data-theme="punk"] .btn--primary {
+  background: var(--fp-accent);
+  color: var(--fp-accent-fg);
+  border-color: var(--fp-accent);
+  font-weight: 700;
+}

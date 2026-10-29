@@ -345,6 +345,17 @@ textarea { min-height: 4rem; resize: vertical; }
 .carbar__wheel--front { right: 12%; }
 .carbar__wheel--rear { left: 12%; }
 .carbar--full { opacity: .55; }
+/* Icon and name on ONE line, always. .row wraps by default, and a seven-seat
+   icon is 130px wide — wide enough to push the name onto its own line in a
+   narrow column, so the three cards disagreed with each other about their
+   own layout depending on how many seats each car had. Here the icon never
+   shrinks and never wraps; the NAME wraps instead, which is what min-width:0
+   on the text block allows. */
+.car__who { flex-wrap: nowrap; align-items: center; gap: var(--fp-gap-s); }
+.car__who > svg,
+.car__who > .carbar { flex: 0 0 auto; }
+.car__who > strong { min-width: 0; overflow-wrap: anywhere; }
+.car__meta { margin: 0.35rem 0 0; }
 .car__from { font-weight: 400; color: var(--fp-muted); }
 
 .carbar--seats-1 { width: 34px; }

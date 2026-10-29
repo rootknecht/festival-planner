@@ -31,10 +31,12 @@
       <div class="stack"><label for="camp_arrival">Camping from</label><input id="camp_arrival" name="camp_arrival" type="date" value="{{ festival.camp_arrival or '' }}"></div>
       <div class="stack"><label for="camp_departure">Camping until</label><input id="camp_departure" name="camp_departure" type="date" value="{{ festival.camp_departure or '' }}"></div>
     </div>
-    <label for="theme">Theme</label>
+    <label for="theme">{{ _("Theme") }}</label>
+    {# The list comes from THEMES in the model, so adding a theme is a CSS
+       file and one entry — this template never needs touching again. #}
     <select id="theme" name="theme">
-      {% for option in ["metal", "matrix", "light"] %}
-      <option value="{{ option }}" {% if festival.theme == option %}selected{% endif %}>{{ option }}</option>
+      {% for key, label in themes.items() %}
+      <option value="{{ key }}" {% if festival.theme == key %}selected{% endif %}>{{ label }}</option>
       {% endfor %}
     </select>
     <button type="submit" class="btn btn--primary">Save</button>

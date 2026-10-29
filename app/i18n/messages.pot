@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Festival Planner VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-28 19:48+0100\n"
+"POT-Creation-Date: 2026-10-29 13:21+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -319,6 +319,10 @@ msgstr ""
 msgid "Dashed names have no account yet."
 msgstr ""
 
+#: app/templates/festivals/settings.html:34 app/templates/profile/index.html:26
+msgid "Theme"
+msgstr ""
+
 #: app/templates/profile/index.html:6
 msgid "Your festivals"
 msgstr ""
@@ -337,10 +341,6 @@ msgstr ""
 
 #: app/templates/profile/index.html:20
 msgid "Language"
-msgstr ""
-
-#: app/templates/profile/index.html:26
-msgid "Theme"
 msgstr ""
 
 #: app/templates/profile/index.html:28

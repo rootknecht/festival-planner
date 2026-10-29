@@ -12,6 +12,7 @@ from qrcode.image.svg import SvgPathImage
 from sqlalchemy.orm import Session as DbSession
 
 from app.deps import get_db, require_user
+from app.models.festival import THEMES
 from app.models.user import User
 from app.services.passwords import (
     PasswordTooShort,
@@ -25,7 +26,10 @@ from app.translations import SUPPORTED_LANGUAGES
 
 router = APIRouter(tags=["profile"])
 
-THEMES = ("metal", "matrix", "light")
+# One source of truth with the festival themes: a theme added to the model's
+# THEMES is immediately offerable as a personal override too, and the two
+# lists can no longer drift (this one was already missing nothing less than
+# the renamed default).
 
 
 def _page(request: Request, user: User, **extra):

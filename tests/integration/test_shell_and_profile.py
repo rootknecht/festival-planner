@@ -10,7 +10,7 @@ from sqlalchemy.pool import StaticPool
 from app.config import Settings
 from app.db import Base, reset_engine_for_tests
 from app.main import create_app
-from app.models.festival import Festival, Participant
+from app.models.festival import THEMES, Festival, Participant
 from app.models.notification import NotificationKind, Tool
 from app.models.user import User
 from app.security.csrf import CSRF_COOKIE
@@ -237,13 +237,16 @@ def test_the_festival_theme_applies_and_the_user_override_wins(client, factory) 
 
 
 def test_an_unknown_theme_is_rejected(client, factory) -> None:
+    """A theme name becomes a stylesheet path, so it must never be free text."""
     festival_id = make_festival(client)
     client.post(
         f"/festivals/{festival_id}/settings",
         data={"name": "Wacken", "theme": "../../etc/passwd", "csrf_token": csrf(client)},
     )
     with factory() as db:
-        assert db.get(Festival, festival_id).theme == "metal"
+        theme = db.get(Festival, festival_id).theme
+    assert theme == "dark"
+    assert theme in THEMES
 
 
 def test_profile_changes_name_and_language(client, factory) -> None:

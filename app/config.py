@@ -66,7 +66,7 @@ class Settings(BaseSettings):
     vapid_subject: str = ""
 
     default_language: str = "en"
-    default_theme: str = "metal"
+    default_theme: str = "dark"
     data_dir: str = Field(default="./data")
 
     @model_validator(mode="after")

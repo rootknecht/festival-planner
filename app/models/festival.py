@@ -23,6 +23,19 @@ class ParticipantRole(enum.StrEnum):
     MEMBER = "member"
 
 
+#: Every selectable theme: the key is the CSS filename in
+#: app/static/css/themes/ and the value is the label shown in settings.
+#: Adding a theme is a CSS file plus one entry here — no migration, because
+#: the column is a plain string.
+THEMES = {
+    "dark": "Dark",
+    "metal": "Metal",
+    "punk": "Punk",
+    "matrix": "Matrix",
+    "light": "Light",
+}
+
+
 class Festival(Base):
     __tablename__ = "festival"
 
@@ -37,7 +50,9 @@ class Festival(Base):
     camp_arrival: Mapped[dt.date | None] = mapped_column(Date, nullable=True)
     camp_departure: Mapped[dt.date | None] = mapped_column(Date, nullable=True)
     timezone: Mapped[str] = mapped_column(String(64), nullable=False, default="Europe/Berlin")
-    theme: Mapped[str] = mapped_column(String(32), nullable=False, default="metal")
+    #: One of THEMES. Stored as a plain string rather than an enum so adding a
+    #: theme is a CSS file plus one list entry, with no migration.
+    theme: Mapped[str] = mapped_column(String(32), nullable=False, default="dark")
     status: Mapped[str] = mapped_column(
         String(16), nullable=False, default=FestivalStatus.ACTIVE.value
     )

@@ -102,12 +102,12 @@
   <ul class="names">
     {% for participant in participants %}
     <li class="name{% if participant.is_placeholder %} name--placeholder{% endif %}">
-      {{ participant.display_name }}{% if participant.is_admin %} &#9733;{% endif %}
+      {{ participant.display_name }}{% if participant.is_admin %} <span class="adminstar" title="{{ _('Admin') }}">{{ icon("star") }}</span>{% endif %}
       {% if membership.is_admin and not participant.is_placeholder and not festival.is_archived %}
       <form method="post" class="inline"
             action="/festivals/{{ festival.id }}/participants/{{ participant.id }}/reset-link">
         <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
-        <button class="linkbtn" title="{{ _('Create a password reset link') }}">&#8634;</button>
+        <button class="linkbtn" title="{{ _('Create a password reset link') }}" aria-label="{{ _('Create a password reset link') }}">{{ icon("reset") }}</button>
       </form>
       {% endif %}
     </li>

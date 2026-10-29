@@ -230,7 +230,7 @@
           </details>
           <form method="post" action="/festivals/{{ festival.id }}/expenses/{{ expense.id }}/delete" class="inline">
             <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
-            <button class="linkbtn" title="{{ _('Remove') }}">&#10005;</button>
+            <button class="linkbtn" title="{{ _('Remove') }}">{{ icon("close") }}</button>
           </form>
         </span>
         {% endif %}

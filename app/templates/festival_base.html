@@ -26,12 +26,12 @@
       <button class="iconbtn" name="language" value="{{ 'de' if language == 'en' else 'en' }}"
               title="{{ _('Switch language') }}">{{ 'DE' if language == 'en' else 'EN' }}</button>
     </form>
-    <a class="iconbtn" href="/profile" title="{{ _('Profile') }}" aria-label="{{ _('Profile') }}">&#9881;</a>
+    <a class="iconbtn" href="/profile" title="{{ _('Profile') }}" aria-label="{{ _('Profile') }}">{{ icon("gear") }}</a>
     <a class="iconbtn iconbtn--install" href="#" data-install-app hidden
-       title="{{ _('Install app') }}">&#8681;</a>
+       title="{{ _('Install app') }}" aria-label="{{ _('Install app') }}">{{ icon("download") }}</a>
     <form method="post" action="/logout" class="inline">
       <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
-      <button class="iconbtn" title="{{ _('Sign out') }}">&#9211;</button>
+      <button class="iconbtn" title="{{ _('Sign out') }}" aria-label="{{ _('Sign out') }}">{{ icon("power") }}</button>
     </form>
   </nav>
 </header>

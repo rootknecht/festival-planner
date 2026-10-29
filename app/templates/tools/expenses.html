@@ -75,7 +75,7 @@
 {% if not festival.is_archived and my_participant_id %}
 <section class="card">
   <details class="reveal">
-    <summary class="btn btn--primary">{{ icon("plus") }} {{ _("Add a cost") }}</summary>
+    <summary class="btn btn--small btn--primary">{{ icon("plus") }} {{ _("Add a cost") }}</summary>
     <form method="post" action="/festivals/{{ festival.id }}/expenses" class="stack">
       <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
       {# Always your own name: one person must not be able to invent a debt for

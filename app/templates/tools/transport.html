@@ -218,7 +218,7 @@
      point are the two things you come to this page to create. #}
   <div class="row">
   <details class="reveal">
-    <summary class="btn btn--primary">{{ icon("plus") }} {{ _("Add a car") }}</summary>
+    <summary class="btn btn--small btn--primary">{{ icon("plus") }} {{ _("Add a car") }}</summary>
     <form method="post" action="/festivals/{{ festival.id }}/transport/cars" class="stack">
       <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
       <label for="driver">{{ _("Who drives?") }}</label>
@@ -279,7 +279,7 @@
 
   {% if membership.is_admin and not festival.is_archived and meeting_points | length < max_meeting_points %}
     <details class="reveal">
-      <summary class="btn">{{ icon("plus") }} {{ _("Add a meeting point") }}</summary>
+      <summary class="btn btn--small">{{ icon("plus") }} {{ _("Add a meeting point") }}</summary>
       <form method="post" action="/festivals/{{ festival.id }}/transport/meeting-points" class="stack">
         <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
         <label for="mp-name">{{ _("Name") }}</label>

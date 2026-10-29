@@ -52,16 +52,18 @@
   --fp-font-body: "Special Elite", "Courier New", Courier, monospace;
   --fp-font-display: "Special Elite", "Courier New", Courier, monospace;
   --fp-display-tracking: 0.02em;
-  --fp-brand-transform: uppercase;
+  --fp-brand-transform: none;
 }
 
 /* Headings: shouted, but NOT font-weight 900 any more — Special Elite has a
    single weight, and asking for 900 would hand every heading to the
    browser's synthetic bold. Uppercase and tracking carry the emphasis
    instead, which is what a typewriter page does anyway. */
+/* Section headings stay shouted. The WORDMARK does not: a festival's name is
+   a name, and it now reads exactly as its admin typed it — the same as the
+   card for that festival on the overview. */
 [data-theme="punk"] h1,
-[data-theme="punk"] h2,
-[data-theme="punk"] .titlebar__name {
+[data-theme="punk"] h2 {
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -92,8 +94,18 @@
    the old stencil needed: distressed glyphs lose their edges when they sit
    too close, and the poster spaces its own title the same way. */
 [data-theme="punk"] .titlebar__name {
-  font-family: "Rubik Dirt", "Arial Black", Impact, sans-serif;
+  /* The name as its admin typed it — no uppercase rule, matching the card on
+     the festival overview.
+
+     The second family is load-bearing, not decoration. Rubik Dirt is subset
+     to CAPITALS here (its lowercase would be 90KB that an all-caps header
+     could never paint), so the lowercase letters come from the next font in
+     this list. Leaving that to the device meant Arial Black on a desktop and
+     Roboto on Android — the wordmark looked different on the phone than on
+     the laptop. Special Elite is shipped with this theme, so now it is the
+     same everywhere, and a typewriter lowercase under distressed capitals is
+     this theme's own two faces rather than an accident. */
+  font-family: "Rubik Dirt", "Special Elite", "Arial Black", monospace;
   font-size: 1.3rem;
   letter-spacing: 0.05em;
-  text-transform: uppercase;
 }

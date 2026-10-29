@@ -97,6 +97,17 @@ def test_the_overview_palette_matches_the_themes_it_copies() -> None:
         assert card["bg"].strip() == theme["fp-surface"], f"{name}: surface drifted"
         assert card["fg"].strip() == theme["fp-fg"], f"{name}: text colour drifted"
 
+        # The card title must use the same face as that theme's wordmark, or
+        # the overview advertises a look the festival does not have.
+        wordmark = re.search(
+            rf'\[data-theme="{name}"\]\s*\.titlebar__name\s*\{{[^}}]*?font-family:\s*([^;]+);',
+            (THEME_DIR / f"{name}.css").read_text(), re.S,
+        )
+        if wordmark:
+            assert card["font"].strip() == wordmark.group(1).strip(), (
+                f"{name}: overview font {card['font']} != wordmark {wordmark.group(1)}"
+            )
+
 
 def test_the_fonts_are_declared_where_every_page_can_use_them() -> None:
     """The overview renders each festival's title in that theme's face while

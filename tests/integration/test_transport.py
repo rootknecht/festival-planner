@@ -623,3 +623,26 @@ def test_a_meeting_point_without_a_time_still_saves(festival, factory) -> None:
     assert response.status_code == 303
     with factory() as db:
         assert db.scalars(select(MeetingPoint)).one().meet_at is None
+
+
+def test_a_pickup_stop_does_not_sit_inside_the_action_row(festival, factory) -> None:
+    """Stops belong above the buttons, not beside them.
+
+    The stop list was a flex item inside the action row, so a car WITH
+    pickups pushed its own buttons sideways and the cards stopped agreeing
+    where their buttons were — visible only by comparing two cards, which is
+    why it survived several rounds of review.
+    """
+    festival_id, owner = festival
+    add_car(owner, festival_id, None)
+    car = only_car(factory)
+    owner.post(
+        f"/festivals/{festival_id}/transport/cars/{car.id}/stops",
+        data={"address": "Coesfeld", "participant_id": "", "csrf_token": csrf(owner)},
+    )
+    page = owner.get(f"/festivals/{festival_id}/transport").text
+    assert "Coesfeld" in page, "the stop was not saved, so this proves nothing"
+
+    actions = page.index('class="car__actions')
+    stops = page.index('<ol class="log"')
+    assert stops < actions, "the stop list must come BEFORE the action row, not inside it"

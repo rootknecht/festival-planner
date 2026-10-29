@@ -46,12 +46,23 @@ def test_every_font_a_theme_asks_for_is_present() -> None:
 
 
 def test_every_shipped_font_carries_its_licence() -> None:
-    """OFL 1.1 requires the licence to travel with the font, and this repo is
-    public. A font without its OFL.txt beside it is a licence violation."""
+    """A font must travel with its own licence text, and with the RIGHT one.
+
+    Special Elite is Apache 2.0, not OFL — it lives in google/fonts' apache/
+    tree. Downloading an OFL.txt for it silently fetched a 404 HTML page, so
+    this checks the CONTENT names a real licence rather than trusting the
+    filename. This repo is public; shipping a font under a licence it is not
+    under is the kind of mistake nobody notices for years.
+    """
     font_dir = THEME_DIR.parents[1] / "fonts"
+    known = ("SIL OPEN FONT LICENSE", "APACHE LICENSE")
     for font in font_dir.glob("*.woff2"):
-        # Weighted files are named Family-400.woff2 and share one licence.
         family = font.stem.split("-")[0]
-        licence = font_dir / f"{family}-OFL.txt"
-        assert licence.is_file(), f"{font.name} ships without {licence.name}"
-        assert "SIL OPEN FONT LICENSE" in licence.read_text().upper()
+        candidates = [font_dir / f"{family}-OFL.txt", font_dir / f"{family}-LICENSE.txt"]
+        found = [c for c in candidates if c.is_file()]
+        assert found, f"{font.name} ships without a licence file"
+        text = found[0].read_text().upper()
+        assert any(k in text for k in known), (
+            f"{found[0].name} does not contain a recognisable licence — "
+            "a failed download leaves an HTML error page behind"
+        )

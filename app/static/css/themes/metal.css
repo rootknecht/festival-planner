@@ -91,7 +91,7 @@
      the reference AND harder to read, which is a rare case of taste and
      legibility agreeing. */
   font-family: "Grenze Gotisch", "Trebuchet MS", system-ui, sans-serif;
-  font-size: 1.55rem;
+  font-size: 1.35rem;
   letter-spacing: 0.06em;
   text-shadow: 0 2px 0 rgba(0, 0, 0, 0.9), 0 -1px 0 rgba(255, 255, 255, 0.1);
 }

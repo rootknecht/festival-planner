@@ -201,3 +201,42 @@ def test_no_theme_rewrites_the_festival_name() -> None:
             assert "text-transform: uppercase" not in wordmark.group(1), (
                 f"{name}.css uppercases the wordmark directly"
             )
+
+
+def test_no_wordmark_asks_a_font_for_a_weight_it_does_not_have() -> None:
+    """Synthetic bold quietly ruins a display face.
+
+    The punk wordmark inherited font-weight: 700 from the shell while Rubik
+    Dirt ships only 400. The browser obliged by smearing every stroke
+    outward, which on a distressed face fills in the chipped holes that make
+    it distressed — the same title, same font and same size looked visibly
+    cleaner in the title bar than on the overview card, where it inherits
+    400. Nothing errors; the font just stops looking like itself.
+    """
+    import re
+
+    base = (THEME_DIR.parents[0] / "base.css").read_text()
+    weights: dict[str, set[str]] = {}
+    for block in re.findall(r"@font-face\s*\{(.*?)\}", base, re.S):
+        family = re.search(r'font-family:\s*"([^"]+)"', block)
+        weight = re.search(r"font-weight:\s*([^;]+);", block)
+        if family and weight:
+            weights.setdefault(family.group(1), set()).add(weight.group(1).strip())
+
+    for name in THEMES:
+        css = (THEME_DIR / f"{name}.css").read_text()
+        rule = re.search(
+            rf'\[data-theme="{name}"\][^{{]*\.titlebar__name\s*\{{(.*?)\}}', css, re.S
+        )
+        if not rule:
+            continue
+        family = re.search(r'font-family:\s*"([^"]+)"', rule.group(1))
+        if not family or family.group(1) not in weights:
+            continue
+        available = weights[family.group(1)]
+        asked = re.search(r"font-weight:\s*([^;]+);", rule.group(1))
+        asked_value = asked.group(1).strip() if asked else "700"  # the shell default
+        assert asked_value in available, (
+            f"{name}: the wordmark asks {family.group(1)} for weight {asked_value}, "
+            f"but only {sorted(available)} is shipped — the browser will fake it"
+        )

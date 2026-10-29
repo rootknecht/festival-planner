@@ -109,3 +109,57 @@ def test_the_fonts_are_declared_where_every_page_can_use_them() -> None:
             f"{name}.css declares a font — move it to base.css or the overview "
             "cannot render it"
         )
+
+
+class _FakeUser:
+    def __init__(self, override):
+        self.theme_override = override
+
+
+class _FakeState:
+    def __init__(self, user):
+        self.user = user
+
+
+class _FakeRequest:
+    def __init__(self, user=None):
+        self.state = _FakeState(user)
+
+
+class _FakeFestival:
+    def __init__(self, theme):
+        self.theme = theme
+
+
+def test_a_user_follows_the_festival_by_default() -> None:
+    """No override is the default, so an admin's choice per festival is what
+    people see — including two festivals open in two tabs."""
+    from app.templating import theme_for
+
+    assert theme_for(_FakeRequest(_FakeUser(None)), _FakeFestival("punk")) == "punk"
+    assert theme_for(_FakeRequest(None), _FakeFestival("metal")) == "metal"
+
+
+def test_a_personal_override_wins_when_it_is_real() -> None:
+    from app.templating import theme_for
+
+    assert theme_for(_FakeRequest(_FakeUser("matrix")), _FakeFestival("punk")) == "matrix"
+
+
+def test_a_stale_theme_name_falls_back_instead_of_404ing_the_stylesheet() -> None:
+    """A theme name becomes a stylesheet path. A value left behind by a
+    renamed or deleted theme must not reach the page: the browser would 404
+    the file and render the app with no styling at all, which reads as a CSS
+    bug rather than stale data."""
+    from app.templating import theme_for
+
+    assert theme_for(_FakeRequest(_FakeUser("blackopsone")), _FakeFestival("punk")) == "punk"
+    assert theme_for(_FakeRequest(_FakeUser(None)), _FakeFestival("deleted")) in THEMES
+
+
+def test_the_profile_offers_following_the_festival_as_the_first_choice() -> None:
+    from pathlib import Path
+
+    page = (Path(__file__).resolve().parents[2] / "app" / "templates" / "profile" / "index.html").read_text()
+    first = page.index('name="theme_override"')
+    assert 'value=""' in page[first:first + 400], "the empty 'follow the festival' option must come first"

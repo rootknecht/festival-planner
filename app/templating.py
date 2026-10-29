@@ -61,13 +61,35 @@ def language_for(request: Request) -> str:
 
 
 def theme_for(request: Request, festival: Any | None = None) -> str:
+    """Resolve the theme for this request, trusting nothing that is stored.
+
+    The default for a user is NO override — "follow the festival's theme" —
+    so the admin's choice per festival is what people see, and two festivals
+    open in two tabs each look like themselves.
+
+    Every stored value is checked against THEMES rather than used directly.
+    A theme name becomes a stylesheet path: a value left behind by a renamed
+    or deleted theme would 404 the stylesheet and render the whole app
+    unstyled, which looks like a CSS bug rather than stale data. Falling back
+    one step is always better than a page with no styling at all.
+
+    This also closes a gap in migration 6c0258f4be1a, which renamed the old
+    "metal" theme to "dark" for FESTIVALS and never touched the matching
+    column on users. No account was affected — the only override in
+    production was empty — but the fallback here means it could not have
+    mattered anyway.
+    """
+    from app.models.festival import THEMES
+
     settings = get_settings()
     user = getattr(request.state, "user", None)
-    if user is not None and user.theme_override:
-        return user.theme_override
-    if festival is not None and getattr(festival, "theme", None):
-        return festival.theme
-    return settings.default_theme
+    override = getattr(user, "theme_override", None)
+    if override in THEMES:
+        return override
+    theme = getattr(festival, "theme", None)
+    if theme in THEMES:
+        return theme
+    return settings.default_theme if settings.default_theme in THEMES else "dark"
 
 
 def render(request: Request, name: str, context: dict[str, Any] | None = None, **kwargs: Any):

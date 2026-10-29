@@ -1,0 +1,30 @@
+{# Shown when a form is submitted with a stale CSRF token.
+
+   This page exists because the honest answer to "your token expired" is not
+   {"detail":"CSRF validation failed"} in raw JSON. That is what a phone
+   showed after the browser's site data was cleared with a page still open:
+   the form on screen carried a token whose cookie no longer existed, and the
+   app answered with an API error aimed at nobody.
+
+   The response that renders this also issues a FRESH cookie, so the link
+   below genuinely works instead of looping. #}
+<!doctype html>
+<html lang="{{ language }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ heading }}</title>
+  <link rel="stylesheet" href="/static/css/base.css">
+  <link rel="stylesheet" href="/static/css/themes/dark.css">
+</head>
+<body>
+  <main class="shell shell--narrow">
+    <section class="card stack">
+      <h1>{{ heading }}</h1>
+      <p>{{ explanation }}</p>
+      <p><a class="btn btn--primary" href="{{ retry_url }}">{{ retry_label }}</a></p>
+      <p class="hint">{{ reassurance }}</p>
+    </section>
+  </main>
+</body>
+</html>

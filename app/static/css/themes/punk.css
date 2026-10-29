@@ -106,6 +106,13 @@
      same everywhere, and a typewriter lowercase under distressed capitals is
      this theme's own two faces rather than an accident. */
   font-family: "Rubik Dirt", "Special Elite", "Arial Black", monospace;
+  /* 400, because Rubik Dirt HAS only 400. The shell sets the wordmark to 700
+     and the browser answered with synthetic bold: it smears every stroke
+     outward, which on a distressed face fills in exactly the chipped holes
+     that make it look distressed. Same font, same size, same text — and
+     visibly less dirty than the identical title on the overview, which
+     inherits 400. Never ask a single-weight face for a weight it lacks. */
+  font-weight: 400;
   font-size: 1.3rem;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.02em;
 }

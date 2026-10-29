@@ -45,6 +45,10 @@ CONTENT_SECURITY_POLICY = "; ".join(
         # the bare host is what the tile URL uses.
         "img-src 'self' data: https://tile.openstreetmap.org https://*.tile.openstreetmap.org",
         "style-src 'self'",
+        # Fonts are self-hosted and stay that way. A font CDN would be a
+        # second origin in this policy and a third party notified of every
+        # page load, to save a few kilobytes that are already subset.
+        "font-src 'self'",
         "script-src 'self'",
         "connect-src 'self'",
     ]

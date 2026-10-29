@@ -141,3 +141,18 @@ Check the relay's own documentation for which ports it offers.
 - **A multi-line secret cannot live in a `.env` file.** Shell-sourced env files
   are line-based. The VAPID private key is therefore a *file path*
   (`FP_VAPID_PRIVATE_KEY_FILE`), not a value.
+
+## Fonts
+
+Two themes ship a display face for the festival name, self-hosted under
+`app/static/fonts/` with its licence beside it:
+
+| Theme | Font | Licence |
+|---|---|---|
+| Metal | Grenze Gotisch | SIL OFL 1.1 (`GrenzeGotisch-OFL.txt`) |
+| Punk  | Black Ops One  | SIL OFL 1.1 (`BlackOpsOne-OFL.txt`) |
+
+Both are subset to the latin characters a European festival name uses, which
+takes them to 9KB and 16KB. There is deliberately no font CDN: it would add an
+origin to the Content-Security-Policy and tell a third party about every page
+load, and `font-src 'self'` in `app/main.py` enforces that.

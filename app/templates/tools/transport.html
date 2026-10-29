@@ -110,23 +110,10 @@
     {% endfor %}
   </ul>
 
-  <div class="car__actions row">
-  {% if unassigned and car.free_seats and not festival.is_archived %}
-  {# The name list only appears once asked for; it was permanently open on
-     every car and pushed the cars themselves off the screen. #}
-  <details class="reveal">
-    <summary class="btn btn--small">{{ icon("plus") }} {{ _("Add passenger") }}</summary>
-    <form method="post" action="/festivals/{{ festival.id }}/transport/cars/{{ car.id }}/seats" class="row">
-      <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
-      <select name="participant_id" aria-label="{{ _('Add passenger') }}">
-        {% for participant in unassigned %}
-        <option value="{{ participant.id }}">{{ participant.display_name }}</option>
-        {% endfor %}
-      </select>
-      <button class="btn btn--small">{{ _("Add passenger") }}</button>
-    </form>
-  </details>
-  {% endif %}
+  {# Actions live in ONE row at the bottom of every card. The stop list used
+     to sit inside this row, so a car WITH pickups pushed its own buttons
+     sideways and the cards no longer agreed where their buttons were. #}
+
 
 
 
@@ -149,7 +136,23 @@
   {% endif %}
 
   {% if not festival.is_archived %}
-  <div class="row">
+  <div class="car__actions row">
+{% if unassigned and car.free_seats and not festival.is_archived %}
+    {# The name list only appears once asked for; it was permanently open on
+       every car and pushed the cars themselves off the screen. #}
+    <details class="reveal">
+      <summary class="btn btn--small">{{ icon("plus") }} {{ _("Add passenger") }}</summary>
+      <form method="post" action="/festivals/{{ festival.id }}/transport/cars/{{ car.id }}/seats" class="row">
+        <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+        <select name="participant_id" aria-label="{{ _('Add passenger') }}">
+          {% for participant in unassigned %}
+          <option value="{{ participant.id }}">{{ participant.display_name }}</option>
+          {% endfor %}
+        </select>
+        <button class="btn btn--small">{{ _("Add passenger") }}</button>
+      </form>
+    </details>
+    {% endif %}
     <details class="reveal">
       <summary class="btn btn--small">{{ icon("plus") }} {{ _("Pickup") }}</summary>
       <form method="post" action="/festivals/{{ festival.id }}/transport/cars/{{ car.id }}/stops" class="stack">
@@ -203,7 +206,6 @@
     </details>
   </div>
   {% endif %}
-  </div>
 </section>
 {% endfor %}
 </div>

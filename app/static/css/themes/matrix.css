@@ -24,5 +24,10 @@
   --fp-font-body: "DejaVu Sans Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   --fp-font-display: "DejaVu Sans Mono", ui-monospace, monospace;
   --fp-display-tracking: 0.12em;
-  --fp-brand-transform: uppercase;
+  /* A festival's name reads as its admin typed it, in EVERY theme. This was
+     "uppercase" here, which silently rewrote "RockHarz 2027" as "ROCKHARZ
+     2027" — the theme decides the face, the colour and the spacing, but not
+     what somebody's festival is called. Section headings are still shouted
+     where the theme wants it; those are labels, not names. */
+  --fp-brand-transform: none;
 }

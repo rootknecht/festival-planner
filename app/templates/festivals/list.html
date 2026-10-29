@@ -9,7 +9,9 @@
 {% if rows %}
 <ul class="cards">
   {% for festival, participant in rows %}
-  <li class="card">
+  {# Each card is drawn in its own festival's theme, so the list shows what
+     you are about to open rather than five identical boxes. #}
+  <li class="card cardtheme cardtheme--{{ festival.theme }}">
     <a class="card__title" href="/festivals/{{ festival.id }}">{{ festival.name }}</a>
     <p class="hint">
       {{ festival.date_range }}

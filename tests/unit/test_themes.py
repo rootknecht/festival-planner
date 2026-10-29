@@ -66,3 +66,46 @@ def test_every_shipped_font_carries_its_licence() -> None:
             f"{found[0].name} does not contain a recognisable licence — "
             "a failed download leaves an HTML error page behind"
         )
+
+
+def _theme_vars(css: str) -> dict[str, str]:
+    import re
+
+    return {m.group(1): m.group(2).strip()
+            for m in re.finditer(r"--(fp-[a-z0-9-]+):\s*([^;]+);", css)}
+
+
+def test_the_overview_palette_matches_the_themes_it_copies() -> None:
+    """The festival list draws each card in its festival's own colours.
+
+    Those values are duplicated into shell.css because the project has no
+    build step and the CSP forbids inline styles. Duplication is acceptable
+    only while something checks it, which is this test: it re-reads both
+    sides and fails the moment a theme is retuned and the overview is not.
+    """
+    import re
+
+    shell = (THEME_DIR.parents[0] / "shell.css").read_text()
+    for name in THEMES:
+        theme = _theme_vars((THEME_DIR / f"{name}.css").read_text())
+        block = re.search(rf"\.cardtheme--{name}\s*\{{(.*?)\}}", shell, re.S)
+        assert block, f"the overview has no card rule for the {name} theme"
+        card = dict(re.findall(r"--card-([a-z]+):\s*([^;]+);", block.group(1)))
+        assert card["accent"].strip() == theme["fp-accent"], (
+            f"{name}: overview accent {card['accent']} != theme {theme['fp-accent']}"
+        )
+        assert card["bg"].strip() == theme["fp-surface"], f"{name}: surface drifted"
+        assert card["fg"].strip() == theme["fp-fg"], f"{name}: text colour drifted"
+
+
+def test_the_fonts_are_declared_where_every_page_can_use_them() -> None:
+    """The overview renders each festival's title in that theme's face while
+    itself being drawn in one theme, so @font-face must live in base.css. A
+    declaration is free: the browser fetches a font only when it is used."""
+    base = (THEME_DIR.parents[0] / "base.css").read_text()
+    assert "@font-face" in base
+    for name in THEMES:
+        assert "@font-face" not in (THEME_DIR / f"{name}.css").read_text(), (
+            f"{name}.css declares a font — move it to base.css or the overview "
+            "cannot render it"
+        )

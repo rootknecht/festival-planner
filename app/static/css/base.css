@@ -156,3 +156,84 @@ a:focus-visible {
 .grid .row { gap: var(--fp-gap-s); }
 
 code { background: var(--fp-surface-2); padding: 0.15rem 0.35rem; border-radius: var(--fp-radius-s); word-break: break-all; }
+
+/* ---------------------------------------------------------------------------
+   Fonts.
+
+   Declared HERE rather than in the theme files, because the festival overview
+   has to render each festival's title in its own theme's face while itself
+   being drawn in only one theme. A declaration costs nothing: a browser
+   downloads a font only when something actually renders in it.
+   Licences ship beside the files in app/static/fonts/.
+   ------------------------------------------------------------------------ */
+/* Grenze, SIL OFL 1.1 — the TEXT companion to Grenze Gotisch above, drawn
+   by the same project. That is why it is here rather than some other serif:
+   the body echoes the wordmark because they are literally relatives, not
+   because two faces happened to look similar in a specimen.
+   400 and 700 are both shipped — a real bold beats the browser's synthetic
+   smear, which looks worst on exactly this kind of face. 8KB each, subset. */
+@font-face {
+  font-family: "Grenze";
+  src: url("/static/fonts/Grenze-400.woff2") format("woff2");
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Grenze";
+  src: url("/static/fonts/Grenze-700.woff2") format("woff2");
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+
+/* Grenze Gotisch, SIL OFL 1.1 — self-hosted, licence beside the file in
+   app/static/fonts/. No font CDN: it would be an extra origin in the CSP, a
+   third party watching every page load, and a hard dependency for an app
+   that otherwise runs entirely from this container.
+
+   Chosen because the Rockharz wordmark is angular chipped caps rather than
+   true blackletter: this is gothic enough to read as metal while staying
+   legible at the size a festival name is actually set. Subset to the latin
+   letters a European festival name uses — 9KB rather than 300KB, which
+   matters on a phone on a campsite. */
+@font-face {
+  font-family: "Grenze Gotisch";
+  src: url("/static/fonts/GrenzeGotisch.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  /* swap: the name shows in the fallback face immediately rather than
+     leaving a blank header while the font loads. */
+  font-display: swap;
+}
+
+/* Rubik Dirt, SIL OFL 1.1 — the distressed photocopy face, and the closest
+   open font to the Spirit poster's eroded lettering.
+
+   It is by far the heaviest font in this app: 302KB as published, 146KB
+   here. The subset is CAPITALS ONLY, which is honest rather than lossy —
+   the punk title bar sets text-transform: uppercase, so the lowercase
+   glyphs would be ~90KB nobody ever paints. It loads for this theme alone,
+   for exactly one line of text, and font-display: swap means the festival
+   name is readable in the fallback face while it arrives. */
+@font-face {
+  font-family: "Rubik Dirt";
+  src: url("/static/fonts/RubikDirt.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Special Elite, Apache License 2.0 — NOT OFL. It lives in google/fonts'
+   apache/ tree and ships here as SpecialElite-LICENSE.txt; assuming OFL
+   because the other fonts were OFL would have put the wrong licence text in
+   a public repo.
+
+   Battered typewriter: the fanzine face, and the one that makes this theme
+   look photocopied rather than designed. One weight only, so bold text is
+   the browser's synthetic bold — tolerable here precisely because the face
+   is already irregular, where on a clean grotesque it would look like a
+   rendering fault. 40KB subset. */
+@font-face {
+  font-family: "Special Elite";
+  src: url("/static/fonts/SpecialElite.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}

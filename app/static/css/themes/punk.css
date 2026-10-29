@@ -1,3 +1,18 @@
+/* Black Ops One, SIL OFL 1.1 — self-hosted, licence beside the file in
+   app/static/fonts/. No font CDN, for the same reasons as the metal theme.
+
+   The Spirit wordmark is rough stencil caps, so a stencil face is the honest
+   match. Rubik Dirt was the first choice and was rejected on weight: 302KB
+   of distressed outlines to render one festival name, on a phone, at a
+   campsite. This is 16KB subset. */
+@font-face {
+  font-family: "Black Ops One";
+  src: url("/static/fonts/BlackOpsOne.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* Theme: Punk — black, bleached white and one electric cyan, after the
    Spirit Festival poster.
 
@@ -80,4 +95,16 @@
   color: var(--fp-accent-fg);
   border-color: var(--fp-accent);
   font-weight: 700;
+}
+
+/* The festival name as the poster sets it: stencilled caps, pushed hard
+   against the top-left, with the accent underlining it like the cyan bar
+   under "spirit-festival.com". */
+[data-theme="punk"] .titlebar__name {
+  /* Stencil for the wordmark only — the poster sets its band names in bold
+     sans and keeps the stencil for "SPIRIT". */
+  font-family: "Black Ops One", "Arial Black", Impact, sans-serif;
+  font-size: 1.5rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
 }

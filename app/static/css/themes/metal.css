@@ -1,3 +1,23 @@
+/* Grenze Gotisch, SIL OFL 1.1 — self-hosted, licence beside the file in
+   app/static/fonts/. No font CDN: it would be an extra origin in the CSP, a
+   third party watching every page load, and a hard dependency for an app
+   that otherwise runs entirely from this container.
+
+   Chosen because the Rockharz wordmark is angular chipped caps rather than
+   true blackletter: this is gothic enough to read as metal while staying
+   legible at the size a festival name is actually set. Subset to the latin
+   letters a European festival name uses — 9KB rather than 300KB, which
+   matters on a phone on a campsite. */
+@font-face {
+  font-family: "Grenze Gotisch";
+  src: url("/static/fonts/GrenzeGotisch.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  /* swap: the name shows in the fallback face immediately rather than
+     leaving a blank header while the font loads. */
+  font-display: swap;
+}
+
 /* Theme: Metal — cold steel on blue-black, after the Rockharz poster.
 
    The distinguishing choice is that there is NO red in it. Dark interfaces
@@ -58,4 +78,20 @@
 /* Square corners and a hairline top edge: panels look cut from plate. */
 [data-theme="metal"] .card {
   border-top-color: #3a475d;
+}
+
+/* The festival name is the poster's wordmark: large, tight, carved. The
+   shadow pair is the same trick as the headings — a dark edge below and a
+   faint light edge above — which is what makes flat text read as struck
+   metal rather than printed. */
+[data-theme="metal"] .titlebar__name {
+  /* The carved face is for the WORDMARK ONLY. The poster does the same:
+     ROCKHARZ is chipped gothic, but "PROUDLY PRESENTS" and the dates are a
+     clean sans. Setting every heading in gothic would be less faithful to
+     the reference AND harder to read, which is a rare case of taste and
+     legibility agreeing. */
+  font-family: "Grenze Gotisch", "Trebuchet MS", system-ui, sans-serif;
+  font-size: 1.55rem;
+  letter-spacing: 0.06em;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.9), 0 -1px 0 rgba(255, 255, 255, 0.1);
 }

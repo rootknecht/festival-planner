@@ -4,7 +4,7 @@ A self-hosted, mobile-first web application for organising a festival trip with
 a group of friends: who is coming, who drives whom, who brings what, what the
 group still has to decide, and everything else discussed — in one place.
 
-Status: **early development** (v0.0.x). Not yet deployable.
+Status: **in use** (v0.9.x). Deployed from a pinned tag; see `CHANGELOG.md`.
 
 ## What it does
 
@@ -18,8 +18,9 @@ Status: **early development** (v0.0.x). Not yet deployable.
   units and a per-unit total.
 - Polls, a group chat room and a forum, all with `@mentions`.
 - Installable as a mobile web app (PWA) with push notifications.
-- Themeable: a theme is a single CSS file. Ships with Metal (dark), Matrix and
-  Light. German and English.
+- Themeable: a theme is a single CSS file plus one entry in `THEMES`. Ships
+  with Dark, Metal, Punk, Matrix and Light; the festival picks one and any
+  user may override it for themselves. German and English.
 
 ## Design principles
 
@@ -147,12 +148,18 @@ Check the relay's own documentation for which ports it offers.
 Two themes ship a display face for the festival name, self-hosted under
 `app/static/fonts/` with its licence beside it:
 
-| Theme | Font | Licence |
-|---|---|---|
-| Metal | Grenze Gotisch | SIL OFL 1.1 (`GrenzeGotisch-OFL.txt`) |
-| Punk  | Black Ops One  | SIL OFL 1.1 (`BlackOpsOne-OFL.txt`) |
+| Theme | Wordmark | Body | Licence |
+|---|---|---|---|
+| Metal | Grenze Gotisch | Grenze (400/700) | SIL OFL 1.1 |
+| Punk  | Black Ops One  | Oswald (400/600) | SIL OFL 1.1 |
 
-Both are subset to the latin characters a European festival name uses, which
-takes them to 9KB and 16KB. There is deliberately no font CDN: it would add an
+Grenze is the text companion to Grenze Gotisch from the same type project, so
+the body echoes the wordmark by descent rather than by resemblance. Black Ops
+One has no such sibling, so Punk pairs it with Oswald, the condensed grotesque
+of gig posters.
+
+Every file is subset to the latin characters a European festival name and a
+German chat message use: 8–16KB each, 49KB for both themes together. Bold is
+shipped as a real weight rather than left to the browser's synthetic smear. There is deliberately no font CDN: it would add an
 origin to the Content-Security-Policy and tell a third party about every page
 load, and `font-src 'self'` in `app/main.py` enforces that.

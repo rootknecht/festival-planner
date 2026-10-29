@@ -50,6 +50,8 @@ def test_every_shipped_font_carries_its_licence() -> None:
     public. A font without its OFL.txt beside it is a licence violation."""
     font_dir = THEME_DIR.parents[1] / "fonts"
     for font in font_dir.glob("*.woff2"):
-        licence = font_dir / f"{font.stem}-OFL.txt"
+        # Weighted files are named Family-400.woff2 and share one licence.
+        family = font.stem.split("-")[0]
+        licence = font_dir / f"{family}-OFL.txt"
         assert licence.is_file(), f"{font.name} ships without {licence.name}"
         assert "SIL OPEN FONT LICENSE" in licence.read_text().upper()

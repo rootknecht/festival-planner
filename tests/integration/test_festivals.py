@@ -13,7 +13,7 @@ from sqlalchemy.pool import StaticPool
 from app.config import Settings
 from app.db import Base, reset_engine_for_tests
 from app.main import create_app
-from app.models.festival import Festival, Invite, Participant
+from app.models.festival import THEMES, Festival, Invite, Participant
 from app.models.user import User
 from app.security.csrf import CSRF_COOKIE
 from app.services.mail import capture_sink
@@ -88,6 +88,43 @@ def test_creator_becomes_admin_and_sees_the_dashboard(factory, settings) -> None
 
     listing = client.get("/")
     assert "Wacken" in listing.text
+
+
+def test_the_new_festival_form_offers_every_theme(factory, settings) -> None:
+    client = make_client(settings)
+    login(client, "owner@example.org")
+    form = client.get("/festivals/new")
+    assert form.status_code == 200
+    for key, label in THEMES.items():
+        assert f'value="{key}"' in form.text
+        assert label in form.text
+
+
+def test_a_theme_chosen_at_creation_is_stored_and_rendered(factory, settings) -> None:
+    client = make_client(settings)
+    csrf = login(client, "owner@example.org")
+    response = client.post(
+        "/festivals", data={"name": "Punkfest", "theme": "punk", "csrf_token": csrf}
+    )
+    assert response.status_code == 303
+    festival_id = int(response.headers["location"].rsplit("/", 1)[1])
+
+    with factory() as db:
+        assert db.get(Festival, festival_id).theme == "punk"
+    assert "themes/punk.css" in client.get(f"/festivals/{festival_id}").text
+
+
+def test_creation_without_a_theme_or_with_a_bogus_one_falls_back_to_dark(
+    factory, settings
+) -> None:
+    client = make_client(settings)
+    csrf = login(client, "owner@example.org")
+    with factory() as db:
+        for data in ({"name": "Quiet"}, {"name": "Loud", "theme": "../../etc/passwd"}):
+            response = client.post("/festivals", data={**data, "csrf_token": csrf})
+            assert response.status_code == 303
+            festival_id = int(response.headers["location"].rsplit("/", 1)[1])
+            assert db.get(Festival, festival_id).theme == "dark"
 
 
 def test_a_festival_without_a_name_is_refused(factory, settings) -> None:

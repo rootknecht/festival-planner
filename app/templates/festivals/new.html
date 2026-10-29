@@ -20,7 +20,15 @@
       <div class="stack"><label for="camp_arrival">Camping from</label><input id="camp_arrival" name="camp_arrival" type="date"></div>
       <div class="stack"><label for="camp_departure">Camping until</label><input id="camp_departure" name="camp_departure" type="date"></div>
     </div>
-    <p class="hint">Only the name is required — everything else can be filled in later.</p>
+    <label for="theme">{{ _("Theme") }}</label>
+    {# Same source as the settings form: THEMES in the model, so a new theme is
+       a CSS file and one entry, never a template change. #}
+    <select id="theme" name="theme">
+      {% for key, label in themes.items() %}
+      <option value="{{ key }}" {% if theme == key %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <p class="hint">Only the name is required — everything else, the theme included, can be changed later.</p>
     <button type="submit" class="btn btn--primary">Create</button>
   </form>
   <p class="hint"><a href="/">Back</a></p>

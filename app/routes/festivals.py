@@ -68,7 +68,7 @@ async def festival_list(
 
 @router.get("/festivals/new")
 async def new_festival_form(request: Request, user: User = Depends(require_user)) -> Response:
-    return render(request, "festivals/new.html", {"error": None})
+    return render(request, "festivals/new.html", {"error": None, "themes": THEMES, "theme": "dark"})
 
 
 @router.post("/festivals")
@@ -82,13 +82,20 @@ async def create_festival(
     camp_arrival: str = Form(default=""),
     camp_departure: str = Form(default=""),
     timezone: str = Form(default="Europe/Berlin"),
+    theme: str = Form(default="dark"),
     user: User = Depends(require_user),
     db: DbSession = Depends(get_db),
 ) -> Response:
+    # An unknown theme is not an error worth a page for: fall back to the
+    # column default, same as the settings form does.
+    chosen_theme = theme if theme in THEMES else "dark"
     clean_name = name.strip()
     if not clean_name:
         return render(
-            request, "festivals/new.html", {"error": "A festival needs a name."}, status_code=400
+            request,
+            "festivals/new.html",
+            {"error": "A festival needs a name.", "themes": THEMES, "theme": chosen_theme},
+            status_code=400,
         )
 
     festival = Festival(
@@ -100,6 +107,7 @@ async def create_festival(
         camp_arrival=_date(camp_arrival),
         camp_departure=_date(camp_departure),
         timezone=(timezone or "Europe/Berlin")[:64],
+        theme=chosen_theme,
         created_by=user.id,
     )
     db.add(festival)

@@ -1,28 +1,61 @@
-/* Theme: Metal — dark, high contrast, the default. */
+/* Theme: Metal — cold steel on blue-black, after the Rockharz poster.
+
+   The distinguishing choice is that there is NO red in it. Dark interfaces
+   reach for red by reflex; that poster does not. Its drama comes from
+   near-black slate, a faint blue cast in the shadows, and type that looks
+   carved out of metal — so the accent here is pale steel, and colour is
+   spent only where something must be found fast (money owed, a full car).
+
+   Surfaces carry a very slight blue lift rather than pure grey, which is
+   what stops a dark theme looking like a switched-off screen. */
 :root {
-  --fp-bg: #0c0c0e;
-  --fp-bg-image: radial-gradient(circle at 20% -10%, #1c1c22 0%, #0c0c0e 55%);
-  --fp-surface: #16161b;
-  --fp-surface-2: #1f1f26;
-  --fp-input-bg: #101014;
-  --fp-fg: #e8e6e3;
-  --fp-muted: #9a958f;
-  --fp-border: #2e2e36;
-  --fp-accent: #c81f2a;
-  --fp-accent-fg: #ffffff;
-  --fp-danger: #c81f2a;
-  --fp-danger-bg: #2a1113;
-  --fp-danger-fg: #f3c9cb;
-  --fp-ok: #4a8f3c;
-  --fp-radius: 10px;
-  --fp-radius-s: 6px;
-  --fp-shadow: 0 2px 10px rgba(0, 0, 0, 0.55);
+  --fp-bg: #0a0e15;
+  --fp-bg-image:
+    radial-gradient(circle at 15% -20%, #1b2433 0%, rgba(10, 14, 21, 0) 60%),
+    linear-gradient(185deg, #0d121b 0%, #080b11 100%);
+  --fp-surface: #121824;
+  --fp-surface-2: #1a2130;
+  --fp-input-bg: #0b0f17;
+  --fp-fg: #dfe3ea;
+  --fp-muted: #8792a5;
+  --fp-border: #2b3547;
+
+  /* Brushed steel, not blood. Light enough to read as the "active" colour on
+     a near-black background without glowing like a neon theme. */
+  --fp-accent: #b9c4d4;
+  --fp-accent-fg: #0a0e15;
+
+  /* Danger keeps a red because a warning that matches the accent is not a
+     warning. Desaturated so it sits in the same cold world. */
+  --fp-danger: #bf4a52;
+  --fp-danger-bg: #241418;
+  --fp-danger-fg: #efc9cc;
+  --fp-ok: #6f9f7a;
+  --fp-warn: #c4a24a;
+
+  --fp-radius: 4px;
+  --fp-radius-s: 3px;
+  --fp-shadow: 0 2px 14px rgba(0, 0, 0, 0.7);
   --fp-gap-s: 0.5rem;
   --fp-gap-m: 1rem;
   --fp-gap-l: 1.5rem;
   --fp-gap-xl: 3rem;
   --fp-font-body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --fp-font-display: "Trebuchet MS", system-ui, sans-serif;
-  --fp-display-tracking: 0.04em;
+  --fp-display-tracking: 0.12em;
   --fp-brand-transform: uppercase;
+}
+
+/* Headings read as struck into the surface rather than printed on it: a dark
+   line below and a light line above the glyph edge. Cheap in CSS, and it is
+   the thing that makes the poster's lettering look like metal. */
+[data-theme="metal"] h1,
+[data-theme="metal"] h2,
+[data-theme="metal"] .titlebar__name {
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.85), 0 -1px 0 rgba(255, 255, 255, 0.07);
+}
+
+/* Square corners and a hairline top edge: panels look cut from plate. */
+[data-theme="metal"] .card {
+  border-top-color: #3a475d;
 }

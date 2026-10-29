@@ -1,0 +1,31 @@
+/* Theme: Dark — high contrast, the default.
+   Was called "metal" until a genuinely metal-looking theme arrived; this one
+   is simply a dark interface with a red accent, which is what the name now
+   says. Festivals already set to "metal" were migrated to "dark". */
+:root {
+  --fp-bg: #0c0c0e;
+  --fp-bg-image: radial-gradient(circle at 20% -10%, #1c1c22 0%, #0c0c0e 55%);
+  --fp-surface: #16161b;
+  --fp-surface-2: #1f1f26;
+  --fp-input-bg: #101014;
+  --fp-fg: #e8e6e3;
+  --fp-muted: #9a958f;
+  --fp-border: #2e2e36;
+  --fp-accent: #c81f2a;
+  --fp-accent-fg: #ffffff;
+  --fp-danger: #c81f2a;
+  --fp-danger-bg: #2a1113;
+  --fp-danger-fg: #f3c9cb;
+  --fp-ok: #4a8f3c;
+  --fp-radius: 10px;
+  --fp-radius-s: 6px;
+  --fp-shadow: 0 2px 10px rgba(0, 0, 0, 0.55);
+  --fp-gap-s: 0.5rem;
+  --fp-gap-m: 1rem;
+  --fp-gap-l: 1.5rem;
+  --fp-gap-xl: 3rem;
+  --fp-font-body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --fp-font-display: "Trebuchet MS", system-ui, sans-serif;
+  --fp-display-tracking: 0.04em;
+  --fp-brand-transform: uppercase;
+}

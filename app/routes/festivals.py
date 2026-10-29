@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session as DbSession
 from app.config import get_settings
 from app.deps import get_db, require_user
 from app.models.festival import (
+    THEMES,
     Festival,
     FestivalStatus,
     Invite,
@@ -219,6 +220,7 @@ async def settings_form(
             "participants": participants,
             "invites": invites,
             "invite_link": request.query_params.get("link"),
+            "themes": THEMES,
             "error": None,
         },
     )
@@ -236,7 +238,7 @@ async def save_settings(
     camp_arrival: str = Form(default=""),
     camp_departure: str = Form(default=""),
     timezone: str = Form(default="Europe/Berlin"),
-    theme: str = Form(default="metal"),
+    theme: str = Form(default="dark"),
     user: User = Depends(require_user),
     db: DbSession = Depends(get_db),
 ) -> Response:
@@ -261,7 +263,7 @@ async def save_settings(
     festival.camp_arrival = _date(camp_arrival)
     festival.camp_departure = _date(camp_departure)
     festival.timezone = (timezone or "Europe/Berlin")[:64]
-    if theme in {"metal", "matrix", "light"}:
+    if theme in THEMES:
         festival.theme = theme
     db.commit()
     return RedirectResponse(f"/festivals/{festival_id}/settings", status_code=303)

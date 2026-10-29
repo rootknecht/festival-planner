@@ -26,8 +26,8 @@
     <label for="theme_override">{{ _("Theme") }}</label>
     <select id="theme_override" name="theme_override">
       <option value="">{{ _("Follow the festival's theme") }}</option>
-      {% for theme_name in themes %}
-      <option value="{{ theme_name }}" {% if user.theme_override == theme_name %}selected{% endif %}>{{ theme_name }}</option>
+      {% for key, label in themes.items() %}
+      <option value="{{ key }}" {% if user.theme_override == key %}selected{% endif %}>{{ label }}</option>
       {% endfor %}
     </select>
     <button class="btn btn--primary">{{ _("Save") }}</button>

@@ -151,15 +151,22 @@ Two themes ship a display face for the festival name, self-hosted under
 | Theme | Wordmark | Body | Licence |
 |---|---|---|---|
 | Metal | Grenze Gotisch | Grenze (400/700) | SIL OFL 1.1 |
-| Punk  | Black Ops One  | Oswald (400/600) | SIL OFL 1.1 |
+| Punk  | Rubik Dirt     | Special Elite    | OFL 1.1 / **Apache 2.0** |
 
 Grenze is the text companion to Grenze Gotisch from the same type project, so
-the body echoes the wordmark by descent rather than by resemblance. Black Ops
-One has no such sibling, so Punk pairs it with Oswald, the condensed grotesque
-of gig posters.
+Metal's body echoes its wordmark by descent rather than by resemblance. Punk
+pairs the distressed Rubik Dirt with Special Elite, a battered typewriter.
 
-Every file is subset to the latin characters a European festival name and a
-German chat message use: 8–16KB each, 49KB for both themes together. Bold is
-shipped as a real weight rather than left to the browser's synthetic smear. There is deliberately no font CDN: it would add an
+Special Elite is **Apache 2.0, not OFL** — it lives in google/fonts' `apache/`
+tree and ships here as `SpecialElite-LICENSE.txt`. The others ship an
+`OFL.txt`. A test asserts every shipped font has a licence file whose contents
+name a real licence, because a failed download leaves an HTML error page with
+the right filename.
+
+Files are subset to the characters actually rendered. Rubik Dirt is capitals
+only (146KB, down from 302KB) because the punk title bar is uppercase, so its
+lowercase glyphs could never appear. Special Elite has a single weight, so
+bold there is the browser's synthetic bold — acceptable on a face that is
+already irregular. There is deliberately no font CDN: it would add an
 origin to the Content-Security-Policy and tell a third party about every page
 load, and `font-src 'self'` in `app/main.py` enforces that.

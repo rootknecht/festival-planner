@@ -1,30 +1,33 @@
-/* Oswald, SIL OFL 1.1 — the condensed grotesque of gig posters and flyers.
-   Black Ops One has no text sibling, so this is a cousin rather than a
-   relative: it keeps the shouted-poster rhythm at a size you can read a
-   forum thread in. Special Elite (battered typewriter) was the more punk
-   choice and was not taken — it is markedly harder to read in long
-   messages, and body text is every word in the app. 8KB per weight. */
+/* Rubik Dirt, SIL OFL 1.1 — the distressed photocopy face, and the closest
+   open font to the Spirit poster's eroded lettering.
+
+   It is by far the heaviest font in this app: 302KB as published, 146KB
+   here. The subset is CAPITALS ONLY, which is honest rather than lossy —
+   the punk title bar sets text-transform: uppercase, so the lowercase
+   glyphs would be ~90KB nobody ever paints. It loads for this theme alone,
+   for exactly one line of text, and font-display: swap means the festival
+   name is readable in the fallback face while it arrives. */
 @font-face {
-  font-family: "Oswald";
-  src: url("/static/fonts/Oswald-400.woff2") format("woff2");
-  font-weight: 400; font-style: normal; font-display: swap;
-}
-@font-face {
-  font-family: "Oswald";
-  src: url("/static/fonts/Oswald-600.woff2") format("woff2");
-  font-weight: 600; font-style: normal; font-display: swap;
+  font-family: "Rubik Dirt";
+  src: url("/static/fonts/RubikDirt.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
 }
 
-/* Black Ops One, SIL OFL 1.1 — self-hosted, licence beside the file in
-   app/static/fonts/. No font CDN, for the same reasons as the metal theme.
+/* Special Elite, Apache License 2.0 — NOT OFL. It lives in google/fonts'
+   apache/ tree and ships here as SpecialElite-LICENSE.txt; assuming OFL
+   because the other fonts were OFL would have put the wrong licence text in
+   a public repo.
 
-   The Spirit wordmark is rough stencil caps, so a stencil face is the honest
-   match. Rubik Dirt was the first choice and was rejected on weight: 302KB
-   of distressed outlines to render one festival name, on a phone, at a
-   campsite. This is 16KB subset. */
+   Battered typewriter: the fanzine face, and the one that makes this theme
+   look photocopied rather than designed. One weight only, so bold text is
+   the browser's synthetic bold — tolerable here precisely because the face
+   is already irregular, where on a clean grotesque it would look like a
+   rendering fault. 40KB subset. */
 @font-face {
-  font-family: "Black Ops One";
-  src: url("/static/fonts/BlackOpsOne.woff2") format("woff2");
+  font-family: "Special Elite";
+  src: url("/static/fonts/SpecialElite.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -76,19 +79,21 @@
   --fp-gap-m: 1rem;
   --fp-gap-l: 1.5rem;
   --fp-gap-xl: 3rem;
-  --fp-font-body: "Oswald", "Arial Narrow", system-ui, sans-serif;
-  --fp-font-display: "Oswald", "Arial Black", Impact, sans-serif;
+  --fp-font-body: "Special Elite", "Courier New", Courier, monospace;
+  --fp-font-display: "Special Elite", "Courier New", Courier, monospace;
   --fp-display-tracking: 0.02em;
   --fp-brand-transform: uppercase;
 }
 
-/* Headings are stencilled: heavy, tight, shouted. */
+/* Headings: shouted, but NOT font-weight 900 any more — Special Elite has a
+   single weight, and asking for 900 would hand every heading to the
+   browser's synthetic bold. Uppercase and tracking carry the emphasis
+   instead, which is what a typewriter page does anyway. */
 [data-theme="punk"] h1,
 [data-theme="punk"] h2,
 [data-theme="punk"] .titlebar__name {
   text-transform: uppercase;
-  letter-spacing: 0.01em;
-  font-weight: 900;
+  letter-spacing: 0.04em;
 }
 
 /* The accent is a highlighter pen, not a tint: the active tool in the bar
@@ -111,17 +116,14 @@
   background: var(--fp-accent);
   color: var(--fp-accent-fg);
   border-color: var(--fp-accent);
-  font-weight: 700;
 }
 
-/* The festival name as the poster sets it: stencilled caps, pushed hard
-   against the top-left, with the accent underlining it like the cyan bar
-   under "spirit-festival.com". */
+/* The festival name is the poster's eroded wordmark. Tracking is wider than
+   the old stencil needed: distressed glyphs lose their edges when they sit
+   too close, and the poster spaces its own title the same way. */
 [data-theme="punk"] .titlebar__name {
-  /* Stencil for the wordmark only — the poster sets its band names in bold
-     sans and keeps the stencil for "SPIRIT". */
-  font-family: "Black Ops One", "Arial Black", Impact, sans-serif;
+  font-family: "Rubik Dirt", "Arial Black", Impact, sans-serif;
   font-size: 1.3rem;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }

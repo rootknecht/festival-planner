@@ -49,6 +49,76 @@ async def _submitted_token(request: Request) -> str | None:
     return None
 
 
+def _set_token_cookie(response: Response, token: str, *, secure: bool) -> None:
+    from app.config import get_settings
+
+    response.set_cookie(
+        CSRF_COOKIE,
+        token,
+        httponly=True,
+        samesite="lax",
+        secure=secure,
+        path="/",
+        # Matched to the session lifetime. These used to disagree — the cookie
+        # lasted a day and the session a month — so a tab left open overnight
+        # came back with a form whose token had no cookie behind it, and the
+        # first thing the user pressed failed.
+        max_age=get_settings().session_lifetime,
+    )
+
+
+def _rejection(request: Request, token: str) -> Response:
+    """Explain the failure in the language of whoever is asking.
+
+    A stale token is a routine event: a tab left open, a browser that cleared
+    its data, a session resumed days later. The response has to be recoverable
+    rather than correct-and-useless, and it carries a FRESH cookie so the
+    retry actually succeeds instead of looping.
+    """
+    from app.templating import templates
+    from app.translations import gettext_for, normalise
+
+    secure = request.url.scheme == "https"
+
+    # HTMX swaps fragments into a live page, so an error page would be
+    # inserted into the layout. Telling the client to reload gets it a fresh
+    # token and puts the user back where they were.
+    if request.headers.get("hx-request", "").lower() == "true":
+        response = Response(status_code=403, headers={"HX-Refresh": "true"})
+        _set_token_cookie(response, token, secure=secure)
+        return response
+
+    accept = request.headers.get("accept", "")
+    if "text/html" not in accept:
+        response = JSONResponse({"detail": "CSRF validation failed"}, status_code=403)
+        _set_token_cookie(response, token, secure=secure)
+        return response
+
+    language = normalise(
+        request.cookies.get("fp_lang") or request.headers.get("accept-language", "")
+    )
+    _ = gettext_for(language)
+    response = templates.TemplateResponse(
+        request,
+        "csrf.html",
+        {
+            "language": language,
+            "heading": _("Please try that again"),
+            "explanation": _(
+                "The security token on that form had expired, so the app refused it. "
+                "This happens when a page has been open for a long time, or after "
+                "the browser has cleared its data."
+            ),
+            "retry_url": request.headers.get("referer") or "/",
+            "retry_label": _("Reload the page"),
+            "reassurance": _("Nothing was changed and nothing was lost."),
+        },
+        status_code=403,
+    )
+    _set_token_cookie(response, token, secure=secure)
+    return response
+
+
 class CsrfMiddleware:
     """Starlette-style middleware callable for use with app.middleware('http')."""
 
@@ -64,17 +134,11 @@ class CsrfMiddleware:
             if not cookie_token or not submitted or not hmac.compare_digest(
                 cookie_token, submitted
             ):
-                return JSONResponse({"detail": "CSRF validation failed"}, status_code=403)
+                # Issue a NEW token with the rejection: the old one is either
+                # gone or untrusted, and without this the retry fails too.
+                return _rejection(request, new_csrf_token())
 
         response = await call_next(request)
         if not cookie_token:
-            response.set_cookie(
-                CSRF_COOKIE,
-                issue_token,
-                httponly=True,
-                samesite="lax",
-                secure=request.url.scheme == "https",
-                path="/",
-                max_age=60 * 60 * 24,
-            )
+            _set_token_cookie(response, issue_token, secure=request.url.scheme == "https")
         return response

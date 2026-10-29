@@ -11,8 +11,13 @@
   --fp-fg: #e8e6e3;
   --fp-muted: #9a958f;
   --fp-border: #2e2e36;
-  --fp-accent: #c81f2a;
-  --fp-accent-fg: #ffffff;
+  /* Steel, matching Metal and Punk, so the three dark themes are one family
+     and the sign-in page (which always uses this theme) does not announce a
+     different product. The red below is NOT the same token: danger has to
+     stay red, and an accent that matches the warning colour means a warning
+     that cannot be seen. */
+  --fp-accent: #b9c4d4;
+  --fp-accent-fg: #0c0c0e;
   --fp-danger: #c81f2a;
   --fp-danger-bg: #2a1113;
   --fp-danger-fg: #f3c9cb;

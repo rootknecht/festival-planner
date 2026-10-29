@@ -4,7 +4,11 @@
 .titlebar {
   position: sticky;
   top: 0;
-  z-index: 10;
+  /* Above Leaflet. Its panes run to 700 and its zoom controls sit at 1000,
+     so a chrome element that must stay on top has to clear that — on a
+     phone the map scrolled straight over the bottom bar, because the rail
+     had no z-index at all and a positioned map pane wins by default. */
+  z-index: 1100;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -56,6 +60,7 @@
 
 .toolbar {
   position: fixed;
+  z-index: 1100;
   top: var(--fp-header-h);
   left: 0;
   bottom: 0;
@@ -200,7 +205,7 @@ body:has(.toolbar) .content { margin-left: 5.5rem; }
 .name--free { opacity: 0.5; border-style: dashed; }
 .linkbtn { background: none; border: none; color: var(--fp-muted); cursor: pointer; font: inherit; padding: 0 0.15rem; }
 .linkbtn:hover { color: var(--fp-danger); }
-.map { height: 22rem; border-radius: var(--fp-radius-s); border: 1px solid var(--fp-border); }
+.map { position: relative; z-index: 0; height: 22rem; border-radius: var(--fp-radius-s); border: 1px solid var(--fp-border); }
 .leaflet-container { background: var(--fp-surface-2); }
 
 /* Polls, chat, forum */
@@ -453,3 +458,64 @@ textarea { min-height: 4rem; resize: vertical; }
 
 /* Status pills on the balance lines. */
 .pill--owe { border-color: var(--fp-warn); color: var(--fp-warn); }
+
+/* ---------------------------------------------------------------------------
+   The festival overview shows every festival in ITS OWN theme.
+
+   Rockharz in metal and Riez in punk have the same accent colour, so colour
+   alone could not tell them apart — the surface, the corner radius and above
+   all the wordmark font do. Each card is a small sample of what you get when
+   you open it.
+
+   The page itself is rendered in one theme (it belongs to no festival), so
+   these are per-card custom properties rather than five competing
+   stylesheets. The values are copied from the theme files because this
+   project has no build step and the CSP forbids inline styles;
+   tests/unit/test_themes.py re-reads both sides and fails on any drift.
+   ------------------------------------------------------------------------ */
+.cardtheme--dark {
+  --card-accent: #b9c4d4;
+  --card-bg: #16161b;
+  --card-fg: #e8e6e3;
+  --card-radius: 10px;
+  --card-font: "Trebuchet MS", system-ui, sans-serif;
+}
+.cardtheme--light {
+  --card-accent: #a3121c;
+  --card-bg: #ffffff;
+  --card-fg: #1b1b1f;
+  --card-radius: 10px;
+  --card-font: "Trebuchet MS", system-ui, sans-serif;
+}
+.cardtheme--matrix {
+  --card-accent: #22e05a;
+  --card-bg: #04140a;
+  --card-fg: #b9ffc6;
+  --card-radius: 4px;
+  --card-font: "DejaVu Sans Mono", ui-monospace, monospace;
+}
+.cardtheme--metal {
+  --card-accent: #b9c4d4;
+  --card-bg: #121824;
+  --card-fg: #dfe3ea;
+  --card-radius: 4px;
+  --card-font: "Grenze Gotisch", "Trebuchet MS", system-ui, sans-serif;
+}
+.cardtheme--punk {
+  --card-accent: #b9c4d4;
+  --card-bg: #0b0b0b;
+  --card-fg: #f4f4f2;
+  --card-radius: 0px;
+  --card-font: "Rubik Dirt", "Arial Black", Impact, sans-serif;
+}
+
+.cardtheme {
+  background: var(--card-bg);
+  color: var(--card-fg);
+  border-left: 4px solid var(--card-accent);
+  border-radius: var(--card-radius);
+}
+.cardtheme .card__title {
+  color: var(--card-accent);
+  font-family: var(--card-font);
+}

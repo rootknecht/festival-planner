@@ -2,6 +2,17 @@
    file, which defines the custom properties used here. A new theme is one
    file in css/themes/ — never a change to this file. */
 
+:root {
+  /* The exception to the rule above: the title bar's height is STRUCTURE,
+     not decoration, and it lives here rather than in a theme. The tool rail
+     is fixed-positioned and used to carry its own hardcoded copy of this
+     number — when a themed wordmark grew, the header grew past the rail's
+     3.4rem and covered the Dashboard icon. One variable, two rules, no way
+     for them to disagree again, and no way for a theme to knock the layout
+     apart by setting a bigger font. */
+  --fp-header-h: 4rem;
+}
+
 *,
 *::before,
 *::after { box-sizing: border-box; }

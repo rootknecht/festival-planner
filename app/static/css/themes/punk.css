@@ -104,7 +104,7 @@
   /* Stencil for the wordmark only — the poster sets its band names in bold
      sans and keeps the stencil for "SPIRIT". */
   font-family: "Black Ops One", "Arial Black", Impact, sans-serif;
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   letter-spacing: 0.02em;
   text-transform: uppercase;
 }

@@ -9,7 +9,12 @@
   justify-content: space-between;
   align-items: center;
   gap: var(--fp-gap-m);
-  padding: 0.6rem var(--fp-gap-m);
+  padding: 0.4rem var(--fp-gap-m);
+  /* Fixed height, not a minimum: the rail below is positioned against this
+     number, so the bar must not be able to grow past it. The wordmark
+     already truncates with an ellipsis when it runs out of width. */
+  height: var(--fp-header-h);
+  box-sizing: border-box;
   background: var(--fp-surface);
   border-bottom: 1px solid var(--fp-border);
 }
@@ -17,6 +22,7 @@
 .titlebar__home { text-decoration: none; color: inherit; display: flex; flex-direction: column; min-width: 0; }
 .titlebar__name {
   font-family: var(--fp-font-display);
+  line-height: 1.15;
   text-transform: var(--fp-brand-transform, none);
   letter-spacing: var(--fp-display-tracking, 0);
   color: var(--fp-accent);
@@ -50,7 +56,7 @@
 
 .toolbar {
   position: fixed;
-  top: 3.4rem;
+  top: var(--fp-header-h);
   left: 0;
   bottom: 0;
   width: 5.5rem;

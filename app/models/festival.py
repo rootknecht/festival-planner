@@ -35,6 +35,12 @@ THEMES = {
     "light": "Light",
 }
 
+#: What the creation form preselects, and what a missing or tampered value
+#: falls back to there. Deliberately NOT the column default: the column keeps
+#: "dark" as the storage-level fallback for rows created outside the form, and
+#: the settings form keeps falling back to a festival's own stored theme.
+NEW_FESTIVAL_THEME = "metal"
+
 
 class Festival(Base):
     __tablename__ = "festival"

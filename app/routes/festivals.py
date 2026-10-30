@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session as DbSession
 from app.config import get_settings
 from app.deps import get_db, require_user
 from app.models.festival import (
+    NEW_FESTIVAL_THEME,
     THEMES,
     Festival,
     FestivalStatus,
@@ -68,7 +69,11 @@ async def festival_list(
 
 @router.get("/festivals/new")
 async def new_festival_form(request: Request, user: User = Depends(require_user)) -> Response:
-    return render(request, "festivals/new.html", {"error": None, "themes": THEMES, "theme": "dark"})
+    return render(
+        request,
+        "festivals/new.html",
+        {"error": None, "themes": THEMES, "theme": NEW_FESTIVAL_THEME},
+    )
 
 
 @router.post("/festivals")
@@ -82,13 +87,14 @@ async def create_festival(
     camp_arrival: str = Form(default=""),
     camp_departure: str = Form(default=""),
     timezone: str = Form(default="Europe/Berlin"),
-    theme: str = Form(default="dark"),
+    theme: str = Form(default=NEW_FESTIVAL_THEME),
     user: User = Depends(require_user),
     db: DbSession = Depends(get_db),
 ) -> Response:
     # An unknown theme is not an error worth a page for: fall back to the
-    # column default, same as the settings form does.
-    chosen_theme = theme if theme in THEMES else "dark"
+    # creation default rather than rendering an error, same as the settings
+    # form falls back instead of raising.
+    chosen_theme = theme if theme in THEMES else NEW_FESTIVAL_THEME
     clean_name = name.strip()
     if not clean_name:
         return render(

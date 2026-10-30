@@ -10,7 +10,7 @@ from sqlalchemy.pool import StaticPool
 from app.config import Settings
 from app.db import Base, reset_engine_for_tests
 from app.main import create_app
-from app.models.festival import THEMES, Festival, Participant
+from app.models.festival import NEW_FESTIVAL_THEME, THEMES, Festival, Participant
 from app.models.notification import NotificationKind, Tool
 from app.models.user import User
 from app.security.csrf import CSRF_COOKIE
@@ -245,7 +245,8 @@ def test_an_unknown_theme_is_rejected(client, factory) -> None:
     )
     with factory() as db:
         theme = db.get(Festival, festival_id).theme
-    assert theme == "dark"
+    # Rejected, so the festival keeps the theme it was created with.
+    assert theme == NEW_FESTIVAL_THEME
     assert theme in THEMES
 
 

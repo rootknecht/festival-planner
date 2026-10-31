@@ -35,6 +35,19 @@
     var points = latlngs.map(function (pair) {
       return map.latLngToLayerPoint(L.latLng(pair[0], pair[1]));
     });
+    // SIMPLIFY BEFORE OFFSETTING. A road geometry has its points ~0.2px
+    // apart, and the direction between two such points is mostly rounding
+    // noise — offsetting each one by its own normal turned a line into a
+    // sawtooth several pixels wide. It also defeated Leaflet's own
+    // simplification, so an offset line kept ~1150 screen points where the
+    // un-offset one beside it kept 74, and looked twice as thick as a result.
+    //
+    // Leaflet simplifies every polyline anyway (smoothFactor); doing it here
+    // first means the normals are taken between points far enough apart to
+    // carry a real direction.
+    // Tolerance 1 == Leaflet's own default smoothFactor, so an offset line
+    // keeps the same level of detail as the un-offset line beside it.
+    points = L.LineUtil.simplify(points, 1);
     return points.map(function (point, index) {
       // The normal at a vertex follows the direction of travel THROUGH it, so
       // corners bend outwards instead of breaking the ribbon apart.

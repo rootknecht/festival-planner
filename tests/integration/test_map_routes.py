@@ -454,6 +454,10 @@ def test_the_map_script_lays_overlapping_lines_side_by_side(factory) -> None:
     assert 'map.on("zoomend"' in script
     # A single line must stay on its true route.
     assert "if (lanes.length < 2) return 0;" in script
+    # Road geometry has points ~0.2px apart; offsetting each one by its own
+    # normal produced a sawtooth that read as a line twice as thick as its
+    # neighbour. Simplify first, or the fix becomes the next bug report.
+    assert "L.LineUtil.simplify(points, 1)" in script
 
 
 def test_a_tram_stop_is_placed_under_its_own_name(factory) -> None:

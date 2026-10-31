@@ -37,7 +37,7 @@
 {% if error %}<p class="alert alert--error" role="alert">{{ error }}</p>{% endif %}
 
 <section class="card">
-  <h2>{{ _("Car-sharing") }}</h2>
+  <h2>{{ _("Car-sharing / Train") }}</h2>
 
   {% if unassigned %}
   <p class="hint">{{ _("Not in a car yet — drag a name onto a car, or use the buttons below it.") }}</p>
@@ -212,6 +212,87 @@
 
 
 
+{% for train in trains %}
+{# A train card carries the connection, not a route: there is nothing to draw
+   on the map and no seat count to run out of. #}
+<section class="card car">
+  <div class="row row--between">
+    <div class="row">
+      {{ icon("train") }}
+      <strong>
+        {{ train.number or _("Train") }}
+        {%- if train.departure_station %} · {{ train.departure_station }}{% endif %}
+      </strong>
+    </div>
+    <span class="hint">
+      {% if train.departure_on %}{{ num_date(train.departure_on, language) }}{% endif %}
+      {%- if train.departure_time %} {{ train.departure_time.strftime("%H:%M") }}{% endif %}
+      {%- if train.arrival_time %} → {{ train.arrival_time.strftime("%H:%M") }}{% endif %}
+    </span>
+  </div>
+
+  <ul class="names">
+    {% for rider in train.riders %}
+    <li class="name{% if rider.participant.is_placeholder %} name--placeholder{% endif %}">
+      {{ rider.participant.display_name }}
+      {% if not festival.is_archived %}
+      <form method="post" action="/festivals/{{ festival.id }}/transport/trains/{{ train.id }}/riders/remove" class="inline">
+        <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+        <input type="hidden" name="participant_id" value="{{ rider.participant.id }}">
+        <button class="linkbtn" title="{{ _('Take out') }}">{{ icon("close") }}</button>
+      </form>
+      {% endif %}
+    </li>
+    {% else %}
+    <li class="hint">{{ _("Nobody on this train yet.") }}</li>
+    {% endfor %}
+  </ul>
+
+  {% if not festival.is_archived %}
+  <div class="row">
+    {% if unassigned %}
+    {# No seat limit, so this never disappears the way a full car's does. #}
+    <details class="reveal">
+      <summary class="btn btn--small">{{ icon("plus") }} {{ _("Add passenger") }}</summary>
+      <form method="post" action="/festivals/{{ festival.id }}/transport/trains/{{ train.id }}/riders" class="row">
+        <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+        <select name="participant_id" aria-label="{{ _('Who') }}">
+          {% for participant in unassigned %}
+          <option value="{{ participant.id }}">{{ participant.display_name }}</option>
+          {% endfor %}
+        </select>
+        <button class="btn btn--small btn--primary">{{ _("Save") }}</button>
+      </form>
+    </details>
+    {% endif %}
+
+    <details class="reveal">
+      <summary class="btn btn--small">{{ icon("pencil") }} {{ _("Edit train") }}</summary>
+      <form method="post" action="/festivals/{{ festival.id }}/transport/trains/{{ train.id }}/edit" class="stack">
+        <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+        <label for="tnum{{ train.id }}">{{ _("Train number") }}</label>
+        <input id="tnum{{ train.id }}" name="number" type="text" maxlength="40" value="{{ train.number }}">
+        <label for="tstation{{ train.id }}">{{ _("Departure station") }}</label>
+        <input id="tstation{{ train.id }}" name="departure_station" type="text" maxlength="200" value="{{ train.departure_station }}">
+        <label for="tdate{{ train.id }}">{{ _("Departure day") }}</label>
+        <input id="tdate{{ train.id }}" name="departure_date" type="date" value="{{ train.departure_on or '' }}">
+        <label for="tdep{{ train.id }}">{{ _("Departure time (optional)") }}</label>
+        <input id="tdep{{ train.id }}" name="departure_time" type="time" value="{{ train.departure_time.strftime('%H:%M') if train.departure_time else '' }}">
+        <label for="tarr{{ train.id }}">{{ _("Arrival time (optional)") }}</label>
+        <input id="tarr{{ train.id }}" name="arrival_time" type="time" value="{{ train.arrival_time.strftime('%H:%M') if train.arrival_time else '' }}">
+        <div class="row">
+          <button class="btn btn--small btn--primary">{{ _("Save") }}</button>
+          <button class="linkbtn" formaction="/festivals/{{ festival.id }}/transport/trains/{{ train.id }}/delete"
+                  title="{{ _('Remove this train') }}">{{ icon("close") }}</button>
+        </div>
+      </form>
+    </details>
+  </div>
+  {% endif %}
+</section>
+{% endfor %}
+
+
 {% if not festival.is_archived %}
 <section class="card">
   {# Both "new" buttons live together: adding a car and adding a meeting
@@ -247,6 +328,29 @@
          points keep their time — that is the moment that must be exact. #}
       <input id="when" name="departure_date" type="date">
       <button class="btn btn--small btn--primary">{{ _("Add car") }}</button>
+    </form>
+  </details>
+  <details class="reveal">
+    {# Right next to "Add a car", because the question people arrive with is
+       "how am I getting there", and the answer is one or the other. #}
+    <summary class="btn btn--small btn--primary">{{ icon("plus") }} {{ _("Add a train") }}</summary>
+    <form method="post" action="/festivals/{{ festival.id }}/transport/trains" class="stack">
+      <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+      <label for="train_number">{{ _("Train number") }}</label>
+      <input id="train_number" name="number" type="text" maxlength="40" placeholder="{{ _('ICE 574, RE 7 …') }}">
+      <label for="train_station">{{ _("Departure station") }}</label>
+      <input id="train_station" name="departure_station" type="text" maxlength="200">
+      <label for="train_date">{{ _("Departure day") }}</label>
+      <input id="train_date" name="departure_date" type="date">
+      {# Times are optional: the connection is worth sharing as soon as the
+         number and the station are known. Unlike a car, a train's time is
+         printed on a ticket, so it is offered rather than left to chat. #}
+      <label for="train_dep">{{ _("Departure time (optional)") }}</label>
+      <input id="train_dep" name="departure_time" type="time">
+      <label for="train_arr">{{ _("Arrival time (optional)") }}</label>
+      <input id="train_arr" name="arrival_time" type="time">
+      <p class="hint">{{ _("A train has room for everybody — no seat count to keep.") }}</p>
+      <button class="btn btn--small btn--primary">{{ _("Add train") }}</button>
     </form>
   </details>
   {% if cars %}
@@ -325,7 +429,7 @@
     <div class="row row--between">
       <span>
         {{ icon("pin") }} <strong>{{ point.name }}</strong> — {{ point.address }}
-        {% if point.meet_at %}· {{ point.meet_at.strftime("%d.%m. %H:%M") }}{% endif %}
+        {% if point.meet_at %}· {{ point.meet_at | num_datetime(language) }}{% endif %}
         {% if not point.lat %}<span class="hint">{{ _("not found on the map") }}</span>{% endif %}
       </span>
       {% if membership.is_admin and not festival.is_archived %}

@@ -11,7 +11,7 @@
       <a class="card__title" href="/festivals/{{ festival.id }}/forum/{{ entry.topic.id }}">{{ entry.topic.title }}</a>
       <p class="hint">
         {{ entry.posts }} {{ _("posts") }} ·
-        {{ entry.topic.last_activity_at.strftime("%d.%m.%Y %H:%M") }}
+        {{ entry.topic.last_activity_at | num_datetime(language) }}
       </p>
     </li>
     {% endfor %}

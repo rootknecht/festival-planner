@@ -51,6 +51,27 @@ templates.env.globals["short_date"] = _short_date
 templates.env.filters["short_date"] = _short_date
 
 
+def _num_date(value, language="en"):
+    from app.services.dates import format_numeric_date
+
+    return format_numeric_date(value, language)
+
+
+def _num_datetime(value, language="en"):
+    from app.services.dates import format_numeric_datetime
+
+    return format_numeric_datetime(value, language)
+
+
+# Numeric dates were hardcoded as %d.%m.%Y in five templates, so an English
+# reader was shown German order with no hint of it. Both are filters AND
+# globals because templates use each shape somewhere.
+templates.env.filters["num_date"] = _num_date
+templates.env.globals["num_date"] = _num_date
+templates.env.filters["num_datetime"] = _num_datetime
+templates.env.globals["num_datetime"] = _num_datetime
+
+
 def language_for(request: Request) -> str:
     user = getattr(request.state, "user", None)
     if user is not None and user.language:

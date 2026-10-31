@@ -22,7 +22,7 @@
       <div class="row row--between">
         <strong>{{ post.author }}</strong>
         <span class="hint hint--tiny">
-          {{ post.created_at.strftime("%d.%m.%Y %H:%M") }}{% if post.edited %} · {{ _("edited") }}{% endif %}
+          {{ post.created_at | num_datetime(language) }}{% if post.edited %} · {{ _("edited") }}{% endif %}
         </span>
       </div>
       <div class="message__body">{{ post.body_html | safe }}</div>

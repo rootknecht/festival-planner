@@ -144,7 +144,7 @@
         <span>
           <strong>{{ expense.description }}</strong> · {{ money(expense.amount_cents) }}
           <span class="hint">{{ _("paid by") }} {{ expense.payer.display_name }}</span>
-          {% if expense.spent_on %}<span class="hint">{{ expense.spent_on.strftime("%d.%m.%Y") }}</span>{% endif %}
+          {% if expense.spent_on %}<span class="hint">{{ expense.spent_on | num_date(language) }}</span>{% endif %}
         </span>
         {% if not festival.is_archived and (membership.is_admin or expense.payer_participant_id == my_participant_id) %}
         <span class="row">

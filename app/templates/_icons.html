@@ -66,6 +66,15 @@
     <path d="M4 20h4L19.5 8.5a2.1 2.1 0 0 0-3-3L5 17v3Z"/><path d="M14.5 5.5l4 4"/>
   {%- elif name == "power" -%}
     <path d="M12 3v9"/><path d="M6.8 7.2a8 8 0 1 0 10.4 0"/>
+  {%- elif name == "train" -%}
+    {# Travelling by train is its own thing, not a car with a different
+       colour: no driver, no route, no seat limit. Side view with two
+       windows, wheels and a rail — the rail is what stops it reading as a
+       bus at toolbar size. #}
+    <path d="M5 5.5h9.5c2.8 0 5 2.2 5 5v4.8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7.5a2 2 0 0 1 2-2Z"/>
+    <path d="M3 10.5h16.5"/><path d="M12 5.5v5"/>
+    <circle cx="7.5" cy="19.5" r="1.5"/><circle cx="16" cy="19.5" r="1.5"/>
+    <path d="M2 22h20"/>
   {%- elif name == "gear" -%}
     {# A real cog, not a sun. The previous drawing was a circle with eight
        straight rays, which is the universal weather icon — people read it as

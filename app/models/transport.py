@@ -12,6 +12,7 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
+    Time,
     UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -102,6 +103,73 @@ class Car(Base):
     def icon_width_px(self) -> int:
         """Drawn width, so a bigger car looks bigger in the list."""
         return ICON_BASE_PX + SEAT_WIDTH_PX * max(0, self.seats_total - 1)
+
+
+class Train(Base):
+    """A train connection somebody is taking, and who else is on it.
+
+    Deliberately NOT a Car with a different icon. A train has no driver, no
+    colour, no pickups and no route to draw on the map; it has a number and a
+    station, and above all it has no seat limit worth modelling — a group does
+    not run out of room on a train the way it runs out of room in a car. The
+    shared shapes are only "people travelling together", which is the list of
+    riders.
+
+    Times are optional on purpose. A connection is worth sharing the moment
+    you know the train and the station; forcing an arrival time would stop
+    people entering what they already know.
+    """
+
+    __tablename__ = "train"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    festival_id: Mapped[int] = mapped_column(
+        ForeignKey("festival.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    #: Free text, not a number: "ICE 574", "RE 7", "NJ 420" are all normal.
+    number: Mapped[str] = mapped_column(String(40), nullable=False, default="")
+    departure_station: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    departure_on: Mapped[dt.date | None] = mapped_column(Date, nullable=True)
+    #: Unlike a car's departure, a train's time IS knowable in advance — it is
+    #: printed on the ticket — so it is offered, but stays optional.
+    departure_time: Mapped[dt.time | None] = mapped_column(Time, nullable=True)
+    arrival_time: Mapped[dt.time | None] = mapped_column(Time, nullable=True)
+    created_by: Mapped[int | None] = mapped_column(
+        ForeignKey("user.id", ondelete="SET NULL"), nullable=True
+    )
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime, nullable=False, default=utcnow)
+
+    riders: Mapped[list[TrainRider]] = relationship(
+        back_populates="train", cascade="all, delete-orphan"
+    )
+
+    @property
+    def label(self) -> str:
+        parts = [part for part in (self.number, self.departure_station) if part]
+        return " from ".join(parts) if len(parts) == 2 else (parts[0] if parts else "train")
+
+    @property
+    def occupied(self) -> int:
+        return len(self.riders)
+
+
+class TrainRider(Base):
+    """Somebody travelling on this connection. No seat count: a train has room."""
+
+    __tablename__ = "train_rider"
+    __table_args__ = (UniqueConstraint("train_id", "participant_id", name="uq_train_rider"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    train_id: Mapped[int] = mapped_column(
+        ForeignKey("train.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    participant_id: Mapped[int] = mapped_column(
+        ForeignKey("participant.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime, nullable=False, default=utcnow)
+
+    train: Mapped[Train] = relationship(back_populates="riders")
+    participant: Mapped[Participant] = relationship()
 
 
 class CarSeat(Base):

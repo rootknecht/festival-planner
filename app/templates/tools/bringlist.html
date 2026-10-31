@@ -125,6 +125,39 @@
   </details>
     {% endif %}
 
+    {% if membership.is_admin and rows and participants %}
+    {# An admin needs a way to enter something for SOMEBODY ELSE, which the
+       table alone cannot give: a person who brings nothing yet has no row
+       to click. Placeholders need this most — they have no account, so
+       nobody can ever act for them except an admin. The permission check
+       lives in the route; this is only the way in. #}
+    <details class="reveal">
+      <summary class="btn btn--small">{{ icon("plus") }} {{ _("Add for somebody") }}</summary>
+      <form method="post" action="/festivals/{{ festival.id }}/bringlist/cells" class="stack">
+        <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+        <label for="for-who">{{ _("Who brings it") }}</label>
+        <select id="for-who" name="participant_id">
+          {% for participant in participants %}
+          <option value="{{ participant.id }}">{{ participant.display_name }}{% if participant.is_placeholder %} ({{ _("no account") }}){% endif %}</option>
+          {% endfor %}
+        </select>
+        <label for="for-row">{{ _("What") }}</label>
+        <select id="for-row" name="row_id">
+          {% for row in rows %}<option value="{{ row.id }}">{{ row.label }}</option>{% endfor %}
+        </select>
+        <label for="for-amount">{{ _("How much") }}</label>
+        <input id="for-amount" name="amount" type="number" min="0" step="any" inputmode="decimal" required>
+        <label for="for-unit">{{ _("Unit") }}</label>
+        <select id="for-unit" name="unit">
+          <option value="">—</option>
+          {% for unit in all_units %}<option value="{{ unit }}">{{ unit }}</option>{% endfor %}
+        </select>
+        <p class="hint">{{ _("They are told that you entered this for them.") }}</p>
+        <button class="btn btn--small btn--primary">{{ _("Save") }}</button>
+      </form>
+    </details>
+    {% endif %}
+
     {% if membership.is_admin and rows %}
     {# Columns are an admin concern: renaming an item or changing its units
        changes what everybody else is agreeing to. #}

@@ -358,6 +358,22 @@ msgstr "Design"
 msgid "Invitation sender"
 msgstr "Absender für Einladungen"
 
+#: app/templates/tools/bringlist.html:134
+msgid "Add for somebody"
+msgstr "Für jemanden eintragen"
+
+#: app/templates/tools/bringlist.html:137
+msgid "Who brings it"
+msgstr "Wer bringt es mit"
+
+#: app/templates/tools/bringlist.html:140
+msgid "no account"
+msgstr "kein Konto"
+
+#: app/templates/tools/bringlist.html:154
+msgid "They are told that you entered this for them."
+msgstr "Die Person wird benachrichtigt, dass du das für sie eingetragen hast."
+
 #: app/templates/festivals/new.html:33 app/templates/festivals/settings.html:45
 msgid "Default"
 msgstr "Standard"

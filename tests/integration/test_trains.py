@@ -438,6 +438,21 @@ def test_a_journey_cannot_collect_unlimited_changes(festival, factory) -> None:
         assert len(list(db.scalars(select(TrainChange)))) == MAX_TRAIN_CHANGES
 
 
+def test_the_card_draws_the_train_at_vehicle_size_not_icon_size(festival, factory) -> None:
+    """A 22px icon beside a 98px car bar made the train look like a detail.
+
+    The wagon therefore uses its own wide viewBox and width class rather than
+    the toolbar `.icon`, and is wider than a five-seat car on purpose.
+    """
+    festival_id, owner = festival
+    add_train(owner, festival_id)
+    page = owner.get(f"/festivals/{festival_id}/transport").text
+    card = page.split("<strong>")[0]
+    assert 'class="trainbar"' in card
+    assert 'viewBox="0 0 56 23"' in card
+    assert 'class="icon"' not in card.split('class="trainbar"')[1][:200]
+
+
 def test_an_archived_festival_freezes_trains(festival, factory) -> None:
     festival_id, owner = festival
     add_train(owner, festival_id)

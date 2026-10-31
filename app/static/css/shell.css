@@ -384,6 +384,12 @@ textarea { min-height: 4rem; resize: vertical; }
 .car__meta { margin: 0.35rem 0 0; }
 .car__from { font-weight: 400; color: var(--fp-muted); }
 
+/* The train wagon on a transport card. Wider than a five-seat car (98px) on
+   purpose: a train is the bigger vehicle and the card should say so at a
+   glance. It never shrinks or wraps, for the same reason .carbar does not. */
+.trainbar { width: 118px; height: auto; display: block; flex: 0 0 auto; }
+.car__who > .trainbar { flex: 0 0 auto; }
+
 .carbar--seats-1 { width: 34px; }
 .carbar--seats-2 { width: 50px; }
 .carbar--seats-3 { width: 66px; }

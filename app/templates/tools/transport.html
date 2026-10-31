@@ -218,7 +218,7 @@
 <section class="card car">
   <div class="row row--between">
     <div class="row">
-      {{ icon("train") }}
+      {{ icon("trainwide", box="0 0 56 23", cls="trainbar", sw="1.2") }}
       <strong>
         {{ train.number or _("Train") }}
         {%- if train.departure_station %} · {{ train.departure_station }}{% endif %}

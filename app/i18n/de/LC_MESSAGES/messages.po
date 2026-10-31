@@ -376,6 +376,30 @@ msgstr "Zugnummer"
 msgid "Departure station"
 msgstr "Abfahrtsbahnhof"
 
+msgid "Arrival station"
+msgstr "Zielbahnhof"
+
+msgid "Add a change"
+msgstr "Umstieg hinzufügen"
+
+msgid "Change station"
+msgstr "Umstiegsbahnhof"
+
+msgid "Change"
+msgstr "Umstieg"
+
+msgid "Time (optional)"
+msgstr "Uhrzeit (optional)"
+
+msgid "Onward train (optional)"
+msgstr "Anschlusszug (optional)"
+
+msgid "Remove this change"
+msgstr "Diesen Umstieg entfernen"
+
+msgid "ICE 596"
+msgstr "ICE 596"
+
 msgid "Departure time (optional)"
 msgstr "Abfahrtszeit (optional)"
 

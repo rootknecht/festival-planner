@@ -129,6 +129,7 @@ class Train(Base):
     #: Free text, not a number: "ICE 574", "RE 7", "NJ 420" are all normal.
     number: Mapped[str] = mapped_column(String(40), nullable=False, default="")
     departure_station: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    arrival_station: Mapped[str] = mapped_column(Text, nullable=False, default="")
     departure_on: Mapped[dt.date | None] = mapped_column(Date, nullable=True)
     #: Unlike a car's departure, a train's time IS knowable in advance — it is
     #: printed on the ticket — so it is offered, but stays optional.
@@ -142,6 +143,11 @@ class Train(Base):
     riders: Mapped[list[TrainRider]] = relationship(
         back_populates="train", cascade="all, delete-orphan"
     )
+    changes: Mapped[list[TrainChange]] = relationship(
+        back_populates="train",
+        cascade="all, delete-orphan",
+        order_by="TrainChange.position",
+    )
 
     @property
     def label(self) -> str:
@@ -151,6 +157,34 @@ class Train(Base):
     @property
     def occupied(self) -> int:
         return len(self.riders)
+
+
+class TrainChange(Base):
+    """Where this journey changes trains, in order.
+
+    A separate row rather than more columns on Train: a journey can have two
+    or three changes, and "change 1 station / change 1 time / change 2 …"
+    would be a schema that has to grow every time somebody books a worse
+    connection.
+
+    The onward train number lives here because that is what a change IS —
+    "Hannover, 11:42, on to ICE 596" is one fact, and splitting it across the
+    card would make it unreadable.
+    """
+
+    __tablename__ = "train_change"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    train_id: Mapped[int] = mapped_column(
+        ForeignKey("train.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    position: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    station: Mapped[str] = mapped_column(Text, nullable=False)
+    #: Optional, like every other time here: the station is the useful part.
+    change_at: Mapped[dt.time | None] = mapped_column(Time, nullable=True)
+    onward_number: Mapped[str] = mapped_column(String(40), nullable=False, default="")
+
+    train: Mapped[Train] = relationship(back_populates="changes")
 
 
 class TrainRider(Base):

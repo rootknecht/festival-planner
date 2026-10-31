@@ -27,6 +27,7 @@ from app.models.transport import (
     MeetingPoint,
     MeetingPointCar,
     Train,
+    TrainChange,
     TrainRider,
 )
 from app.models.user import User
@@ -113,6 +114,7 @@ def add_train(
     festival_id: int,
     number: str,
     departure_station: str,
+    arrival_station: str = "",
     departure_on: dt.date | None,
     departure_time: dt.time | None,
     arrival_time: dt.time | None,
@@ -122,6 +124,7 @@ def add_train(
         festival_id=festival_id,
         number=number.strip()[:40],
         departure_station=departure_station.strip()[:200],
+        arrival_station=arrival_station.strip()[:200],
         departure_on=departure_on,
         departure_time=departure_time,
         arrival_time=arrival_time,
@@ -140,6 +143,7 @@ def edit_train(
     train: Train,
     number: str,
     departure_station: str,
+    arrival_station: str = "",
     departure_on: dt.date | None,
     departure_time: dt.time | None,
     arrival_time: dt.time | None,
@@ -154,12 +158,62 @@ def edit_train(
     before = train.label
     train.number = number.strip()[:40]
     train.departure_station = departure_station.strip()[:200]
+    train.arrival_station = arrival_station.strip()[:200]
     train.departure_on = departure_on
     train.departure_time = departure_time
     train.arrival_time = arrival_time
     log(db, train.festival_id, "train", train.id, actor, f"changed {before} -> {train.label}")
     db.commit()
     return train
+
+
+#: Enough for a miserable connection, few enough that the card stays readable.
+MAX_TRAIN_CHANGES = 6
+
+
+def add_change(
+    db: DbSession,
+    *,
+    train: Train,
+    station: str,
+    change_at: dt.time | None,
+    onward_number: str,
+    actor: User,
+) -> TrainChange:
+    """Add a change on this journey, after the ones already there."""
+    station = station.strip()[:200]
+    if not station:
+        raise SeatRefused("a change needs a station")
+    if len(train.changes) >= MAX_TRAIN_CHANGES:
+        raise SeatRefused("that is enough changes for one journey")
+
+    change = TrainChange(
+        train_id=train.id,
+        position=len(train.changes),
+        station=station,
+        change_at=change_at,
+        onward_number=onward_number.strip()[:40],
+    )
+    db.add(change)
+    log(db, train.festival_id, "train_change", train.id, actor,
+        f"change at {station} on {train.label}")
+    db.commit()
+    return change
+
+
+def delete_change(db: DbSession, *, change: TrainChange, actor: User) -> None:
+    train = change.train
+    log(db, train.festival_id, "train_change", train.id, actor,
+        f"removed the change at {change.station} on {train.label}")
+    db.delete(change)
+    db.flush()
+    # Keep the order gap-free, so the next change lands at the end rather
+    # than colliding with a position that is still taken.
+    for index, remaining in enumerate(
+        sorted((c for c in train.changes if c.id != change.id), key=lambda c: c.position)
+    ):
+        remaining.position = index
+    db.commit()
 
 
 def delete_train(db: DbSession, train: Train, actor: User) -> None:

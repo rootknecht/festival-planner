@@ -67,14 +67,17 @@
   {%- elif name == "power" -%}
     <path d="M12 3v9"/><path d="M6.8 7.2a8 8 0 1 0 10.4 0"/>
   {%- elif name == "train" -%}
-    {# Travelling by train is its own thing, not a car with a different
-       colour: no driver, no route, no seat limit. Side view with two
-       windows, wheels and a rail — the rail is what stops it reading as a
-       bus at toolbar size. #}
-    <path d="M5 5.5h9.5c2.8 0 5 2.2 5 5v4.8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7.5a2 2 0 0 1 2-2Z"/>
-    <path d="M3 10.5h16.5"/><path d="M12 5.5v5"/>
-    <circle cx="7.5" cy="19.5" r="1.5"/><circle cx="16" cy="19.5" r="1.5"/>
-    <path d="M2 22h20"/>
+    {# A passenger wagon seen from the side: roof line, rounded cab end, a row
+       of narrow windows with a wider door, wheels and a rail. The first
+       attempt was a tall locomotive front and read as a bus; this shape was
+       chosen against a reference and checked at 24px, where the rail is what
+       keeps it unmistakable. #}
+    <path d="M8 8h11.8a1.8 1.8 0 0 1 1.8 1.8v6.4H2.6v-5A3.2 3.2 0 0 1 5.3 8Z"/>
+    <path d="M3.4 6.2h17.6"/>
+    <path d="M6.2 10.6v2.8M9.6 10.6v2.8M13 10.6v2.8"/>
+    <rect x="15.8" y="10.4" width="4" height="3.2" rx="0.6"/>
+    <circle cx="7.4" cy="18.6" r="1.4"/><circle cx="16.8" cy="18.6" r="1.4"/>
+    <path d="M2 21h20"/>
   {%- elif name == "gear" -%}
     {# A real cog, not a sun. The previous drawing was a circle with eight
        straight rays, which is the universal weather icon — people read it as

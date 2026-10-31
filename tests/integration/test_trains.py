@@ -18,12 +18,13 @@ from app.config import Settings
 from app.db import Base, reset_engine_for_tests
 from app.main import create_app
 from app.models.festival import Participant
-from app.models.transport import Car, Train, TrainRider
+from app.models.transport import Car, Train, TrainChange, TrainRider
 from app.models.user import User
 from app.security.csrf import CSRF_COOKIE
 from app.services import geocode as geocode_service
 from app.services.mail import capture_sink
 from app.services.passwords import hash_password
+from app.services.transport import MAX_TRAIN_CHANGES
 
 PASSWORD = "a-long-enough-password"
 
@@ -292,6 +293,149 @@ def test_the_page_offers_adding_a_train_and_shows_it(festival, factory) -> None:
     assert "ICE 574" in page
     assert "Hamburg Hbf" in page
     assert "09:14" in page
+
+
+def test_a_journey_records_where_it_ends(festival, factory) -> None:
+    festival_id, owner = festival
+    add_train(owner, festival_id, arrival_station="Itzehoe")
+    train = trains(factory, festival_id)[0]
+    assert train.departure_station == "Hamburg Hbf"
+    assert train.arrival_station == "Itzehoe"
+
+    page = owner.get(f"/festivals/{festival_id}/transport").text
+    assert "Itzehoe" in page
+
+
+def test_changes_are_kept_in_order_with_their_details(festival, factory) -> None:
+    festival_id, owner = festival
+    add_train(owner, festival_id, arrival_station="Wacken")
+    train_id = trains(factory, festival_id)[0].id
+
+    for station, time, onward in (
+        ("Hannover", "11:42", "ICE 596"),
+        ("Itzehoe", "", ""),
+    ):
+        response = owner.post(
+            f"/festivals/{festival_id}/transport/trains/{train_id}/changes",
+            data={
+                "station": station,
+                "change_time": time,
+                "onward_number": onward,
+                "csrf_token": csrf(owner),
+            },
+        )
+        assert response.status_code == 303
+
+    with factory() as db:
+        changes = sorted(
+            db.scalars(select(TrainChange).where(TrainChange.train_id == train_id)),
+            key=lambda c: c.position,
+        )
+    assert [c.station for c in changes] == ["Hannover", "Itzehoe"]
+    assert changes[0].change_at == dt.time(11, 42)
+    assert changes[0].onward_number == "ICE 596"
+    # Everything but the station stays optional.
+    assert changes[1].change_at is None and changes[1].onward_number == ""
+
+    page = owner.get(f"/festivals/{festival_id}/transport").text
+    assert "Hannover" in page and "11:42" in page and "ICE 596" in page
+
+
+def test_a_change_without_a_station_is_refused(festival, factory) -> None:
+    festival_id, owner = festival
+    add_train(owner, festival_id)
+    train_id = trains(factory, festival_id)[0].id
+    response = owner.post(
+        f"/festivals/{festival_id}/transport/trains/{train_id}/changes",
+        data={"station": "   ", "csrf_token": csrf(owner)},
+    )
+    assert response.status_code == 200
+    assert "a change needs a station" in response.text
+    with factory() as db:
+        assert list(db.scalars(select(TrainChange))) == []
+
+
+def test_removing_a_change_closes_the_gap_in_the_order(festival, factory) -> None:
+    """Otherwise the next change collides with a position still taken."""
+    festival_id, owner = festival
+    add_train(owner, festival_id)
+    train_id = trains(factory, festival_id)[0].id
+    for station in ("A-Stadt", "B-Stadt", "C-Stadt"):
+        owner.post(
+            f"/festivals/{festival_id}/transport/trains/{train_id}/changes",
+            data={"station": station, "csrf_token": csrf(owner)},
+        )
+    with factory() as db:
+        middle = db.scalars(
+            select(TrainChange).where(TrainChange.station == "B-Stadt")
+        ).first()
+    owner.post(
+        f"/festivals/{festival_id}/transport/changes/{middle.id}/delete",
+        data={"csrf_token": csrf(owner)},
+    )
+    with factory() as db:
+        remaining = sorted(
+            db.scalars(select(TrainChange).where(TrainChange.train_id == train_id)),
+            key=lambda c: c.position,
+        )
+    assert [(c.station, c.position) for c in remaining] == [("A-Stadt", 0), ("C-Stadt", 1)]
+
+
+def test_a_change_cannot_be_deleted_from_another_festival(festival, factory) -> None:
+    festival_id, owner = festival
+    add_train(owner, festival_id)
+    train_id = trains(factory, festival_id)[0].id
+    owner.post(
+        f"/festivals/{festival_id}/transport/trains/{train_id}/changes",
+        data={"station": "Hannover", "csrf_token": csrf(owner)},
+    )
+    with factory() as db:
+        change_id = db.scalars(select(TrainChange)).first().id
+
+    other = owner.post("/festivals", data={"name": "Other", "csrf_token": csrf(owner)})
+    other_id = int(other.headers["location"].rsplit("/", 1)[1])
+    response = owner.post(
+        f"/festivals/{other_id}/transport/changes/{change_id}/delete",
+        data={"csrf_token": csrf(owner)},
+    )
+    assert response.status_code == 404
+    with factory() as db:
+        assert db.scalars(select(TrainChange)).first() is not None
+
+
+def test_deleting_the_train_takes_its_changes_with_it(festival, factory) -> None:
+    festival_id, owner = festival
+    add_train(owner, festival_id)
+    train_id = trains(factory, festival_id)[0].id
+    owner.post(
+        f"/festivals/{festival_id}/transport/trains/{train_id}/changes",
+        data={"station": "Hannover", "csrf_token": csrf(owner)},
+    )
+    owner.post(
+        f"/festivals/{festival_id}/transport/trains/{train_id}/delete",
+        data={"csrf_token": csrf(owner)},
+    )
+    with factory() as db:
+        assert list(db.scalars(select(TrainChange))) == []
+
+
+def test_a_journey_cannot_collect_unlimited_changes(festival, factory) -> None:
+    festival_id, owner = festival
+    add_train(owner, festival_id)
+    train_id = trains(factory, festival_id)[0].id
+    for index in range(MAX_TRAIN_CHANGES):
+        owner.post(
+            f"/festivals/{festival_id}/transport/trains/{train_id}/changes",
+            data={"station": f"Station {index}", "csrf_token": csrf(owner)},
+        )
+    refused = owner.post(
+        f"/festivals/{festival_id}/transport/trains/{train_id}/changes",
+        data={"station": "One too many", "csrf_token": csrf(owner)},
+    )
+    assert refused.status_code == 200
+    assert "enough changes" in refused.text
+    with factory() as db:
+        assert len(list(db.scalars(select(TrainChange)))) == MAX_TRAIN_CHANGES
 
 
 def test_an_archived_festival_freezes_trains(festival, factory) -> None:

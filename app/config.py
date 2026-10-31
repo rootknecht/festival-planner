@@ -58,6 +58,15 @@ class Settings(BaseSettings):
     mail_brands: str = ""
 
     # Nominatim geocoding (usage-policy compliant defaults)
+    # Road routing for the car lines on the map. Empty key = feature off, and
+    # the map draws the straight dashed sketch it always drew. The public OSRM
+    # demo server is deliberately NOT an option: its terms forbid application
+    # use. openrouteservice's free tier permits it.
+    ors_api_key: str = ""
+    ors_url: str = "https://api.openrouteservice.org/v2/directions"
+    ors_profile: str = "driving-car"
+    ors_timeout: float = 15.0
+
     nominatim_url: str = "https://nominatim.openstreetmap.org/search"
     nominatim_user_agent: str = "festival-planner (self-hosted)"
     nominatim_min_interval: float = 1.0

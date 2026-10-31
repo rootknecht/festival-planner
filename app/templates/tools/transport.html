@@ -544,6 +544,7 @@
 <section class="card">
   <h2>{{ _("On the map") }}</h2>
   <div id="map" class="map" data-routes="{{ routes_json }}"
+       data-roads="{{ roads_json }}" data-trains="{{ train_routes_json }}"
        {% for car in cars %}data-color-{{ car.id }}="{{ car.color }}"{% endfor %}></div>
   {# Legend: which colour belongs to whose car. Without it the map is a set of
      coloured lines with no way to tell whose is whose. #}

@@ -498,6 +498,39 @@ def map_points(
     return points
 
 
+def train_map_points(
+    train: Train,
+    festival_lat: float | None,
+    festival_lon: float | None,
+) -> list[MapPoint]:
+    """Departure station, each change in order, then the arrival station.
+
+    The festival site is appended only when the journey has no arrival station
+    of its own, because the last rail stop is usually not the festival gate —
+    the shuttle bus is somebody else's problem.
+    """
+    points: list[MapPoint] = []
+    if train.departure_lat is not None and train.departure_lon is not None:
+        points.append(
+            MapPoint(train.departure_station or "start", train.departure_lat,
+                     train.departure_lon, "start")
+        )
+    for change in train.changes:
+        if change.lat is not None and change.lon is not None:
+            label = change.station
+            if change.onward_number:
+                label = f"{change.station} → {change.onward_number}"
+            points.append(MapPoint(label, change.lat, change.lon, "change"))
+    if train.arrival_lat is not None and train.arrival_lon is not None:
+        points.append(
+            MapPoint(train.arrival_station or "arrival", train.arrival_lat,
+                     train.arrival_lon, "arrival")
+        )
+    elif festival_lat is not None and festival_lon is not None:
+        points.append(MapPoint("festival", festival_lat, festival_lon, "festival"))
+    return points
+
+
 # --- colour names -----------------------------------------------------------
 
 #: Hex values for the drawn car icons and the map legend. Kept here rather than

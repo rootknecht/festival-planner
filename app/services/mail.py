@@ -12,6 +12,7 @@ import smtplib
 import ssl
 from dataclasses import dataclass, field
 from email.message import EmailMessage
+from email.utils import formatdate, make_msgid, parseaddr
 
 from app.config import Settings, get_settings
 
@@ -75,6 +76,17 @@ class SmtpMailer(Mailer):
         reply_to = message.reply_to or self.settings.smtp_reply_to
         if reply_to:
             email["Reply-To"] = reply_to
+        # RFC 5322 requires a Date, and nothing upstream adds one: posteo's
+        # amavis flagged a delivered invitation with "BAD HEADER SECTION,
+        # Missing required header field: Date". It arrives either way, but a
+        # malformed header section is free spam score at the receivers that
+        # matter. Message-ID is not required but is what lets a mail client
+        # thread a reply and a receiver suppress a duplicate; it is derived
+        # from the sender's own domain so it never leaks the host name.
+        email["Date"] = formatdate(localtime=True)
+        sender = parseaddr(email["From"])[1]
+        domain = sender.rpartition("@")[2] or None
+        email["Message-ID"] = make_msgid(domain=domain)
         email.set_content(message.body)
 
         context = ssl.create_default_context()

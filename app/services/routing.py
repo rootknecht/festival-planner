@@ -52,9 +52,15 @@ _PRECISION = 5
 MAX_WAYPOINTS = 25
 
 
-def _key(profile: str, coords: list[tuple[float, float]]) -> str:
+def _key(profile: str, coords: list[tuple[float, float]], radius: float) -> str:
+    """Cache key. The snap radius belongs in it.
+
+    Raising the radius turns a previously impossible route into a possible
+    one, so a key without it would keep serving the remembered failure until
+    the retry window expired — a config change that appears to do nothing.
+    """
     rounded = [(round(lat, _PRECISION), round(lon, _PRECISION)) for lat, lon in coords]
-    raw = profile + "|" + ";".join(f"{lat},{lon}" for lat, lon in rounded)
+    raw = f"{profile}|{radius:.0f}|" + ";".join(f"{lat},{lon}" for lat, lon in rounded)
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
 
@@ -76,7 +82,16 @@ def fetch(
             # The API takes lon,lat — the opposite order to everything else in
             # this codebase, which is a classic way to end up routing through
             # the Indian Ocean.
-            json={"coordinates": [[lon, lat] for lat, lon in coords]},
+            #
+            # `radiuses` is not optional in practice. A FESTIVAL SITE IS A
+            # FIELD: Rock Harz geocodes to a point with no mapped road within
+            # the API's default 350 m, so every line through it came back 404
+            # "could not find routable point" while a city-to-city line
+            # worked. One number per waypoint; the API wants the list.
+            json={
+                "coordinates": [[lon, lat] for lat, lon in coords],
+                "radiuses": [settings.ors_snap_radius] * len(coords),
+            },
             headers={
                 "Authorization": settings.ors_api_key,
                 "Content-Type": "application/json",
@@ -86,6 +101,18 @@ def fetch(
         response.raise_for_status()
         payload = response.json()
         line = payload["features"][0]["geometry"]["coordinates"]
+    except httpx.HTTPStatusError as exc:
+        # The STATUS alone sent a debugging round down the wrong path: a 404
+        # here is not "endpoint missing", it is the API's way of saying one
+        # coordinate has no road near it, and the reason is in the body.
+        detail = ""
+        try:
+            error = exc.response.json().get("error", {})
+            detail = f" | code {error.get('code')}: {error.get('message')}"
+        except (ValueError, AttributeError):
+            detail = f" | body {exc.response.text[:200]}"
+        logger.warning("routing %d waypoints failed: %s%s", len(coords), exc, detail)
+        return None
     except (httpx.HTTPError, ValueError, KeyError, IndexError, TypeError) as exc:
         logger.warning("routing %d waypoints failed: %s", len(coords), exc)
         return None
@@ -109,7 +136,7 @@ def road_route(
         logger.info("not routing %d waypoints, over the limit", len(coords))
         return None
 
-    key = _key(settings.ors_profile, coords)
+    key = _key(settings.ors_profile, coords, settings.ors_snap_radius)
     cached = db.get(RouteCache, key)
     if cached is not None:
         if cached.geometry:

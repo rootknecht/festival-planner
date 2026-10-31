@@ -36,13 +36,22 @@ GEOMETRY = [[9.9, 53.5], [9.7, 53.8], [9.4, 54.0]]
 def no_live_geocoding(monkeypatch):
     """Stations resolve to fixed coordinates; nothing leaves the machine."""
     places = {
+        # A main station is found either way; a tram stop ONLY under its own
+        # name; a town only without the word. All three shapes occur in
+        # production, which is why the lookup tries the bare name first.
+        "Hamburg Hbf": (53.5528, 10.0067),
         "Hamburg Hbf station": (53.5528, 10.0067),
+        "Venloer Str./ Gürtel": (50.9479, 6.9123),
         "Itzehoe station": (53.9239, 9.5156),
-        "Wacken station": (54.0186, 9.3761),
+        "Wacken": (54.0186, 9.3761),
     }
 
     def fake_lookup(query, settings=None):
-        lat, lon = places.get(query, (53.0, 9.0))
+        if query not in places:
+            # Nominatim's real behaviour for a tram stop with " station"
+            # appended, and for anything else it cannot place: nothing.
+            return None
+        lat, lon = places[query]
         return lat, lon, f"resolved {query}"
 
     monkeypatch.setattr(geocode_service, "lookup", fake_lookup)
@@ -266,6 +275,86 @@ def test_too_many_waypoints_is_refused_rather_than_charged(factory, monkeypatch)
         assert routing.road_route(db, coords, settings_with(ors_api_key="k")) is None
 
 
+def test_the_request_asks_the_router_to_look_further_than_350m(factory, monkeypatch) -> None:
+    """A festival site is a field. Without this, every line through it 404s."""
+    sent = {}
+
+    class Response:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {"features": [{"geometry": {"coordinates": GEOMETRY}}]}
+
+    def fake_post(url, **kwargs):
+        sent.update(kwargs["json"])
+        return Response()
+
+    monkeypatch.setattr(routing.httpx, "post", fake_post)
+    settings = settings_with(ors_api_key="k")
+    with factory() as db:
+        routing.road_route(db, [(53.5, 9.9), (54.0, 9.4), (51.7, 11.2)], settings)
+
+    # One radius per waypoint, which is the shape the API demands.
+    assert sent["radiuses"] == [settings.ors_snap_radius] * 3
+    assert settings.ors_snap_radius >= 1000
+
+
+def test_raising_the_radius_does_not_keep_serving_the_old_refusal(
+    factory, monkeypatch
+) -> None:
+    """The radius is part of the cache key, or the fix appears to do nothing."""
+    calls = []
+
+    def refuse(url, **kwargs):
+        calls.append(1)
+        request = routing.httpx.Request("POST", url)
+        response = routing.httpx.Response(
+            404,
+            json={"error": {"code": 2010, "message": "Could not find routable point"}},
+            request=request,
+        )
+        raise routing.httpx.HTTPStatusError("404", request=request, response=response)
+
+    monkeypatch.setattr(routing.httpx, "post", refuse)
+    coords = [(53.5, 9.9), (51.7433843, 11.2284084)]
+
+    with factory() as db:
+        assert routing.road_route(db, coords, settings_with(ors_api_key="k")) is None
+        # Same radius: the refusal is remembered, no second request.
+        assert routing.road_route(db, coords, settings_with(ors_api_key="k")) is None
+        assert len(calls) == 1
+        # A bigger radius is a DIFFERENT question, so it is asked.
+        routing.road_route(
+            db, coords, settings_with(ors_api_key="k", ors_snap_radius=10000.0)
+        )
+    assert len(calls) == 2
+
+
+def test_the_api_s_own_reason_reaches_the_log(factory, monkeypatch, caplog) -> None:
+    """A bare '404 Not Found' sent one debugging round the wrong way."""
+
+    def refuse(url, **kwargs):
+        request = routing.httpx.Request("POST", url)
+        response = routing.httpx.Response(
+            404,
+            json={
+                "error": {
+                    "code": 2010,
+                    "message": "Could not find routable point within a radius of 350.0 meters",
+                }
+            },
+            request=request,
+        )
+        raise routing.httpx.HTTPStatusError("404", request=request, response=response)
+
+    monkeypatch.setattr(routing.httpx, "post", refuse)
+    with caplog.at_level("WARNING"):
+        assert routing.fetch([(53.5, 9.9), (51.7, 11.2)], settings_with(ors_api_key="k")) is None
+    assert "2010" in caplog.text
+    assert "routable point" in caplog.text
+
+
 # --- what the page ships -----------------------------------------------------
 
 
@@ -314,6 +403,37 @@ def test_a_train_journey_is_drawn_from_its_geocoded_stations(factory) -> None:
     points = trains[str(train_id)]
     assert [p["kind"] for p in points] == ["start", "arrival"]
     assert points[0]["label"] == "Hamburg Hbf"
+
+
+def test_a_tram_stop_is_placed_under_its_own_name(factory) -> None:
+    """Appending " station" to a tram stop finds nothing.
+
+    This is why no line appeared for a Köln U-Bahn journey: the only query
+    ever sent was the one that cannot resolve.
+    """
+    client = client_for(settings_with())
+    festival_id = make_festival(client, factory)
+    add_train(
+        client,
+        festival_id,
+        number="U 13",
+        departure_station="Venloer Str./ Gürtel",
+        arrival_station="Wacken",
+    )
+    with factory() as db:
+        train = db.scalars(select(Train)).first()
+        assert (train.departure_lat, train.departure_lon) == (50.9479, 6.9123)
+        assert (train.arrival_lat, train.arrival_lon) == (54.0186, 9.3761)
+
+
+def test_a_station_that_resolves_only_with_the_word_is_still_placed(factory) -> None:
+    client = client_for(settings_with())
+    festival_id = make_festival(client, factory)
+    add_train(client, festival_id, departure_station="Itzehoe", arrival_station="Wacken")
+    with factory() as db:
+        train = db.scalars(select(Train)).first()
+        # Found on the second attempt, with " station" appended.
+        assert (train.departure_lat, train.departure_lon) == (53.9239, 9.5156)
 
 
 def test_a_change_appears_between_the_two_stations_in_order(factory) -> None:

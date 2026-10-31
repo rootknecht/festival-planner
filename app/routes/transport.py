@@ -31,23 +31,28 @@ def _settings_for(request: Request):
 
 
 def _place_stations(request: Request, db: DbSession, train: Train) -> None:
-    """Geocode a journey's stations, after saving and never on page view.
-
-    "Hamburg Hbf" is a station name, not an address, so " station" is appended
-    before asking: Nominatim resolves "Itzehoe station" to the platform and
-    plain "Itzehoe" to the town hall, and for a line drawn at country scale
-    either is fine — but a town called like a person is not.
-    """
+    """Geocode a journey's stations, after saving and never on page view."""
     settings = _settings_for(request)
     # A change added a moment ago is not in this object's loaded collection
     # yet; without the refresh its station is silently never geocoded.
     db.refresh(train)
 
     def place(name: str) -> tuple[float | None, float | None]:
+        """Try the name as written, then as a station.
+
+        Order matters. "Venloer Str./ Gürtel" is a tram stop and resolves on
+        its own, while "Venloer Str./ Gürtel station" resolves to nothing; but
+        a bare "Itzehoe" is a town, and appending the word moves the pin from
+        the town hall to the platform. Asking in this order gets a stop right
+        AND a main station right, and both answers are cached either way.
+        """
         name = (name or "").strip()
         if not name:
             return None, None
-        return geocode(db, f"{name} station", settings)
+        lat, lon = geocode(db, name, settings)
+        if lat is None:
+            lat, lon = geocode(db, f"{name} station", settings)
+        return lat, lon
 
     train.departure_lat, train.departure_lon = place(train.departure_station)
     train.arrival_lat, train.arrival_lon = place(train.arrival_station)

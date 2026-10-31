@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session as DbSession
 from app.deps import get_db, require_user
 from app.models.festival import Participant
 from app.models.notification import Tool
-from app.models.transport import Car, CarStop, MeetingPoint, Train
+from app.models.transport import Car, CarStop, MeetingPoint, Train, TrainChange
 from app.models.user import User
 from app.realtime.hub import notify_change
 from app.services import notifications, transport
@@ -59,6 +59,7 @@ def _page(request: Request, db: DbSession, user: User, festival_id: int, **extra
             "color_hex": transport.COLOR_HEX,
             "meeting_points": points,
             "max_meeting_points": transport.MAX_MEETING_POINTS,
+            "max_train_changes": transport.MAX_TRAIN_CHANGES,
             "routes_json": json.dumps(routes),
             "legend_json": json.dumps(
                 [
@@ -390,6 +391,7 @@ async def add_train(
     festival_id: int,
     number: str = Form(default=""),
     departure_station: str = Form(default=""),
+    arrival_station: str = Form(default=""),
     departure_date: str = Form(default=""),
     departure_time: str = Form(default=""),
     arrival_time: str = Form(default=""),
@@ -409,6 +411,7 @@ async def add_train(
         festival_id=festival_id,
         number=number,
         departure_station=departure_station,
+        arrival_station=arrival_station,
         departure_on=_parse_day(departure_date),
         departure_time=_parse_clock(departure_time),
         arrival_time=_parse_clock(arrival_time),
@@ -425,6 +428,7 @@ async def edit_train(
     train_id: int,
     number: str = Form(default=""),
     departure_station: str = Form(default=""),
+    arrival_station: str = Form(default=""),
     departure_date: str = Form(default=""),
     departure_time: str = Form(default=""),
     arrival_time: str = Form(default=""),
@@ -443,6 +447,7 @@ async def edit_train(
         train=train,
         number=number,
         departure_station=departure_station,
+        arrival_station=arrival_station,
         departure_on=_parse_day(departure_date),
         departure_time=_parse_clock(departure_time),
         arrival_time=_parse_clock(arrival_time),
@@ -505,6 +510,52 @@ async def remove_rider(
         participant=_participant_of(db, festival_id, participant_id),
         actor=user,
     )
+    notify_change(festival_id, "transport")
+    return RedirectResponse(f"/festivals/{festival_id}/transport", status_code=303)
+
+
+@router.post("/festivals/{festival_id}/transport/trains/{train_id}/changes")
+async def add_train_change(
+    request: Request,
+    festival_id: int,
+    train_id: int,
+    station: str = Form(default=""),
+    change_time: str = Form(default=""),
+    onward_number: str = Form(default=""),
+    user: User = Depends(require_user),
+    db: DbSession = Depends(get_db),
+) -> Response:
+    require_writable(require_membership(db, user, festival_id))
+    try:
+        transport.add_change(
+            db,
+            train=_train_of(db, festival_id, train_id),
+            station=station,
+            change_at=_parse_clock(change_time),
+            onward_number=onward_number,
+            actor=user,
+        )
+    except transport.SeatRefused as exc:
+        return _page(request, db, user, festival_id, error=str(exc))
+    notify_change(festival_id, "transport")
+    return RedirectResponse(f"/festivals/{festival_id}/transport", status_code=303)
+
+
+@router.post("/festivals/{festival_id}/transport/changes/{change_id}/delete")
+async def delete_train_change(
+    request: Request,
+    festival_id: int,
+    change_id: int,
+    user: User = Depends(require_user),
+    db: DbSession = Depends(get_db),
+) -> Response:
+    require_writable(require_membership(db, user, festival_id))
+    change = db.get(TrainChange, change_id)
+    # Belongs-to check through the train, like a car stop through its car:
+    # an id alone must never be enough to reach another festival's data.
+    if change is None or change.train.festival_id != festival_id:
+        raise HTTPException(status_code=404, detail="not found")
+    transport.delete_change(db, change=change, actor=user)
     notify_change(festival_id, "transport")
     return RedirectResponse(f"/festivals/{festival_id}/transport", status_code=303)
 

@@ -222,6 +222,7 @@
       <strong>
         {{ train.number or _("Train") }}
         {%- if train.departure_station %} · {{ train.departure_station }}{% endif %}
+        {%- if train.arrival_station %} → {{ train.arrival_station }}{% endif %}
       </strong>
     </div>
     <span class="hint">
@@ -230,6 +231,25 @@
       {%- if train.arrival_time %} → {{ train.arrival_time.strftime("%H:%M") }}{% endif %}
     </span>
   </div>
+
+  {% if train.changes %}
+  {# The journey in order: where you get off and what you get on. #}
+  <ul class="stops">
+    {% for change in train.changes %}
+    <li>
+      {{ _("Change") }}: <strong>{{ change.station }}</strong>
+      {%- if change.change_at %} · {{ change.change_at.strftime("%H:%M") }}{% endif %}
+      {%- if change.onward_number %} · {{ change.onward_number }}{% endif %}
+      {% if not festival.is_archived %}
+      <form method="post" action="/festivals/{{ festival.id }}/transport/changes/{{ change.id }}/delete" class="inline">
+        <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+        <button class="linkbtn" title="{{ _('Remove this change') }}">{{ icon("close") }}</button>
+      </form>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
 
   <ul class="names">
     {% for rider in train.riders %}
@@ -266,6 +286,22 @@
     </details>
     {% endif %}
 
+    {% if train.changes | length < max_train_changes %}
+    <details class="reveal">
+      <summary class="btn btn--small">{{ icon("plus") }} {{ _("Add a change") }}</summary>
+      <form method="post" action="/festivals/{{ festival.id }}/transport/trains/{{ train.id }}/changes" class="stack">
+        <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+        <label for="cstation{{ train.id }}">{{ _("Change station") }}</label>
+        <input id="cstation{{ train.id }}" name="station" type="text" maxlength="200" required>
+        <label for="ctime{{ train.id }}">{{ _("Time (optional)") }}</label>
+        <input id="ctime{{ train.id }}" name="change_time" type="time">
+        <label for="connward{{ train.id }}">{{ _("Onward train (optional)") }}</label>
+        <input id="connward{{ train.id }}" name="onward_number" type="text" maxlength="40" placeholder="{{ _('ICE 596') }}">
+        <button class="btn btn--small btn--primary">{{ _("Save") }}</button>
+      </form>
+    </details>
+    {% endif %}
+
     <details class="reveal">
       <summary class="btn btn--small">{{ icon("pencil") }} {{ _("Edit train") }}</summary>
       <form method="post" action="/festivals/{{ festival.id }}/transport/trains/{{ train.id }}/edit" class="stack">
@@ -274,6 +310,8 @@
         <input id="tnum{{ train.id }}" name="number" type="text" maxlength="40" value="{{ train.number }}">
         <label for="tstation{{ train.id }}">{{ _("Departure station") }}</label>
         <input id="tstation{{ train.id }}" name="departure_station" type="text" maxlength="200" value="{{ train.departure_station }}">
+        <label for="tarrstation{{ train.id }}">{{ _("Arrival station") }}</label>
+        <input id="tarrstation{{ train.id }}" name="arrival_station" type="text" maxlength="200" value="{{ train.arrival_station }}">
         <label for="tdate{{ train.id }}">{{ _("Departure day") }}</label>
         <input id="tdate{{ train.id }}" name="departure_date" type="date" value="{{ train.departure_on or '' }}">
         <label for="tdep{{ train.id }}">{{ _("Departure time (optional)") }}</label>
@@ -340,6 +378,8 @@
       <input id="train_number" name="number" type="text" maxlength="40" placeholder="{{ _('ICE 574, RE 7 …') }}">
       <label for="train_station">{{ _("Departure station") }}</label>
       <input id="train_station" name="departure_station" type="text" maxlength="200">
+      <label for="train_arrival_station">{{ _("Arrival station") }}</label>
+      <input id="train_arrival_station" name="arrival_station" type="text" maxlength="200">
       <label for="train_date">{{ _("Departure day") }}</label>
       <input id="train_date" name="departure_date" type="date">
       {# Times are optional: the connection is worth sharing as soon as the

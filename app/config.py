@@ -66,6 +66,12 @@ class Settings(BaseSettings):
     ors_url: str = "https://api.openrouteservice.org/v2/directions"
     ors_profile: str = "driving-car"
     ors_timeout: float = 15.0
+    # How far the router may look for a road near a waypoint. The API default
+    # of 350 m fails on the one coordinate that matters most — a festival site
+    # is a field, and Rock Harz has no mapped road that close. 5 km is far
+    # enough for a meadow and near enough that the line still starts where the
+    # user pointed.
+    ors_snap_radius: float = 5000.0
 
     nominatim_url: str = "https://nominatim.openstreetmap.org/search"
     nominatim_user_agent: str = "festival-planner (self-hosted)"

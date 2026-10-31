@@ -54,6 +54,32 @@ def format_date_range(
     return f"{format_long_date(start, language)} – {format_long_date(end, language)}"
 
 
+#: Numeric date order per language. English puts the month first, German the
+#: day — the same string "05/03/27" means two different days to the two
+#: readers, which is exactly why this cannot be one hardcoded format.
+_NUMERIC_FORMATS = {"de": "%d/%m/%y", "en": "%m/%d/%y"}
+
+
+def format_numeric_date(value: dt.date | None, language: str = "en") -> str:
+    """ "03/05/27" — month first in English, day first in German."""
+    if value is None:
+        return ""
+    pattern = _NUMERIC_FORMATS["de" if (language or "en").startswith("de") else "en"]
+    return value.strftime(pattern)
+
+
+def format_numeric_datetime(value: dt.datetime | None, language: str = "en") -> str:
+    """A numeric date with a 24-hour clock: "03/05/27 19:30".
+
+    The clock stays 24-hour in both languages: these are departure and posting
+    times among people who all read it that way, and am/pm invites exactly the
+    midnight ambiguity a travel plan cannot afford.
+    """
+    if value is None:
+        return ""
+    return f"{format_numeric_date(value, language)} {value.strftime('%H:%M')}"
+
+
 def format_short_date(value: dt.date | None, language: str = "en") -> str:
     """Day and month only — "7. Juli" / "7 Jul".
 

@@ -358,6 +358,51 @@ msgstr "Design"
 msgid "Invitation sender"
 msgstr "Absender für Einladungen"
 
+msgid "Car-sharing / Train"
+msgstr "Fahrgemeinschaft / Zug"
+
+msgid "Add a train"
+msgstr "Zug hinzufügen"
+
+msgid "Add train"
+msgstr "Zug hinzufügen"
+
+msgid "Train"
+msgstr "Zug"
+
+msgid "Train number"
+msgstr "Zugnummer"
+
+msgid "Departure station"
+msgstr "Abfahrtsbahnhof"
+
+msgid "Departure time (optional)"
+msgstr "Abfahrtszeit (optional)"
+
+msgid "Arrival time (optional)"
+msgstr "Ankunftszeit (optional)"
+
+msgid "Nobody on this train yet."
+msgstr "Noch niemand in diesem Zug."
+
+msgid "Edit train"
+msgstr "Zug bearbeiten"
+
+msgid "Remove this train"
+msgstr "Diesen Zug entfernen"
+
+msgid "A train has room for everybody — no seat count to keep."
+msgstr "In einem Zug ist Platz für alle — keine Sitzplätze zu verwalten."
+
+msgid "ICE 574, RE 7 …"
+msgstr "ICE 574, RE 7 …"
+
+msgid "{actor} put you on {train}."
+msgstr "{actor} hat dich in {train} eingetragen."
+
+msgid "{actor} took you off {train}."
+msgstr "{actor} hat dich aus {train} ausgetragen."
+
 #: app/templates/tools/bringlist.html:134
 msgid "Add for somebody"
 msgstr "Für jemanden eintragen"

@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session as DbSession
 from app.deps import get_db, require_user
 from app.models.festival import Participant
 from app.models.notification import Tool
-from app.models.transport import Car, CarStop, MeetingPoint
+from app.models.transport import Car, CarStop, MeetingPoint, Train
 from app.models.user import User
 from app.realtime.hub import notify_change
 from app.services import notifications, transport
@@ -38,7 +38,9 @@ def _page(request: Request, db: DbSession, user: User, festival_id: int, **extra
     routes = {
         car.id: [
             {"label": point.label, "lat": point.lat, "lon": point.lon, "kind": point.kind}
-            for point in transport.map_points(car, festival.lat, festival.lon, points)
+            for point in transport.map_points(
+                car, festival.lat, festival.lon, points, language_for(request)
+            )
         ]
         for car in cars
     }
@@ -51,6 +53,7 @@ def _page(request: Request, db: DbSession, user: User, festival_id: int, **extra
             "badges": notifications.badges(db, user.id, festival_id),
             "active_tool": "transport",
             "cars": cars,
+            "trains": transport.trains_of(db, festival_id),
             "unassigned": transport.unassigned(db, festival_id),
             "colors": transport.color_labels(gettext_for(language_for(request))),
             "color_hex": transport.COLOR_HEX,
@@ -139,6 +142,28 @@ def _meeting_point_of(db: DbSession, festival_id: int, point_id: int) -> Meeting
     if point is None or point.festival_id != festival_id:
         raise HTTPException(status_code=404, detail="not found")
     return point
+
+
+def _parse_clock(raw: str) -> dt.time | None:
+    """Parse an <input type=time> value, tolerating a missing one.
+
+    A train's times are optional: the connection is worth sharing the moment
+    you know the number and the station.
+    """
+    raw = (raw or "").strip()
+    if not raw:
+        return None
+    try:
+        return dt.time.fromisoformat(raw)
+    except ValueError:
+        return None
+
+
+def _train_of(db: DbSession, festival_id: int, train_id: int) -> Train:
+    train = db.get(Train, train_id)
+    if train is None or train.festival_id != festival_id:
+        raise HTTPException(status_code=404, detail="not found")
+    return train
 
 
 def _car_of(db: DbSession, festival_id: int, car_id: int) -> Car:
@@ -355,6 +380,131 @@ async def edit_car(
         return _page(request, db, user, festival_id, error=str(exc))
     if departure_address is not None:
         _set_departure_address(db, request, car, departure_address)
+    notify_change(festival_id, "transport")
+    return RedirectResponse(f"/festivals/{festival_id}/transport", status_code=303)
+
+
+@router.post("/festivals/{festival_id}/transport/trains")
+async def add_train(
+    request: Request,
+    festival_id: int,
+    number: str = Form(default=""),
+    departure_station: str = Form(default=""),
+    departure_date: str = Form(default=""),
+    departure_time: str = Form(default=""),
+    arrival_time: str = Form(default=""),
+    user: User = Depends(require_user),
+    db: DbSession = Depends(get_db),
+) -> Response:
+    require_writable(require_membership(db, user, festival_id))
+    if not number.strip() and not departure_station.strip():
+        # Everything else may be filled in later, but a connection with
+        # neither a number nor a station is not information.
+        return _page(
+            request, db, user, festival_id,
+            error="A train needs at least a number or a departure station.",
+        )
+    transport.add_train(
+        db,
+        festival_id=festival_id,
+        number=number,
+        departure_station=departure_station,
+        departure_on=_parse_day(departure_date),
+        departure_time=_parse_clock(departure_time),
+        arrival_time=_parse_clock(arrival_time),
+        actor=user,
+    )
+    notify_change(festival_id, "transport")
+    return RedirectResponse(f"/festivals/{festival_id}/transport", status_code=303)
+
+
+@router.post("/festivals/{festival_id}/transport/trains/{train_id}/edit")
+async def edit_train(
+    request: Request,
+    festival_id: int,
+    train_id: int,
+    number: str = Form(default=""),
+    departure_station: str = Form(default=""),
+    departure_date: str = Form(default=""),
+    departure_time: str = Form(default=""),
+    arrival_time: str = Form(default=""),
+    user: User = Depends(require_user),
+    db: DbSession = Depends(get_db),
+) -> Response:
+    require_writable(require_membership(db, user, festival_id))
+    train = _train_of(db, festival_id, train_id)
+    if not number.strip() and not departure_station.strip():
+        return _page(
+            request, db, user, festival_id,
+            error="A train needs at least a number or a departure station.",
+        )
+    transport.edit_train(
+        db,
+        train=train,
+        number=number,
+        departure_station=departure_station,
+        departure_on=_parse_day(departure_date),
+        departure_time=_parse_clock(departure_time),
+        arrival_time=_parse_clock(arrival_time),
+        actor=user,
+    )
+    notify_change(festival_id, "transport")
+    return RedirectResponse(f"/festivals/{festival_id}/transport", status_code=303)
+
+
+@router.post("/festivals/{festival_id}/transport/trains/{train_id}/delete")
+async def delete_train(
+    request: Request,
+    festival_id: int,
+    train_id: int,
+    user: User = Depends(require_user),
+    db: DbSession = Depends(get_db),
+) -> Response:
+    require_writable(require_membership(db, user, festival_id))
+    transport.delete_train(db, _train_of(db, festival_id, train_id), user)
+    notify_change(festival_id, "transport")
+    return RedirectResponse(f"/festivals/{festival_id}/transport", status_code=303)
+
+
+@router.post("/festivals/{festival_id}/transport/trains/{train_id}/riders")
+async def add_rider(
+    request: Request,
+    festival_id: int,
+    train_id: int,
+    participant_id: int = Form(...),
+    user: User = Depends(require_user),
+    db: DbSession = Depends(get_db),
+) -> Response:
+    require_writable(require_membership(db, user, festival_id))
+    try:
+        transport.add_rider(
+            db,
+            train=_train_of(db, festival_id, train_id),
+            participant=_participant_of(db, festival_id, participant_id),
+            actor=user,
+        )
+    except transport.SeatRefused as exc:
+        return _page(request, db, user, festival_id, error=str(exc))
+    notify_change(festival_id, "transport")
+    return RedirectResponse(f"/festivals/{festival_id}/transport", status_code=303)
+
+
+@router.post("/festivals/{festival_id}/transport/trains/{train_id}/riders/remove")
+async def remove_rider(
+    request: Request,
+    festival_id: int,
+    train_id: int,
+    participant_id: int = Form(...),
+    user: User = Depends(require_user),
+    db: DbSession = Depends(get_db),
+) -> Response:
+    require_writable(require_membership(db, user, festival_id))
+    transport.remove_rider(
+        db,
+        train=_train_of(db, festival_id, train_id),
+        participant=_participant_of(db, festival_id, participant_id),
+        actor=user,
+    )
     notify_change(festival_id, "transport")
     return RedirectResponse(f"/festivals/{festival_id}/transport", status_code=303)
 

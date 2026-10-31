@@ -10,7 +10,7 @@
       <div class="row row--between">
         <strong>{{ message.author }}</strong>
         <span class="hint hint--tiny">
-          {{ message.created_at.strftime("%d.%m. %H:%M") }}{% if message.edited %} · {{ _("edited") }}{% endif %}
+          {{ message.created_at | num_datetime(language) }}{% if message.edited %} · {{ _("edited") }}{% endif %}
         </span>
       </div>
       <div class="message__body">{{ message.body_html | safe }}</div>

@@ -26,9 +26,12 @@ from app.models.transport import (
     CarStop,
     MeetingPoint,
     MeetingPointCar,
+    Train,
+    TrainRider,
 )
 from app.models.user import User
 from app.services.bringlist import log
+from app.services.dates import format_numeric_datetime
 from app.services.notifications import notify_participant
 from app.translations import N_
 
@@ -73,7 +76,7 @@ def seated_participant_ids(db: DbSession, festival_id: int) -> set[int]:
 
 
 def unassigned(db: DbSession, festival_id: int) -> list[Participant]:
-    taken = seated_participant_ids(db, festival_id)
+    taken = seated_participant_ids(db, festival_id) | train_participant_ids(db, festival_id)
     return [
         participant
         for participant in db.scalars(
@@ -83,6 +86,148 @@ def unassigned(db: DbSession, festival_id: int) -> list[Participant]:
         )
         if participant.id not in taken
     ]
+
+
+# --- trains -----------------------------------------------------------------
+
+
+def trains_of(db: DbSession, festival_id: int) -> list[Train]:
+    return list(
+        db.scalars(select(Train).where(Train.festival_id == festival_id).order_by(Train.id))
+    )
+
+
+def train_participant_ids(db: DbSession, festival_id: int) -> set[int]:
+    return set(
+        db.scalars(
+            select(TrainRider.participant_id)
+            .join(Train, Train.id == TrainRider.train_id)
+            .where(Train.festival_id == festival_id)
+        )
+    )
+
+
+def add_train(
+    db: DbSession,
+    *,
+    festival_id: int,
+    number: str,
+    departure_station: str,
+    departure_on: dt.date | None,
+    departure_time: dt.time | None,
+    arrival_time: dt.time | None,
+    actor: User,
+) -> Train:
+    train = Train(
+        festival_id=festival_id,
+        number=number.strip()[:40],
+        departure_station=departure_station.strip()[:200],
+        departure_on=departure_on,
+        departure_time=departure_time,
+        arrival_time=arrival_time,
+        created_by=actor.id,
+    )
+    db.add(train)
+    db.flush()
+    log(db, festival_id, "train", train.id, actor, f"added {train.label}")
+    db.commit()
+    return train
+
+
+def edit_train(
+    db: DbSession,
+    *,
+    train: Train,
+    number: str,
+    departure_station: str,
+    departure_on: dt.date | None,
+    departure_time: dt.time | None,
+    arrival_time: dt.time | None,
+    actor: User,
+) -> Train:
+    """Overwrite the connection details.
+
+    Unlike a car, nothing here can strand anybody: changing a train number
+    does not take away someone's seat, so there is no refusal case. The old
+    label goes into the log so the change is readable afterwards.
+    """
+    before = train.label
+    train.number = number.strip()[:40]
+    train.departure_station = departure_station.strip()[:200]
+    train.departure_on = departure_on
+    train.departure_time = departure_time
+    train.arrival_time = arrival_time
+    log(db, train.festival_id, "train", train.id, actor, f"changed {before} -> {train.label}")
+    db.commit()
+    return train
+
+
+def delete_train(db: DbSession, train: Train, actor: User) -> None:
+    log(db, train.festival_id, "train", train.id, actor, f"removed {train.label}")
+    db.delete(train)
+    db.commit()
+
+
+def add_rider(db: DbSession, *, train: Train, participant: Participant, actor: User) -> TrainRider:
+    """Put somebody on a train.
+
+    A train has no seat limit, so the only refusal is travelling twice: being
+    in a car AND on a train would make both lists lie about who is where.
+    """
+    if participant.festival_id != train.festival_id:
+        raise HTTPException(status_code=404, detail="not found")
+    if participant.id in seated_participant_ids(db, train.festival_id):
+        raise SeatRefused("that person is already travelling in a car")
+    if participant.id in train_participant_ids(db, train.festival_id):
+        raise SeatRefused("that person is already on a train")
+
+    rider = TrainRider(train_id=train.id, participant_id=participant.id)
+    db.add(rider)
+    log(db, train.festival_id, "train_rider", train.id, actor,
+        f"put {participant.display_name} on {train.label}")
+    db.commit()
+
+    notify_participant(
+        db,
+        festival_id=train.festival_id,
+        participant_id=participant.id,
+        kind=NotificationKind.CHANGE,
+        tool=Tool.TRANSPORT,
+        message_key="change.train.added",
+        payload={"train": train.label},
+        actor_name=actor.display_name,
+        actor_user_id=actor.id,
+    )
+    return rider
+
+
+def remove_rider(db: DbSession, *, train: Train, participant: Participant, actor: User) -> None:
+    rider = db.scalar(
+        select(TrainRider).where(
+            TrainRider.train_id == train.id, TrainRider.participant_id == participant.id
+        )
+    )
+    if rider is None:
+        raise HTTPException(status_code=404, detail="not found")
+    db.delete(rider)
+    log(db, train.festival_id, "train_rider", train.id, actor,
+        f"took {participant.display_name} off {train.label}")
+    db.commit()
+
+    notify_participant(
+        db,
+        festival_id=train.festival_id,
+        participant_id=participant.id,
+        kind=NotificationKind.CHANGE,
+        tool=Tool.TRANSPORT,
+        message_key="change.train.removed",
+        payload={"train": train.label},
+        actor_name=actor.display_name,
+        actor_user_id=actor.id,
+    )
+
+
+# --- cars ---------------------------------------------------------------
 
 
 def add_car(
@@ -169,6 +314,8 @@ def assign_seat(db: DbSession, *, car: Car, participant: Participant, actor: Use
         raise HTTPException(status_code=404, detail="not found")
     if participant.id in seated_participant_ids(db, car.festival_id):
         raise SeatRefused("that person is already travelling in another car")
+    if participant.id in train_participant_ids(db, car.festival_id):
+        raise SeatRefused("that person is already travelling by train")
     if car.free_seats <= 0:
         raise SeatRefused("that car is full")
 
@@ -260,6 +407,7 @@ def map_points(
     festival_lat: float | None,
     festival_lon: float | None,
     meeting_points: Sequence[MeetingPoint] = (),
+    language: str = "en",
 ) -> list[MapPoint]:
     """Departure, the car's own pickups, then any meeting point, then the site.
 
@@ -286,7 +434,9 @@ def map_points(
             continue
         label = point.name
         if point.meet_at is not None:
-            label = f"{point.name} — {point.meet_at.strftime('%d.%m. %H:%M')}"
+            # Numeric order follows the reader's language, like every other
+            # date in the interface.
+            label = f"{point.name} — {format_numeric_datetime(point.meet_at, language)}"
         points.append(MapPoint(label, point.lat, point.lon, "meeting"))
 
     if festival_lat is not None and festival_lon is not None:

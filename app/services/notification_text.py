@@ -19,6 +19,8 @@ TEMPLATES: dict[str, str] = {
     "poll.open": N_("A poll is waiting for your answer: “{question}”."),
     "change.car.added": N_("{actor} placed you in {car}."),
     "change.car.removed": N_("{actor} took you out of {car}."),
+    "change.train.added": N_("{actor} put you on {train}."),
+    "change.train.removed": N_("{actor} took you off {train}."),
     "change.bring.assigned": N_("{actor} noted that you bring {item}."),
     "change.bring.changed": N_("{actor} changed your amount for {item}."),
     "change.bring.cleared": N_("{actor} cleared your entry for {item}."),

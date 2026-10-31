@@ -545,10 +545,12 @@
   <h2>{{ _("On the map") }}</h2>
   <div id="map" class="map" data-routes="{{ routes_json }}"
        data-roads="{{ roads_json }}" data-trains="{{ train_routes_json }}"
+       data-train-color="{{ train_color }}"
        {% for car in cars %}data-color-{{ car.id }}="{{ car.color }}"{% endfor %}></div>
-  {# Legend: which colour belongs to whose car. Without it the map is a set of
-     coloured lines with no way to tell whose is whose. #}
-  {% if cars %}
+  {# Legend: which colour belongs to whose car, plus the train line, which is
+     one entry however many trains there are — they all share the slate
+     colour, so a row per train would say the same thing repeatedly. #}
+  {% if cars or train_routes or meeting_points %}
   <ul class="legend">
     {% for car in cars %}
     <li class="legend__item">
@@ -556,6 +558,11 @@
       {{ car.driver.display_name if car.driver else _("No driver yet") }}
     </li>
     {% endfor %}
+    {% if train_routes %}
+    <li class="legend__item">
+      <span class="legend__swatch legend__swatch--train"></span>{{ _("Train") }}
+    </li>
+    {% endif %}
     {% for point in meeting_points if point.lat %}
     <li class="legend__item">
       <span class="legend__swatch legend__swatch--meet"></span>{{ point.name }}
@@ -563,7 +570,14 @@
     {% endfor %}
   </ul>
   {% endif %}
-  <p class="hint">{{ _("Straight lines show the order of the stops, not the road route.") }}</p>
+  <p class="hint">
+    {% if roads %}
+    {{ _("Solid lines follow the road. Dashed lines are straight connectors — a train is always dashed, because the map knows the stations, not the track.") }}
+    {% else %}
+    {{ _("Straight lines show the order of the stops, not the road route.") }}
+    {% endif %}
+    {{ _("Cars sharing a stretch are drawn side by side, so every colour stays visible.") }}
+  </p>
 </section>
 {% endblock %}
 

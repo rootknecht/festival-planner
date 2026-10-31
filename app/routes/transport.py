@@ -122,6 +122,7 @@ def _page(request: Request, db: DbSession, user: User, festival_id: int, **extra
             # cached page or an old service worker still draws something.
             "roads_json": json.dumps(roads),
             "train_routes_json": json.dumps(train_routes),
+            "train_color": transport.TRAIN_LINE_COLOR,
             "legend_json": json.dumps(
                 [
                     {

@@ -8,6 +8,7 @@ does with the answer — including when the answer is "no".
 
 import datetime as dt
 import json
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
@@ -23,7 +24,7 @@ from app.models.transport import Car, RouteCache, Train
 from app.models.user import User
 from app.security.csrf import CSRF_COOKIE
 from app.services import geocode as geocode_service
-from app.services import routing
+from app.services import routing, transport
 from app.services.passwords import hash_password
 
 PASSWORD = "a-long-enough-password"
@@ -403,6 +404,56 @@ def test_a_train_journey_is_drawn_from_its_geocoded_stations(factory) -> None:
     points = trains[str(train_id)]
     assert [p["kind"] for p in points] == ["start", "arrival"]
     assert points[0]["label"] == "Hamburg Hbf"
+
+
+def test_the_legend_names_the_train_line(factory) -> None:
+    client = client_for(settings_with())
+    festival_id = make_festival(client, factory)
+    before = client.get(f"/festivals/{festival_id}/transport").text
+    assert "legend__swatch--train" not in before, "no trains, no train legend row"
+
+    add_train(client, festival_id)
+    page = client.get(f"/festivals/{festival_id}/transport").text
+    legend = page.split('<ul class="legend">')[1].split("</ul>")[0]
+    assert "legend__swatch--train" in legend
+    assert ">Train<" in legend or "Train" in legend
+
+
+def test_one_legend_row_however_many_trains(factory) -> None:
+    """They all share one colour, so repeating the row says nothing."""
+    client = client_for(settings_with())
+    festival_id = make_festival(client, factory)
+    add_train(client, festival_id)
+    add_train(client, festival_id, number="RE 7")
+    page = client.get(f"/festivals/{festival_id}/transport").text
+    assert page.count("legend__swatch--train") == 1
+
+
+def test_the_legend_swatch_matches_the_colour_the_map_draws(factory) -> None:
+    """A swatch in a different colour than its line is worse than no legend."""
+    css = Path("app/static/css/shell.css").read_text(encoding="utf-8")
+    assert f".legend__swatch--train {{ background: {transport.TRAIN_LINE_COLOR}; }}" in css
+
+    client = client_for(settings_with())
+    festival_id = make_festival(client, factory)
+    add_train(client, festival_id)
+    page = client.get(f"/festivals/{festival_id}/transport").text
+    # And the browser is told the same value, rather than map.js hardcoding it.
+    assert f'data-train-color="{transport.TRAIN_LINE_COLOR}"' in page
+
+
+def test_the_map_script_lays_overlapping_lines_side_by_side(factory) -> None:
+    """Two cars on the same road hid each other; the lanes are the fix.
+
+    This asserts the mechanism exists and is driven by the data, since the
+    actual pixels can only be judged by looking at a rendered map.
+    """
+    script = Path("app/static/js/map.js").read_text(encoding="utf-8")
+    assert "laneOffset" in script and "SPACING_PX" in script
+    # Recomputed after a zoom, or the lanes drift apart as the scale changes.
+    assert 'map.on("zoomend"' in script
+    # A single line must stay on its true route.
+    assert "if (lanes.length < 2) return 0;" in script
 
 
 def test_a_tram_stop_is_placed_under_its_own_name(factory) -> None:

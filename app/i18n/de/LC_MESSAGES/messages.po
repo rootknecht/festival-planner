@@ -382,6 +382,12 @@ msgstr "Abfahrtsbahnhof"
 msgid "Arrival station"
 msgstr "Zielbahnhof"
 
+msgid "Cars sharing a stretch are drawn side by side, so every colour stays visible."
+msgstr "Autos auf gleicher Strecke werden nebeneinander gezeichnet, damit jede Farbe sichtbar bleibt."
+
+msgid "Solid lines follow the road. Dashed lines are straight connectors — a train is always dashed, because the map knows the stations, not the track."
+msgstr "Durchgezogene Linien folgen der Straße. Gestrichelte Linien sind direkte Verbindungen — ein Zug ist immer gestrichelt, weil die Karte die Bahnhöfe kennt, nicht die Gleise."
+
 msgid "Delete"
 msgstr "Löschen"
 

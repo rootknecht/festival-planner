@@ -280,6 +280,10 @@ textarea { min-height: 4rem; resize: vertical; }
 .legend__item { display: flex; align-items: center; gap: .35rem; font-size: .9rem; }
 .legend__swatch { width: 14px; height: 14px; border-radius: 3px; border: 1px solid rgba(0,0,0,.35); }
 .legend__swatch--meet { background: transparent; border: 2px dashed var(--fp-muted); }
+/* Mirrors transport.TRAIN_LINE_COLOR. A test asserts the two match, because a
+   legend swatch in a different colour than the line it explains is worse than
+   no legend at all. */
+.legend__swatch--train { background: #5a6b8c; }
 
 
 /* Click-to-edit cell: the value is a summary, the input appears on click. */

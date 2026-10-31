@@ -531,6 +531,14 @@ def train_map_points(
     return points
 
 
+#: The colour of a train line on the map and of its legend swatch. Slate, not
+#: one of the car paints: a train is not somebody's car, and the eye should
+#: not hunt for which driver owns the blue-grey line. Mirrored in
+#: `.legend__swatch--train` in shell.css, and pinned by a test so the two
+#: cannot drift apart.
+TRAIN_LINE_COLOR = "#5a6b8c"
+
+
 # --- colour names -----------------------------------------------------------
 
 #: Hex values for the drawn car icons and the map legend. Kept here rather than

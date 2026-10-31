@@ -116,6 +116,15 @@ a:focus-visible {
   color: var(--fp-accent-fg);
 }
 
+/* Destructive actions read as destructive. The themes already carry a danger
+   colour for alerts, so this borrows it rather than inventing a second red
+   that would drift away from the alert one. */
+.btn--danger {
+  background: var(--fp-danger-bg);
+  border-color: var(--fp-danger);
+  color: var(--fp-danger);
+}
+
 .btn:hover { filter: brightness(1.12); }
 
 .alert {

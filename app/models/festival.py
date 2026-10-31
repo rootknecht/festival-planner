@@ -59,6 +59,11 @@ class Festival(Base):
     #: One of THEMES. Stored as a plain string rather than an enum so adding a
     #: theme is a CSS file plus one list entry, with no migration.
     theme: Mapped[str] = mapped_column(String(32), nullable=False, default="dark")
+    #: Public domain this festival sends and links under, from the instance
+    #: allowlist (Settings.mail_brands). Empty means the instance default.
+    #: A plain string for the same reason as the theme: adding a domain is
+    #: configuration, not a migration.
+    mail_domain: Mapped[str] = mapped_column(String(255), nullable=False, default="")
     status: Mapped[str] = mapped_column(
         String(16), nullable=False, default=FestivalStatus.ACTIVE.value
     )

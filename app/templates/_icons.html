@@ -67,8 +67,13 @@
   {%- elif name == "power" -%}
     <path d="M12 3v9"/><path d="M6.8 7.2a8 8 0 1 0 10.4 0"/>
   {%- elif name == "gear" -%}
-    <circle cx="12" cy="12" r="3.2"/>
-    <path d="M12 2.6v2.1M12 19.3v2.1M21.4 12h-2.1M4.7 12H2.6M18.6 5.4l-1.5 1.5M6.9 17.1l-1.5 1.5M18.6 18.6l-1.5-1.5M6.9 6.9L5.4 5.4"/>
+    {# A real cog, not a sun. The previous drawing was a circle with eight
+       straight rays, which is the universal weather icon — people read it as
+       "appearance" or "day/night", not "settings". Six teeth rather than
+       eight: at 24px the extra teeth close the gaps and the whole thing goes
+       blobby. #}
+    <path d="M9.1 3.2L14.9 3.2L13.9 5.3L16.9 7.0L18.2 5.1L21.1 10.1L18.8 10.3L18.8 13.7L21.1 13.9L18.2 18.9L16.9 17.0L13.9 18.7L14.9 20.8L9.1 20.8L10.1 18.7L7.1 17.0L5.8 18.9L2.9 13.9L5.2 13.7L5.2 10.3L2.9 10.1L5.8 5.1L7.1 7.0L10.1 5.3Z"/>
+    <circle cx="12" cy="12" r="3.6"/>
   {%- elif name == "download" -%}
     <path d="M12 3v11"/><path d="M8 10.5l4 4 4-4"/><path d="M4 20h16"/>
   {%- elif name == "star" -%}

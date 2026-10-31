@@ -39,6 +39,14 @@
       <option value="{{ key }}" {% if festival.theme == key %}selected{% endif %}>{{ label }}</option>
       {% endfor %}
     </select>
+    <label for="mail_domain">{{ _("Invitation sender") }}</label>
+    {# Same allowlist as the creation form; empty means the instance default. #}
+    <select id="mail_domain" name="mail_domain">
+      <option value="">{{ _("Default") }}</option>
+      {% for domain, brand in brands.items() %}
+      <option value="{{ domain }}" {% if festival.mail_domain == domain %}selected{% endif %}>{{ brand.sender }}</option>
+      {% endfor %}
+    </select>
     <button type="submit" class="btn btn--primary">Save</button>
   </form>
 </section>

@@ -22,7 +22,7 @@ from app.models.festival import (
 )
 from app.models.password_reset import PasswordReset
 from app.models.user import User, utcnow
-from app.services import notifications
+from app.services import branding, notifications
 from app.services.access import (
     count_admins,
     festivals_for,
@@ -69,10 +69,17 @@ async def festival_list(
 
 @router.get("/festivals/new")
 async def new_festival_form(request: Request, user: User = Depends(require_user)) -> Response:
+    settings = _settings_for(request)
     return render(
         request,
         "festivals/new.html",
-        {"error": None, "themes": THEMES, "theme": NEW_FESTIVAL_THEME},
+        {
+            "error": None,
+            "themes": THEMES,
+            "theme": NEW_FESTIVAL_THEME,
+            "brands": branding.brands(settings),
+            "mail_domain": "",
+        },
     )
 
 
@@ -88,9 +95,16 @@ async def create_festival(
     camp_departure: str = Form(default=""),
     timezone: str = Form(default="Europe/Berlin"),
     theme: str = Form(default=NEW_FESTIVAL_THEME),
+    mail_domain: str = Form(default=""),
     user: User = Depends(require_user),
     db: DbSession = Depends(get_db),
 ) -> Response:
+    settings = _settings_for(request)
+    # Allowlist, never free text: this value becomes a mail header and the
+    # front of a one-time link. Anything unknown means the instance default.
+    chosen_domain = mail_domain.strip().lower()
+    if not branding.is_known(settings, chosen_domain):
+        chosen_domain = ""
     # An unknown theme is not an error worth a page for: fall back to the
     # creation default rather than rendering an error, same as the settings
     # form falls back instead of raising.
@@ -100,7 +114,13 @@ async def create_festival(
         return render(
             request,
             "festivals/new.html",
-            {"error": "A festival needs a name.", "themes": THEMES, "theme": chosen_theme},
+            {
+                "error": "A festival needs a name.",
+                "themes": THEMES,
+                "theme": chosen_theme,
+                "brands": branding.brands(settings),
+                "mail_domain": chosen_domain,
+            },
             status_code=400,
         )
 
@@ -114,6 +134,7 @@ async def create_festival(
         camp_departure=_date(camp_departure),
         timezone=(timezone or "Europe/Berlin")[:64],
         theme=chosen_theme,
+        mail_domain=chosen_domain,
         created_by=user.id,
     )
     db.add(festival)
@@ -235,6 +256,7 @@ async def settings_form(
             "invites": invites,
             "invite_link": request.query_params.get("link"),
             "themes": THEMES,
+            "brands": branding.brands(_settings_for(request)),
             "error": None,
         },
     )
@@ -253,6 +275,7 @@ async def save_settings(
     camp_departure: str = Form(default=""),
     timezone: str = Form(default="Europe/Berlin"),
     theme: str = Form(default="dark"),
+    mail_domain: str = Form(default=""),
     user: User = Depends(require_user),
     db: DbSession = Depends(get_db),
 ) -> Response:
@@ -279,6 +302,12 @@ async def save_settings(
     festival.timezone = (timezone or "Europe/Berlin")[:64]
     if theme in THEMES:
         festival.theme = theme
+    # Same allowlist rule as creation: an unknown domain means the instance
+    # default, so a tampered select cannot forge a sender or a link base.
+    wanted_domain = mail_domain.strip().lower()
+    festival.mail_domain = (
+        wanted_domain if branding.is_known(_settings_for(request), wanted_domain) else ""
+    )
     db.commit()
     return RedirectResponse(f"/festivals/{festival_id}/settings", status_code=303)
 
@@ -396,9 +425,11 @@ async def create_invite(
     )
     db.commit()
 
-    link = f"{settings.base_url.rstrip('/')}/invite/{token}"
+    brand = branding.brand_for(settings, membership.festival)
+    link = f"{brand.base_url}/invite/{token}"
     get_mailer(settings).send(
         Message(
+            from_=brand.sender,
             to=address,
             subject=f"You are invited to {membership.festival.name}",
             body=(
@@ -502,7 +533,7 @@ async def issue_reset_link(
     )
     db.commit()
 
-    link = f"{settings.base_url.rstrip('/')}/reset/{token}"
+    link = f"{branding.brand_for(settings, membership.festival).base_url}/reset/{token}"
     return _dashboard(
         request,
         db,

@@ -23,6 +23,11 @@ class Message:
     to: str
     subject: str
     body: str
+    #: Per-message sender identity. Empty means "use the instance default":
+    #: a festival can send under its own domain without every caller having
+    #: to know which one that is.
+    from_: str = ""
+    reply_to: str = ""
 
 
 class Mailer:
@@ -62,13 +67,14 @@ class SmtpMailer(Mailer):
 
     def send(self, message: Message) -> bool:
         email = EmailMessage()
-        email["From"] = self.settings.smtp_from
+        email["From"] = message.from_ or self.settings.smtp_from
         email["To"] = message.to
         email["Subject"] = message.subject
         # People DO reply to these mails — "when do we leave?" to an invite is
         # the most natural thing in the world. Without this it lands nowhere.
-        if self.settings.smtp_reply_to:
-            email["Reply-To"] = self.settings.smtp_reply_to
+        reply_to = message.reply_to or self.settings.smtp_reply_to
+        if reply_to:
+            email["Reply-To"] = reply_to
         email.set_content(message.body)
 
         context = ssl.create_default_context()

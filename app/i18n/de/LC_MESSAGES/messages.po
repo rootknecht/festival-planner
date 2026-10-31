@@ -379,6 +379,9 @@ msgstr "Abfahrtsbahnhof"
 msgid "Arrival station"
 msgstr "Zielbahnhof"
 
+msgid "Delete"
+msgstr "Löschen"
+
 msgid "Add a change"
 msgstr "Umstieg hinzufügen"
 

@@ -234,8 +234,17 @@ async def delete_car(
     user: User = Depends(require_user),
     db: DbSession = Depends(get_db),
 ) -> Response:
-    require_writable(require_membership(db, user, festival_id))
-    transport.delete_car(db, _car_of(db, festival_id, car_id), user)
+    """Remove a car and free its passengers. Admin or that car's driver.
+
+    The page only ever showed the control to those two, but the ROUTE accepted
+    it from any member — a hidden button is not an authorisation check, and
+    deleting somebody else's car throws out everybody who had a seat in it.
+    """
+    membership = require_writable(require_membership(db, user, festival_id))
+    car = _car_of(db, festival_id, car_id)
+    if not membership.is_admin and not (car.driver and car.driver.user_id == user.id):
+        raise HTTPException(status_code=403, detail="only an admin or the driver")
+    transport.delete_car(db, car, user)
     notify_change(festival_id, "transport")
     return RedirectResponse(f"/festivals/{festival_id}/transport", status_code=303)
 
@@ -465,8 +474,13 @@ async def delete_train(
     user: User = Depends(require_user),
     db: DbSession = Depends(get_db),
 ) -> Response:
-    require_writable(require_membership(db, user, festival_id))
-    transport.delete_train(db, _train_of(db, festival_id, train_id), user)
+    membership = require_writable(require_membership(db, user, festival_id))
+    train = _train_of(db, festival_id, train_id)
+    # Same rule as a car: an admin, or whoever entered the connection. A train
+    # has no driver, so its creator is the equivalent owner.
+    if not membership.is_admin and train.created_by != user.id:
+        raise HTTPException(status_code=403, detail="only an admin or whoever added it")
+    transport.delete_train(db, train, user)
     notify_change(festival_id, "transport")
     return RedirectResponse(f"/festivals/{festival_id}/transport", status_code=303)
 

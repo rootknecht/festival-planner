@@ -201,7 +201,19 @@
           <input type="checkbox" name="clear_departure" value="1"> {{ _("Clear the departure day") }}
         </label>
         {% endif %}
-        <button class="btn btn--small btn--primary">{{ _("Save changes") }}</button>
+        <div class="row">
+          <button class="btn btn--small btn--primary">{{ _("Save changes") }}</button>
+          {% if membership.is_admin or (car.driver and car.driver.user_id == user.id) %}
+          {# Deleting lives inside the edit form, where the other deliberate
+             changes are, and says "Delete" in words: a bare cross next to a
+             passenger list is one mis-tap away from destroying everybody's
+             seats. #}
+          <button class="btn btn--small btn--danger"
+                  formaction="/festivals/{{ festival.id }}/transport/cars/{{ car.id }}/delete">
+            {{ _("Delete") }}
+          </button>
+          {% endif %}
+        </div>
       </form>
     </details>
   </div>
@@ -320,8 +332,14 @@
         <input id="tarr{{ train.id }}" name="arrival_time" type="time" value="{{ train.arrival_time.strftime('%H:%M') if train.arrival_time else '' }}">
         <div class="row">
           <button class="btn btn--small btn--primary">{{ _("Save") }}</button>
-          <button class="linkbtn" formaction="/festivals/{{ festival.id }}/transport/trains/{{ train.id }}/delete"
-                  title="{{ _('Remove this train') }}">{{ icon("close") }}</button>
+          {% if membership.is_admin or train.created_by == user.id %}
+          {# A train has no driver, so whoever entered the connection is its
+             owner — same rule as a car, enforced in the route as well. #}
+          <button class="btn btn--small btn--danger"
+                  formaction="/festivals/{{ festival.id }}/transport/trains/{{ train.id }}/delete">
+            {{ _("Delete") }}
+          </button>
+          {% endif %}
         </div>
       </form>
     </details>
@@ -412,7 +430,8 @@
         {% if membership.is_admin or (car.driver and car.driver.user_id == user.id) %}
         <form method="post" action="/festivals/{{ festival.id }}/transport/cars/{{ car.id }}/delete" class="inline">
           <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
-          <button class="linkbtn" title="{{ _('Remove this car and free its passengers') }}">{{ icon("close") }}</button>
+          <button class="btn btn--small btn--danger"
+                  title="{{ _('Remove this car and free its passengers') }}">{{ _("Delete") }}</button>
         </form>
         {% endif %}
       </div>

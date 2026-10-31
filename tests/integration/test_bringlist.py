@@ -212,16 +212,16 @@ def test_an_admin_can_enter_for_a_placeholder_who_has_no_account(festival, facto
     add_row(owner, festival_id, "Firewood")
     owner.post(
         f"/festivals/{festival_id}/participants",
-        data={"display_name": "Benne", "csrf_token": csrf(owner)},
+        data={"display_name": "Robin", "csrf_token": csrf(owner)},
     )
     rows, people = ids(factory, festival_id)
-    placeholder = next(p for p in people if p.display_name == "Benne")
+    placeholder = next(p for p in people if p.display_name == "Robin")
     assert placeholder.user_id is None
 
     assert set_cell(owner, festival_id, rows[0].id, placeholder.id, "2").status_code == 303
     page = owner.get(f"/festivals/{festival_id}/bringlist").text
     table = page.split("<tbody>")[1].split("</tbody>")[0]
-    assert "Benne" in table
+    assert "Robin" in table
 
 
 def test_an_archived_festival_offers_nobody_the_form(festival, factory) -> None:

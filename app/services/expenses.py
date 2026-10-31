@@ -367,15 +367,15 @@ class Balance:
 
     @property
     def by_person(self) -> list[PersonTotal]:
-        """One line per person: "69,75 € from Benne (beer, power station)".
+        """One line per person: "69,75 € from Robin (beer, power station)".
 
         Several debts with the same person collapse into one figure, because
         that is how the money actually moves — one transfer, not one per
         crate of beer. The items stay in the line so the number can be
         checked without opening anything.
 
-        Debts in BOTH directions with the same person net off: if Benne owes
-        you 80 and you owe Benne 10, you are owed 70 and should not be shown
+        Debts in BOTH directions with the same person net off: if Robin owes
+        you 80 and you owe Robin 10, you are owed 70 and should not be shown
         two lines that invite two transfers.
         """
         blank = {"name": "", "cents": 0, "what": [], "waiting": False,

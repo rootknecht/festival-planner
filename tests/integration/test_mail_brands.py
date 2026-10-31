@@ -25,7 +25,7 @@ from app.services.mail import capture_sink
 from app.services.passwords import hash_password
 
 PASSWORD = "a-long-enough-password"
-BRANDS = "metalheadz.org,oiboyz.org=hello@oiboyz.org"
+BRANDS = "firstfest.example,secondfest.example=hello@secondfest.example"
 
 
 @pytest.fixture()
@@ -57,7 +57,7 @@ def settings() -> Settings:
     return Settings(
         _env_file=None,
         environment="test",
-        base_url="https://metalheadz.org",
+        base_url="https://firstfest.example",
         mail_brands=BRANDS,
     )
 
@@ -99,32 +99,32 @@ def invite(client: TestClient, festival_id: int, address: str) -> None:
 def test_the_configuration_derives_a_sender_per_domain(settings: Settings) -> None:
     """A bare domain means noreply@domain; an explicit address wins."""
     assert settings.brand_senders == {
-        "metalheadz.org": "noreply@metalheadz.org",
-        "oiboyz.org": "hello@oiboyz.org",
+        "firstfest.example": "noreply@firstfest.example",
+        "secondfest.example": "hello@secondfest.example",
     }
 
 
 def test_the_creation_form_offers_every_brand_plus_the_default(client: TestClient) -> None:
     page = client.get("/festivals/new").text
     assert 'name="mail_domain"' in page
-    assert 'value="metalheadz.org"' in page
-    assert 'value="oiboyz.org"' in page
-    assert "hello@oiboyz.org" in page
+    assert 'value="firstfest.example"' in page
+    assert 'value="secondfest.example"' in page
+    assert "hello@secondfest.example" in page
     # The instance default must stay choosable, as the empty value.
     assert 'value=""' in page
 
 
 def test_a_festival_sends_and_links_under_its_chosen_domain(client, factory) -> None:
-    festival_id = make_festival(client, mail_domain="oiboyz.org")
+    festival_id = make_festival(client, mail_domain="secondfest.example")
     with factory() as db:
-        assert db.get(Festival, festival_id).mail_domain == "oiboyz.org"
+        assert db.get(Festival, festival_id).mail_domain == "secondfest.example"
 
     capture_sink().clear()
     invite(client, festival_id, "friend@example.org")
     message = capture_sink().sent[-1]
-    assert message.from_ == "hello@oiboyz.org"
-    assert "https://oiboyz.org/invite/" in message.body
-    assert "metalheadz.org" not in message.body
+    assert message.from_ == "hello@secondfest.example"
+    assert "https://secondfest.example/invite/" in message.body
+    assert "firstfest.example" not in message.body
 
 
 def test_a_festival_without_a_choice_uses_the_instance_default(client) -> None:
@@ -134,7 +134,7 @@ def test_a_festival_without_a_choice_uses_the_instance_default(client) -> None:
     message = capture_sink().sent[-1]
     # No per-message sender: the mailer falls back to settings.smtp_from.
     assert message.from_ == ""
-    assert "https://metalheadz.org/invite/" in message.body
+    assert "https://firstfest.example/invite/" in message.body
 
 
 def test_an_unknown_domain_falls_back_instead_of_being_stored(client, factory) -> None:
@@ -152,10 +152,10 @@ def test_settings_can_change_the_brand_and_reject_a_bogus_one(client, factory) -
     festival_id = make_festival(client)
     client.post(
         f"/festivals/{festival_id}/settings",
-        data={"name": "Wacken", "mail_domain": "oiboyz.org", "csrf_token": csrf(client)},
+        data={"name": "Wacken", "mail_domain": "secondfest.example", "csrf_token": csrf(client)},
     )
     with factory() as db:
-        assert db.get(Festival, festival_id).mail_domain == "oiboyz.org"
+        assert db.get(Festival, festival_id).mail_domain == "secondfest.example"
 
     client.post(
         f"/festivals/{festival_id}/settings",
@@ -169,13 +169,13 @@ def test_a_festival_whose_domain_left_the_allowlist_degrades_quietly(
     client, factory, settings
 ) -> None:
     """Configuration can shrink; stored data must not start forging senders."""
-    festival_id = make_festival(client, mail_domain="oiboyz.org")
-    object.__setattr__(settings, "mail_brands", "metalheadz.org")
+    festival_id = make_festival(client, mail_domain="secondfest.example")
+    object.__setattr__(settings, "mail_brands", "firstfest.example")
     capture_sink().clear()
     invite(client, festival_id, "friend@example.org")
     message = capture_sink().sent[-1]
     assert message.from_ == ""
-    assert "https://metalheadz.org/invite/" in message.body
+    assert "https://firstfest.example/invite/" in message.body
 
 
 def test_self_service_reset_follows_the_domain_it_was_asked_on(client) -> None:
@@ -184,16 +184,16 @@ def test_self_service_reset_follows_the_domain_it_was_asked_on(client) -> None:
     client.post(
         "/forgot",
         data={"email": "owner@example.org", "csrf_token": client.cookies[CSRF_COOKIE]},
-        headers={"host": "oiboyz.org"},
+        headers={"host": "secondfest.example"},
     )
     message = capture_sink().sent[-1]
-    assert message.from_ == "hello@oiboyz.org"
-    assert "https://oiboyz.org/reset/" in message.body
+    assert message.from_ == "hello@secondfest.example"
+    assert "https://secondfest.example/reset/" in message.body
 
 
 def test_a_forged_host_cannot_move_a_reset_link_or_its_sender(client) -> None:
     """Host is attacker-controlled: anything unlisted must hit the default."""
-    for forged in ("evil.example", "metalheadz.org.evil.example", "oiboyz.org@evil.example"):
+    for forged in ("evil.example", "firstfest.example.evil.example", "secondfest.example@evil.example"):
         capture_sink().clear()
         client.get("/forgot")
         response = client.post(
@@ -204,7 +204,7 @@ def test_a_forged_host_cannot_move_a_reset_link_or_its_sender(client) -> None:
         assert response.status_code == 200
         message = capture_sink().sent[-1]
         assert message.from_ == ""
-        assert "https://metalheadz.org/reset/" in message.body
+        assert "https://firstfest.example/reset/" in message.body
         assert "evil.example" not in message.body
 
 
@@ -214,9 +214,9 @@ def test_a_host_with_a_port_still_matches_its_brand(client) -> None:
     client.post(
         "/forgot",
         data={"email": "owner@example.org", "csrf_token": client.cookies[CSRF_COOKIE]},
-        headers={"host": "oiboyz.org:443"},
+        headers={"host": "secondfest.example:443"},
     )
-    assert "https://oiboyz.org/reset/" in capture_sink().sent[-1].body
+    assert "https://secondfest.example/reset/" in capture_sink().sent[-1].body
 
 
 def test_the_reset_route_still_reveals_nothing_about_unknown_addresses(client) -> None:
@@ -224,13 +224,13 @@ def test_the_reset_route_still_reveals_nothing_about_unknown_addresses(client) -
     known = client.post(
         "/forgot",
         data={"email": "owner@example.org", "csrf_token": client.cookies[CSRF_COOKIE]},
-        headers={"host": "oiboyz.org"},
+        headers={"host": "secondfest.example"},
     )
     client.get("/forgot")
     unknown = client.post(
         "/forgot",
         data={"email": "nobody@example.org", "csrf_token": client.cookies[CSRF_COOKIE]},
-        headers={"host": "oiboyz.org"},
+        headers={"host": "secondfest.example"},
     )
     assert known.status_code == unknown.status_code == 200
     assert known.text == unknown.text

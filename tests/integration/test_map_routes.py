@@ -478,7 +478,7 @@ def test_the_map_gets_the_palette_hex_not_a_css_colour_name(factory) -> None:
 
 
 def test_the_map_draws_a_crosshair_for_the_site_and_cars_for_departures(factory) -> None:
-    """Jeschke's wording: the festival is a target, a start is a car."""
+    """By design: the festival is a target, a start is a car."""
     script = Path("app/static/js/map.js").read_text(encoding="utf-8")
     assert "function crosshairIcon()" in script
     assert "function carIcon(hex)" in script

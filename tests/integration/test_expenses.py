@@ -693,7 +693,7 @@ def test_the_harmless_fields_stay_editable_after_the_lock(trip, factory) -> None
 
 
 def test_the_balance_groups_by_person_with_the_items_named(trip, factory) -> None:
-    """The requested shape: "69,75 € from Benne (beer, power station)"."""
+    """The requested shape: "69,75 € from Robin (beer, power station)"."""
     festival_id, owner, kai, anna = trip
     people = who(factory, festival_id)
     add_cost(kai, festival_id, people["Kai"].id, amount="30,00", description="Dosenbier")

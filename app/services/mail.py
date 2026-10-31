@@ -76,7 +76,7 @@ class SmtpMailer(Mailer):
         reply_to = message.reply_to or self.settings.smtp_reply_to
         if reply_to:
             email["Reply-To"] = reply_to
-        # RFC 5322 requires a Date, and nothing upstream adds one: posteo's
+        # RFC 5322 requires a Date, and nothing upstream adds one: a receiving provider's
         # amavis flagged a delivered invitation with "BAD HEADER SECTION,
         # Missing required header field: Date". It arrives either way, but a
         # malformed header section is free spam score at the receivers that

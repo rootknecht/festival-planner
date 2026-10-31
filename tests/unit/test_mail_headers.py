@@ -1,6 +1,6 @@
 """The header section of outgoing mail must be well formed.
 
-A delivered invitation came back from posteo's amavis with "BAD HEADER
+A delivered invitation came back from a receiving provider's amavis with "BAD HEADER
 SECTION, Missing required header field: Date". The mail arrived, which is
 exactly why this needs a test rather than a watchful eye: a malformed header
 section costs spam score at the receivers that matter and nothing in the
@@ -72,9 +72,9 @@ def test_every_mail_carries_a_message_id_on_the_sending_domain(captured) -> None
 
 
 def test_the_message_id_follows_a_per_festival_sender(captured) -> None:
-    sent = send(captured, from_="noreply@oiboyz.org")
-    assert sent["From"] == "noreply@oiboyz.org"
-    assert sent["Message-ID"].endswith("@oiboyz.org>")
+    sent = send(captured, from_="noreply@secondfest.example")
+    assert sent["From"] == "noreply@secondfest.example"
+    assert sent["Message-ID"].endswith("@secondfest.example>")
 
 
 def test_two_mails_do_not_share_a_message_id(captured) -> None:

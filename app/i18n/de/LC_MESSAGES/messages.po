@@ -358,7 +358,7 @@ msgstr "Design"
 msgid "Invitation sender"
 msgstr "Absender für Einladungen"
 
-# Jeschke's wording: the German heading stays "Fahrgemeinschaft" even though
+# Deliberate: the German heading stays "Fahrgemeinschaft" even though
 # the English says "Car-sharing / Train". A translation is not obliged to
 # mirror the source when the shorter word already covers it.
 msgid "Car-sharing / Train"

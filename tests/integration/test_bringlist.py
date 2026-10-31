@@ -178,6 +178,60 @@ def test_an_admin_may_assign_an_item_to_anybody(festival, factory) -> None:
     assert set_cell(owner, festival_id, rows[0].id, friend_p.id, "3").status_code == 303
 
 
+def test_an_admin_gets_a_way_to_enter_something_for_somebody_else(festival, factory) -> None:
+    """The table alone cannot offer this.
+
+    Somebody who brings nothing yet has no row to click, and a placeholder
+    has no account at all, so without this form an admin can only fill in
+    people who already appear in the table.
+    """
+    festival_id, owner, friend = festival
+    add_row(owner, festival_id, "Firewood")
+    rows, people = ids(factory, festival_id)
+    friend_p = next(p for p in people if p.display_name == "Friend")
+
+    page = owner.get(f"/festivals/{festival_id}/bringlist").text
+    form = page.split('id="for-who"')[1].split("</select>")[0]
+    assert "Add for somebody" in page
+    # Everyone is offered, including people with no row in the table yet.
+    assert f'value="{friend_p.id}"' in form
+    assert "Friend" in form
+
+
+def test_a_member_is_not_offered_the_assign_to_others_form(festival, factory) -> None:
+    """A control nobody may use must not be on the page at all."""
+    festival_id, owner, friend = festival
+    add_row(owner, festival_id, "Firewood")
+    page = friend.get(f"/festivals/{festival_id}/bringlist").text
+    assert "Add for somebody" not in page
+    assert 'id="for-who"' not in page
+
+
+def test_an_admin_can_enter_for_a_placeholder_who_has_no_account(festival, factory) -> None:
+    festival_id, owner, friend = festival
+    add_row(owner, festival_id, "Firewood")
+    owner.post(
+        f"/festivals/{festival_id}/participants",
+        data={"display_name": "Benne", "csrf_token": csrf(owner)},
+    )
+    rows, people = ids(factory, festival_id)
+    placeholder = next(p for p in people if p.display_name == "Benne")
+    assert placeholder.user_id is None
+
+    assert set_cell(owner, festival_id, rows[0].id, placeholder.id, "2").status_code == 303
+    page = owner.get(f"/festivals/{festival_id}/bringlist").text
+    table = page.split("<tbody>")[1].split("</tbody>")[0]
+    assert "Benne" in table
+
+
+def test_an_archived_festival_offers_nobody_the_form(festival, factory) -> None:
+    festival_id, owner, friend = festival
+    add_row(owner, festival_id, "Firewood")
+    owner.post(f"/festivals/{festival_id}/archive", data={"csrf_token": csrf(owner)})
+    page = owner.get(f"/festivals/{festival_id}/bringlist").text
+    assert 'id="for-who"' not in page
+
+
 def test_only_people_who_bring_something_appear_in_the_table(festival, factory) -> None:
     festival_id, owner, friend = festival
     add_row(owner, festival_id, "Firewood")

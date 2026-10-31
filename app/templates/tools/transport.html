@@ -546,7 +546,10 @@
   <div id="map" class="map" data-routes="{{ routes_json }}"
        data-roads="{{ roads_json }}" data-trains="{{ train_routes_json }}"
        data-train-color="{{ train_color }}"
-       {% for car in cars %}data-color-{{ car.id }}="{{ car.color }}"{% endfor %}></div>
+       {# The PALETTE hex, not the colour name: "red" as a CSS keyword is
+          #ff0000, while this app's red is #c81f2a, so the map line used to be
+          a different red from the legend swatch beside it. #}
+       {% for car in cars %}data-color-{{ car.id }}="{{ color_hex.get(car.color, '#c81f2a') }}"{% endfor %}></div>
   {# Legend: which colour belongs to whose car, plus the train line, which is
      one entry however many trains there are — they all share the slate
      colour, so a row per train would say the same thing repeatedly. #}

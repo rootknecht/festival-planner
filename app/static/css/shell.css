@@ -285,6 +285,11 @@ textarea { min-height: 4rem; resize: vertical; }
    no legend at all. */
 .legend__swatch--train { background: #5a6b8c; }
 
+/* Leaflet's divIcon is a plain div and comes with a white box and a border;
+   these markers are SVG shapes and must sit on the map, not in a card. */
+.mapicon { background: none; border: 0; }
+.mapicon svg { display: block; }
+
 
 /* Click-to-edit cell: the value is a summary, the input appears on click. */
 .cell > summary { cursor: pointer; list-style: none; }

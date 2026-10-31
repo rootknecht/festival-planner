@@ -30,6 +30,59 @@
   var SPACING_PX = 4;
   var tracked = [];
 
+  // Markers are drawn shapes rather than image files, so there is nothing to
+  // 404 and the car can take the colour of the car it stands for.
+  function readableOutline(hex) {
+    // A white car needs a dark outline and a black one a white outline, or
+    // the marker disappears into the map on one of them.
+    var value = hex.replace("#", "");
+    if (value.length === 3) {
+      value = value[0] + value[0] + value[1] + value[1] + value[2] + value[2];
+    }
+    var r = parseInt(value.slice(0, 2), 16) || 0;
+    var g = parseInt(value.slice(2, 4), 16) || 0;
+    var b = parseInt(value.slice(4, 6), 16) || 0;
+    return (0.299 * r + 0.587 * g + 0.114 * b) > 150 ? "#15161a" : "#ffffff";
+  }
+
+  function carIcon(hex) {
+    var outline = readableOutline(hex);
+    return L.divIcon({
+      className: "mapicon",
+      iconSize: [34, 17],
+      iconAnchor: [17, 9],
+      html:
+        '<svg width="34" height="17" viewBox="0 0 34 17" xmlns="http://www.w3.org/2000/svg">' +
+        '<path d="M2 12.6h30.2V9.4c0-1.2-.9-2.2-2.1-2.4l-5.3-.9-3.2-2.9c-.7-.6-1.6-1-2.6-1h-8.6' +
+        'c-1 0-2 .4-2.7 1.2L4.9 5.9 2.7 6.7C1.7 7.1 1.1 8 1.1 9v2.4c0 .7.4 1.2.9 1.2Z" fill="' +
+        hex + '" stroke="' + outline + '" stroke-width="1.3" stroke-linejoin="round"/>' +
+        '<path d="M9.4 3.4 7.2 6.1h7.3V3.4z" fill="' + outline + '" opacity="0.35"/>' +
+        '<circle cx="9.6" cy="13.4" r="3.1" fill="#15161a" stroke="' + outline +
+        '" stroke-width="1.1"/>' +
+        '<circle cx="25.2" cy="13.4" r="3.1" fill="#15161a" stroke="' + outline +
+        '" stroke-width="1.1"/></svg>'
+    });
+  }
+
+  // The festival is the one place on the map that is a TARGET rather than a
+  // waypoint, so it gets a crosshair. Drawn twice, white underneath, because
+  // it has to stay legible on forest green and on motorway orange alike.
+  function crosshairIcon() {
+    var rings =
+      '<circle cx="14" cy="14" r="7.5"/>' +
+      '<path d="M14 1.5v5M14 21.5v5M1.5 14h5M21.5 14h5"/>';
+    return L.divIcon({
+      className: "mapicon",
+      iconSize: [28, 28],
+      iconAnchor: [14, 14],
+      html:
+        '<svg width="28" height="28" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">' +
+        '<g fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round">' + rings + '</g>' +
+        '<g fill="none" stroke="#15161a" stroke-width="2.4" stroke-linecap="round">' + rings + '</g>' +
+        '<circle cx="14" cy="14" r="2.6" fill="#15161a"/></svg>'
+    });
+  }
+
   function offsetLatLngs(latlngs, pixels) {
     if (!pixels) return latlngs;
     var points = latlngs.map(function (pair) {
@@ -88,6 +141,7 @@
 
   var trainColour = node.getAttribute("data-train-color") || "#5a6b8c";
   var bounds = [];
+  var drawn = {};
 
   // Count every line that will be drawn BEFORE drawing any of them: a line's
   // lane depends on how many neighbours it has, and the group is centred on
@@ -121,19 +175,35 @@
       var latlng = [point.lat, point.lon];
       line.push(latlng);
       bounds.push(latlng);
-      // A meeting point is drawn as a ringed square-ish marker so it reads as
-      // "everybody here" rather than as one more private pickup. Markers are
-      // NOT offset: a pickup is a place, and moving it would be a lie.
-      L.circleMarker(latlng, {
-        radius: point.kind === "festival" ? 9 : (point.kind === "meeting" ? 8 : 6),
-        color: (point.kind === "festival" || point.kind === "meeting") ? "#ffffff" : colour,
-        fillColor: colour,
-        fillOpacity: 0.9,
-        weight: point.kind === "meeting" ? 3 : 2,
-        dashArray: point.kind === "meeting" ? "3 3" : null
-      })
-        .addTo(map)
-        .bindPopup(point.label);
+      // The festival and a shared meeting point appear in EVERY car's point
+      // list, so they were being drawn once per car — three markers and
+      // three popups stacked on one spot, which went unnoticed while they
+      // were identical circles. Shared kinds are drawn once.
+      if (point.kind === "festival" || point.kind === "meeting") {
+        var key = point.kind + ":" + point.lat + ":" + point.lon;
+        if (drawn[key]) return;
+        drawn[key] = true;
+      }
+
+      // Markers are NOT offset into lanes: a pickup is a place, and moving
+      // it would be a lie. Three shapes, by what the point MEANS — where a
+      // car sets off, where everybody gathers, and the target itself.
+      var marker;
+      if (point.kind === "festival") {
+        marker = L.marker(latlng, { icon: crosshairIcon(), zIndexOffset: 400 });
+      } else if (point.kind === "start") {
+        marker = L.marker(latlng, { icon: carIcon(colour), zIndexOffset: 200 });
+      } else {
+        marker = L.circleMarker(latlng, {
+          radius: point.kind === "meeting" ? 8 : 6,
+          color: point.kind === "meeting" ? "#ffffff" : colour,
+          fillColor: colour,
+          fillOpacity: 0.9,
+          weight: point.kind === "meeting" ? 3 : 2,
+          dashArray: point.kind === "meeting" ? "3 3" : null
+        });
+      }
+      marker.addTo(map).bindPopup(point.label);
     });
 
     var road = roads[carId];

@@ -460,6 +460,41 @@ def test_the_map_script_lays_overlapping_lines_side_by_side(factory) -> None:
     assert "L.LineUtil.simplify(points, 1)" in script
 
 
+def test_the_map_gets_the_palette_hex_not_a_css_colour_name(factory) -> None:
+    """"red" as a CSS keyword is #ff0000; this app's red is #c81f2a.
+
+    The map used to be handed the NAME, so its line was a different red from
+    the legend swatch beside it, and a car marker would have been too.
+    """
+    client = client_for(settings_with())
+    festival_id = make_festival(client, factory)
+    add_car_with_route(client, festival_id, factory)
+    with factory() as db:
+        car_id = db.scalars(select(Car)).first().id
+
+    page = client.get(f"/festivals/{festival_id}/transport").text
+    assert f'data-color-{car_id}="{transport.COLOR_HEX["red"]}"' in page
+    assert f'data-color-{car_id}="red"' not in page
+
+
+def test_the_map_draws_a_crosshair_for_the_site_and_cars_for_departures(factory) -> None:
+    """Jeschke's wording: the festival is a target, a start is a car."""
+    script = Path("app/static/js/map.js").read_text(encoding="utf-8")
+    assert "function crosshairIcon()" in script
+    assert "function carIcon(hex)" in script
+    assert 'point.kind === "festival"' in script and "crosshairIcon()" in script
+    assert 'point.kind === "start"' in script and "carIcon(colour)" in script
+    # A white car needs a dark outline, a black one a white outline.
+    assert "readableOutline" in script
+    # The festival and a shared meeting point are in EVERY car's point list,
+    # so without this they are drawn once per car, stacked.
+    assert "if (drawn[key]) return;" in script
+
+    css = Path("app/static/css/shell.css").read_text(encoding="utf-8")
+    # Leaflet's divIcon is a div, and brings a white box unless told otherwise.
+    assert ".mapicon { background: none; border: 0; }" in css
+
+
 def test_a_tram_stop_is_placed_under_its_own_name(factory) -> None:
     """Appending " station" to a tram stop finds nothing.
 

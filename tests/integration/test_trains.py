@@ -25,6 +25,7 @@ from app.services import geocode as geocode_service
 from app.services.mail import capture_sink
 from app.services.passwords import hash_password
 from app.services.transport import MAX_TRAIN_CHANGES
+from app.translations import gettext_for
 
 PASSWORD = "a-long-enough-password"
 
@@ -287,6 +288,10 @@ def test_the_page_offers_adding_a_train_and_shows_it(festival, factory) -> None:
     page = owner.get(f"/festivals/{festival_id}/transport").text
     assert "Car-sharing / Train" in page
     assert "Add a train" in page
+
+    # The German heading is deliberately NOT a mirror of the English one.
+    german = gettext_for("de")
+    assert german("Car-sharing / Train") == "Fahrgemeinschaft"
 
     add_train(owner, festival_id, departure_date="2027-07-28", departure_time="09:14")
     page = owner.get(f"/festivals/{festival_id}/transport").text

@@ -130,6 +130,13 @@ class Train(Base):
     number: Mapped[str] = mapped_column(String(40), nullable=False, default="")
     departure_station: Mapped[str] = mapped_column(Text, nullable=False, default="")
     arrival_station: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    # Stations are geocoded on save, exactly like a car's departure address:
+    # the map needs coordinates, and a station the geocoder cannot place is
+    # still a perfectly good station to write on the card.
+    departure_lat: Mapped[float | None] = mapped_column(Float, nullable=True)
+    departure_lon: Mapped[float | None] = mapped_column(Float, nullable=True)
+    arrival_lat: Mapped[float | None] = mapped_column(Float, nullable=True)
+    arrival_lon: Mapped[float | None] = mapped_column(Float, nullable=True)
     departure_on: Mapped[dt.date | None] = mapped_column(Date, nullable=True)
     #: Unlike a car's departure, a train's time IS knowable in advance — it is
     #: printed on the ticket — so it is offered, but stays optional.
@@ -183,6 +190,8 @@ class TrainChange(Base):
     #: Optional, like every other time here: the station is the useful part.
     change_at: Mapped[dt.time | None] = mapped_column(Time, nullable=True)
     onward_number: Mapped[str] = mapped_column(String(40), nullable=False, default="")
+    lat: Mapped[float | None] = mapped_column(Float, nullable=True)
+    lon: Mapped[float | None] = mapped_column(Float, nullable=True)
 
     train: Mapped[Train] = relationship(back_populates="changes")
 
@@ -302,6 +311,23 @@ class MeetingPointCar(Base):
 
     meeting_point: Mapped[MeetingPoint] = relationship(back_populates="cars")
     car: Mapped[Car] = relationship()
+
+
+class RouteCache(Base):
+    """Road geometry already fetched, keyed by the rounded waypoint list.
+
+    The free routing tier allows 2000 requests a day; a page view must never
+    spend one. An empty geometry is a remembered FAILURE, not a route with no
+    points — see routing.FAILURE_RETRY.
+    """
+
+    __tablename__ = "route_cache"
+
+    route_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
+    profile: Mapped[str] = mapped_column(String(40), nullable=False, default="driving-car")
+    waypoints: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    geometry: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    fetched_at: Mapped[dt.datetime] = mapped_column(DateTime, nullable=False, default=utcnow)
 
 
 class GeocodeCache(Base):

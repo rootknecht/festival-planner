@@ -15,7 +15,7 @@ from app.models.notification import Tool
 from app.models.transport import Car, CarStop, MeetingPoint, Train, TrainChange
 from app.models.user import User
 from app.realtime.hub import notify_change
-from app.services import notifications, transport
+from app.services import notifications, routing, transport
 from app.services.access import require_membership, require_writable
 from app.services.geocode import geocode
 from app.templating import language_for, render
@@ -30,20 +30,69 @@ def _settings_for(request: Request):
     return getattr(request.app.state, "settings", None) or get_settings()
 
 
+def _place_stations(request: Request, db: DbSession, train: Train) -> None:
+    """Geocode a journey's stations, after saving and never on page view.
+
+    "Hamburg Hbf" is a station name, not an address, so " station" is appended
+    before asking: Nominatim resolves "Itzehoe station" to the platform and
+    plain "Itzehoe" to the town hall, and for a line drawn at country scale
+    either is fine — but a town called like a person is not.
+    """
+    settings = _settings_for(request)
+    # A change added a moment ago is not in this object's loaded collection
+    # yet; without the refresh its station is silently never geocoded.
+    db.refresh(train)
+
+    def place(name: str) -> tuple[float | None, float | None]:
+        name = (name or "").strip()
+        if not name:
+            return None, None
+        return geocode(db, f"{name} station", settings)
+
+    train.departure_lat, train.departure_lon = place(train.departure_station)
+    train.arrival_lat, train.arrival_lon = place(train.arrival_station)
+    for change in train.changes:
+        if change.lat is None and change.lon is None:
+            change.lat, change.lon = place(change.station)
+    db.commit()
+
+
 def _page(request: Request, db: DbSession, user: User, festival_id: int, **extra) -> Response:
     membership = require_membership(db, user, festival_id)
     festival = membership.festival
     cars = transport.cars_of(db, festival_id)
     points = transport.meeting_points_of(db, festival_id)
-    routes = {
-        car.id: [
+    settings = _settings_for(request)
+    trains = transport.trains_of(db, festival_id)
+    routes: dict[int, list[dict]] = {}
+    roads: dict[int, list[list[float]]] = {}
+    for car in cars:
+        car_points = transport.map_points(
+            car, festival.lat, festival.lon, points, language_for(request)
+        )
+        routes[car.id] = [
             {"label": point.label, "lat": point.lat, "lon": point.lon, "kind": point.kind}
-            for point in transport.map_points(
-                car, festival.lat, festival.lon, points, language_for(request)
-            )
+            for point in car_points
         ]
-        for car in cars
+        # Cached per waypoint list, so this is a request only when somebody
+        # changed the route — not once per page view. Without a key it is a
+        # no-op and the map keeps the straight dashed line.
+        road = routing.road_route(
+            db, [(point.lat, point.lon) for point in car_points], settings
+        )
+        if road:
+            roads[car.id] = road
+
+    train_routes = {
+        train.id: [
+            {"label": point.label, "lat": point.lat, "lon": point.lon, "kind": point.kind}
+            for point in transport.train_map_points(train, festival.lat, festival.lon)
+        ]
+        for train in trains
     }
+    # A journey with one placeable station is a dot, not a line; drop it rather
+    # than drawing a marker that suggests the map knows the route.
+    train_routes = {tid: pts for tid, pts in train_routes.items() if len(pts) > 1}
     return render(
         request,
         "tools/transport.html",
@@ -53,7 +102,9 @@ def _page(request: Request, db: DbSession, user: User, festival_id: int, **extra
             "badges": notifications.badges(db, user.id, festival_id),
             "active_tool": "transport",
             "cars": cars,
-            "trains": transport.trains_of(db, festival_id),
+            "trains": trains,
+            "train_routes": train_routes,
+            "roads": roads,
             "unassigned": transport.unassigned(db, festival_id),
             "colors": transport.color_labels(gettext_for(language_for(request))),
             "color_hex": transport.COLOR_HEX,
@@ -61,6 +112,11 @@ def _page(request: Request, db: DbSession, user: User, festival_id: int, **extra
             "max_meeting_points": transport.MAX_MEETING_POINTS,
             "max_train_changes": transport.MAX_TRAIN_CHANGES,
             "routes_json": json.dumps(routes),
+            # Road geometry per car, and the station chain per train. Both are
+            # separate attributes rather than a changed `routes` shape, so a
+            # cached page or an old service worker still draws something.
+            "roads_json": json.dumps(roads),
+            "train_routes_json": json.dumps(train_routes),
             "legend_json": json.dumps(
                 [
                     {
@@ -415,7 +471,7 @@ async def add_train(
             request, db, user, festival_id,
             error="A train needs at least a number or a departure station.",
         )
-    transport.add_train(
+    train = transport.add_train(
         db,
         festival_id=festival_id,
         number=number,
@@ -426,6 +482,7 @@ async def add_train(
         arrival_time=_parse_clock(arrival_time),
         actor=user,
     )
+    _place_stations(request, db, train)
     notify_change(festival_id, "transport")
     return RedirectResponse(f"/festivals/{festival_id}/transport", status_code=303)
 
@@ -462,6 +519,9 @@ async def edit_train(
         arrival_time=_parse_clock(arrival_time),
         actor=user,
     )
+    # A station that was edited is a different place, so it is placed again
+    # rather than keeping the old pin — cached queries make this nearly free.
+    _place_stations(request, db, train)
     notify_change(festival_id, "transport")
     return RedirectResponse(f"/festivals/{festival_id}/transport", status_code=303)
 
@@ -540,10 +600,11 @@ async def add_train_change(
     db: DbSession = Depends(get_db),
 ) -> Response:
     require_writable(require_membership(db, user, festival_id))
+    train = _train_of(db, festival_id, train_id)
     try:
         transport.add_change(
             db,
-            train=_train_of(db, festival_id, train_id),
+            train=train,
             station=station,
             change_at=_parse_clock(change_time),
             onward_number=onward_number,
@@ -551,6 +612,7 @@ async def add_train_change(
         )
     except transport.SeatRefused as exc:
         return _page(request, db, user, festival_id, error=str(exc))
+    _place_stations(request, db, train)
     notify_change(festival_id, "transport")
     return RedirectResponse(f"/festivals/{festival_id}/transport", status_code=303)
 

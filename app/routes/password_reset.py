@@ -13,6 +13,7 @@ from app.config import get_settings
 from app.deps import get_db
 from app.models.password_reset import PasswordReset
 from app.models.user import User, utcnow
+from app.services import branding
 from app.services.mail import Message, get_mailer
 from app.services.passwords import PasswordTooShort, hash_password, validate_password
 from app.services.sessions import revoke_all_sessions
@@ -58,9 +59,16 @@ async def forgot(
             )
         )
         db.commit()
-        link = f"{settings.base_url.rstrip('/')}/reset/{token}"
+        # No festival context here by design — the address may belong to
+        # someone in festivals on several domains, or none, and this route
+        # must not reveal which. The domain they are actually looking at is
+        # the honest brand, and it is allowlisted inside brand_for_host so a
+        # forged Host cannot redirect the link or forge its sender.
+        brand = branding.brand_for_host(settings, request.headers.get("host"))
+        link = f"{brand.base_url}/reset/{token}"
         get_mailer(settings).send(
             Message(
+                from_=brand.sender,
                 to=user.email,
                 subject="Festival Planner — reset your password",
                 body=(

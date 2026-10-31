@@ -28,6 +28,16 @@
       <option value="{{ key }}" {% if theme == key %}selected{% endif %}>{{ label }}</option>
       {% endfor %}
     </select>
+    <label for="mail_domain">{{ _("Invitation sender") }}</label>
+    {# Which domain invitations and reset links for THIS festival come from.
+       The list is the instance allowlist, never free text: the value becomes
+       a mail header and the front of a one-time link. #}
+    <select id="mail_domain" name="mail_domain">
+      <option value="">{{ _("Default") }}</option>
+      {% for domain, brand in brands.items() %}
+      <option value="{{ domain }}" {% if mail_domain == domain %}selected{% endif %}>{{ brand.sender }}</option>
+      {% endfor %}
+    </select>
     <p class="hint">Only the name is required — everything else, the theme included, can be changed later.</p>
     <button type="submit" class="btn btn--primary">Create</button>
   </form>

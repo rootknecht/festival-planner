@@ -354,6 +354,14 @@ msgstr "Gestrichelte Namen haben noch kein Konto."
 msgid "Theme"
 msgstr "Design"
 
+#: app/templates/festivals/new.html:31 app/templates/festivals/settings.html:43
+msgid "Invitation sender"
+msgstr "Absender für Einladungen"
+
+#: app/templates/festivals/new.html:33 app/templates/festivals/settings.html:45
+msgid "Default"
+msgstr "Standard"
+
 #: app/templates/profile/index.html:6
 msgid "Your festivals"
 msgstr "Deine Festivals"

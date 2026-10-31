@@ -50,6 +50,12 @@ class Settings(BaseSettings):
     #: give it a mailbox), in which case a reply would bounce into nothing.
     smtp_reply_to: str = ""
     smtp_starttls: bool = True
+    #: Public domains this instance may send and link as, comma separated.
+    #: Each entry is "domain" or "domain=sender@address"; a bare domain gets
+    #: noreply@<domain>. Empty means one brand only: smtp_from and base_url.
+    #: A festival picks one of these, so it is an allowlist, never free text —
+    #: the value becomes both a mail header and a URL base.
+    mail_brands: str = ""
 
     # Nominatim geocoding (usage-policy compliant defaults)
     nominatim_url: str = "https://nominatim.openstreetmap.org/search"
@@ -93,6 +99,26 @@ class Settings(BaseSettings):
     @property
     def mail_enabled(self) -> bool:
         return bool(self.smtp_host and self.smtp_from)
+
+    @property
+    def brand_senders(self) -> dict[str, str]:
+        """Domain -> From address, parsed from mail_brands.
+
+        Order is preserved: the first entry is what a festival without an
+        explicit choice inherits when base_url names no configured domain.
+        """
+        parsed: dict[str, str] = {}
+        for raw in self.mail_brands.split(","):
+            entry = raw.strip()
+            if not entry:
+                continue
+            domain, _, sender = entry.partition("=")
+            domain = domain.strip().lower().removeprefix("https://").removeprefix("http://")
+            domain = domain.strip("/")
+            if not domain:
+                continue
+            parsed[domain] = sender.strip() or f"noreply@{domain}"
+        return parsed
 
 
 _settings: Settings | None = None

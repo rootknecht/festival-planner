@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import logging
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request, status
 from fastapi.responses import RedirectResponse, Response
@@ -36,6 +37,8 @@ from app.services.notification_text import describe
 from app.services.tokens import generate_token, hash_token
 from app.templating import language_for, render
 from app.translations import gettext_for
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["festivals"])
 
@@ -228,24 +231,30 @@ async def clear_notification(
     return RedirectResponse(f"/festivals/{festival_id}", status_code=303)
 
 
-@router.get("/festivals/{festival_id}/settings")
-async def settings_form(
+def _settings_page(
     request: Request,
+    db: DbSession,
+    user: User,
     festival_id: int,
-    user: User = Depends(require_user),
-    db: DbSession = Depends(get_db),
+    error: str | None = None,
 ) -> Response:
+    """The settings page, so a refused action can redraw it with a reason."""
     membership = require_admin(db, user, festival_id)
     participants = db.scalars(
         select(Participant)
         .where(Participant.festival_id == festival_id)
         .order_by(func.lower(Participant.display_name))
     ).all()
+    # EVERY invitation, not just the unaccepted ones. An invitation that was
+    # relayed and then refused by the recipient's provider still reads as
+    # "sent" everywhere else, so the admin needs to see what became of each
+    # one. Newest first; the template shows the status word.
     invites = db.scalars(
         select(Invite)
-        .where(Invite.festival_id == festival_id, Invite.accepted_at.is_(None))
+        .where(Invite.festival_id == festival_id)
         .order_by(Invite.created_at.desc())
     ).all()
+    cleared = request.query_params.get("cleared")
     return render(
         request,
         "festivals/settings.html",
@@ -255,11 +264,22 @@ async def settings_form(
             "participants": participants,
             "invites": invites,
             "invite_link": request.query_params.get("link"),
+            "cleared": int(cleared) if cleared and cleared.isdigit() else None,
             "themes": THEMES,
             "brands": branding.brands(_settings_for(request)),
-            "error": None,
+            "error": error,
         },
     )
+
+
+@router.get("/festivals/{festival_id}/settings")
+async def settings_form(
+    request: Request,
+    festival_id: int,
+    user: User = Depends(require_user),
+    db: DbSession = Depends(get_db),
+) -> Response:
+    return _settings_page(request, db, user, festival_id)
 
 
 @router.post("/festivals/{festival_id}/settings")
@@ -460,6 +480,118 @@ async def revoke_invite(
     invite.revoked_at = utcnow()
     db.commit()
     return RedirectResponse(f"/festivals/{festival_id}/settings", status_code=303)
+
+
+@router.post("/festivals/{festival_id}/invites/{invite_id}/relink")
+async def relink_invite(
+    request: Request,
+    festival_id: int,
+    invite_id: int,
+    user: User = Depends(require_user),
+    db: DbSession = Depends(get_db),
+) -> Response:
+    """Issue a FRESH link for the same address and show it to the admin.
+
+    The raw token is never stored — only its hash — so an old link cannot be
+    shown again, and that is deliberate: a column full of working invitation
+    links is a column full of credentials. Instead the old invitation is
+    revoked and a new one takes its place, which is also the right behaviour
+    when a link went to an address that bounced.
+
+    No mail is sent. This exists precisely for the case where mail did not
+    arrive, so sending another one would repeat the failure.
+    """
+    settings = _settings_for(request)
+    require_writable(require_admin(db, user, festival_id))
+    invite = db.get(Invite, invite_id)
+    if invite is None or invite.festival_id != festival_id:
+        raise HTTPException(status_code=404, detail="not found")
+    if invite.accepted_at is not None:
+        # Nothing to re-issue: that person is already in the festival.
+        raise HTTPException(status_code=400, detail="that invitation was accepted")
+
+    invite.revoked_at = utcnow()
+    token = generate_token()
+    db.add(
+        Invite(
+            festival_id=festival_id,
+            email=invite.email,
+            token_hash=hash_token(token),
+            created_by=user.id,
+            expires_at=utcnow() + dt.timedelta(seconds=settings.invite_lifetime),
+            claims_participant_id=invite.claims_participant_id,
+        )
+    )
+    db.commit()
+    return RedirectResponse(f"/festivals/{festival_id}/settings?link={token}", status_code=303)
+
+
+@router.post("/festivals/{festival_id}/invites/clear")
+async def clear_invites(
+    request: Request,
+    festival_id: int,
+    user: User = Depends(require_user),
+    db: DbSession = Depends(get_db),
+) -> Response:
+    """Delete the invitations that can never be used again.
+
+    Accepted, revoked and expired rows only. An OPEN invitation is somebody's
+    pending link and is never swept up by a tidying button.
+    """
+    require_writable(require_admin(db, user, festival_id))
+    removed = 0
+    for invite in db.scalars(select(Invite).where(Invite.festival_id == festival_id)):
+        if invite.is_finished:
+            db.delete(invite)
+            removed += 1
+    db.commit()
+    return RedirectResponse(
+        f"/festivals/{festival_id}/settings?cleared={removed}", status_code=303
+    )
+
+
+@router.post("/festivals/{festival_id}/delete")
+async def delete_festival(
+    request: Request,
+    festival_id: int,
+    confirm_name: str = Form(default=""),
+    user: User = Depends(require_user),
+    db: DbSession = Depends(get_db),
+) -> Response:
+    """Erase a festival and everything in it. Admin only, name typed by hand.
+
+    Archiving is the reversible option and stays the default advice. This is
+    the other one: cars, trains, the bring list, expenses, polls, messages,
+    participants and invitations all go with it, for everybody, and no
+    undo exists short of last night's backup.
+
+    The typed name is the whole safety mechanism, so it is checked on the
+    SERVER. A disabled button or a browser confirm() is decoration — anyone
+    can POST this URL directly, and the festival is somebody else's work too.
+    """
+    membership = require_admin(db, user, festival_id)
+    festival = membership.festival
+    if confirm_name.strip() != festival.name:
+        # Rendering the page again keeps the admin where they were, with the
+        # festival intact and the reason stated.
+        return _settings_page(
+            request,
+            db,
+            user,
+            festival_id,
+            error=(
+                "The festival was not deleted: type its name exactly as it is "
+                "written to confirm."
+            ),
+        )
+
+    name = festival.name
+    # Children are removed by ON DELETE CASCADE, which is enforced here
+    # because the engine sets PRAGMA foreign_keys=ON for every connection.
+    db.delete(festival)
+    db.commit()
+    logger.info("festival %s (%r) deleted by user %s", festival_id, name, user.id)
+    return RedirectResponse("/", status_code=303)
 
 
 @router.post("/festivals/{festival_id}/archive")

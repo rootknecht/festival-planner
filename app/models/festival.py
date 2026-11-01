@@ -165,4 +165,38 @@ class Invite(Base):
 
     @property
     def is_open(self) -> bool:
-        return self.accepted_at is None and self.revoked_at is None
+        return self.accepted_at is None and self.revoked_at is None and not self.is_expired
+
+    @property
+    def is_expired(self) -> bool:
+        """Past its lifetime, whoever still holds the link.
+
+        SQLite hands back a naive datetime even though the column was written
+        as aware, so the comparison has to restore the timezone first — the
+        same guard as the invite and reset expiry checks in the routes.
+        """
+        expires = self.expires_at
+        if expires.tzinfo is None:
+            expires = expires.replace(tzinfo=dt.UTC)
+        return expires <= utcnow()
+
+    @property
+    def status(self) -> str:
+        """One word for the admin: accepted, revoked, expired or open.
+
+        Order matters. An invitation that was accepted and whose window has
+        since passed is ACCEPTED — the useful fact is that the person is in,
+        not that a dead link got deader.
+        """
+        if self.accepted_at is not None:
+            return "accepted"
+        if self.revoked_at is not None:
+            return "revoked"
+        if self.is_expired:
+            return "expired"
+        return "open"
+
+    @property
+    def is_finished(self) -> bool:
+        """Can never be used again, so it is only clutter on the page."""
+        return self.status != "open"

@@ -6,6 +6,14 @@
   <a class="btn" href="/festivals/{{ festival.id }}">Back to dashboard</a>
 </header>
 
+{# A refused action has to SAY so. The delete form checks the typed name on
+   the server, and without this block that refusal was silent: the page came
+   back looking untouched, which reads as "nothing happened" rather than
+   "nothing was deleted". #}
+{% if error %}
+<p class="alert alert--error" role="alert">{{ error }}</p>
+{% endif %}
+
 {% if invite_link %}
 <p class="alert" role="status">
   Invitation created. Copy this link if the email does not arrive:<br>
@@ -101,25 +109,55 @@
     <button class="btn btn--primary">Send invitation</button>
   </form>
 
+  {% if cleared is not none %}
+  <p class="hint">{{ cleared }} finished invitation(s) removed.</p>
+  {% endif %}
+
   {% if invites %}
   <table class="grid">
+    <thead>
+      <tr><th>Email</th><th>Status</th><th>Sent</th><th></th></tr>
+    </thead>
     <tbody>
     {% for invite in invites %}
       <tr>
         <td>{{ invite.email }}</td>
-        <td class="hint">{% if invite.revoked_at %}revoked{% else %}open{% endif %}</td>
+        {# An invitation that bounced at the recipient's provider still looks
+           "sent" everywhere else, so the status word is the whole point of
+           this table. #}
+        <td class="hint">{{ invite.status }}</td>
+        <td class="hint">{{ num_date(invite.created_at, language) }}</td>
         <td>
-          {% if not invite.revoked_at %}
-          <form method="post" action="/festivals/{{ festival.id }}/invites/{{ invite.id }}/revoke">
-            <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
-            <button class="btn">Revoke</button>
-          </form>
+          {% if invite.status != "accepted" %}
+          <div class="row">
+            <form method="post" action="/festivals/{{ festival.id }}/invites/{{ invite.id }}/relink">
+              <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+              {# The old link cannot be shown again: only its hash is stored.
+                 This revokes it and issues a fresh one to copy by hand. #}
+              <button class="btn btn--small" title="Issue a new link and show it here (no email is sent)">New link</button>
+            </form>
+            {% if invite.status == "open" %}
+            <form method="post" action="/festivals/{{ festival.id }}/invites/{{ invite.id }}/revoke">
+              <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+              <button class="btn btn--small">Revoke</button>
+            </form>
+            {% endif %}
+          </div>
           {% endif %}
         </td>
       </tr>
     {% endfor %}
     </tbody>
   </table>
+
+  {% if invites | selectattr("is_finished") | list %}
+  <form method="post" action="/festivals/{{ festival.id }}/invites/clear" class="stack">
+    <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+    {# Only accepted, revoked and expired rows. An open invitation is
+       somebody's pending link and is never swept up by a tidying button. #}
+    <button class="btn btn--small">Clear finished invitations</button>
+  </form>
+  {% endif %}
   {% endif %}
 </section>
 
@@ -136,5 +174,22 @@
     <button class="btn">Archive after the event</button>
   </form>
   {% endif %}
+
+  <details class="reveal">
+    <summary class="btn btn--small btn--danger">Delete festival</summary>
+    <form method="post" action="/festivals/{{ festival.id }}/delete" class="stack">
+      <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+      <p class="hint">
+        This erases the cars, trains, bring list, expenses, polls, messages,
+        participants and invitations of <strong>{{ festival.name }}</strong>,
+        for everybody. There is no undo. Archiving keeps all of it and can be
+        reversed.
+      </p>
+      <label for="confirm_name">Type the festival name to confirm</label>
+      <input id="confirm_name" name="confirm_name" type="text" autocomplete="off"
+             placeholder="{{ festival.name }}" required>
+      <button class="btn btn--small btn--danger">Delete this festival for everybody</button>
+    </form>
+  </details>
 </section>
 {% endblock %}

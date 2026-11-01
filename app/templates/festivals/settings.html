@@ -163,33 +163,38 @@
 
 <section class="card">
   <h2>Lifecycle</h2>
-  {% if festival.is_archived %}
-  <form method="post" action="/festivals/{{ festival.id }}/unarchive">
-    <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
-    <button class="btn">Reopen festival</button>
-  </form>
-  {% else %}
-  <form method="post" action="/festivals/{{ festival.id }}/archive">
-    <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
-    <button class="btn">Archive after the event</button>
-  </form>
-  {% endif %}
-
-  <details class="reveal">
-    <summary class="btn btn--small btn--danger">Delete festival</summary>
-    <form method="post" action="/festivals/{{ festival.id }}/delete" class="stack">
+  {# Both lifecycle actions on one line, same size: archiving and deleting are
+     the two ways a festival ends, and the reversible one should not look like
+     the more important choice by being twice the size. #}
+  <div class="row">
+    {% if festival.is_archived %}
+    <form method="post" action="/festivals/{{ festival.id }}/unarchive">
       <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
-      <p class="hint">
-        This erases the cars, trains, bring list, expenses, polls, messages,
-        participants and invitations of <strong>{{ festival.name }}</strong>,
-        for everybody. There is no undo. Archiving keeps all of it and can be
-        reversed.
-      </p>
-      <label for="confirm_name">Type the festival name to confirm</label>
-      <input id="confirm_name" name="confirm_name" type="text" autocomplete="off"
-             placeholder="{{ festival.name }}" required>
-      <button class="btn btn--small btn--danger">Delete this festival for everybody</button>
+      <button class="btn btn--small">Reopen festival</button>
     </form>
-  </details>
+    {% else %}
+    <form method="post" action="/festivals/{{ festival.id }}/archive">
+      <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+      <button class="btn btn--small">Archive after the event</button>
+    </form>
+    {% endif %}
+
+    <details class="reveal">
+      <summary class="btn btn--small btn--danger">Delete festival</summary>
+      <form method="post" action="/festivals/{{ festival.id }}/delete" class="stack">
+        <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
+        <p class="hint">
+          This erases the cars, trains, bring list, expenses, polls, messages,
+          participants and invitations of <strong>{{ festival.name }}</strong>,
+          for everybody. There is no undo. Archiving keeps all of it and can be
+          reversed.
+        </p>
+        <label for="confirm_name">Type the festival name to confirm</label>
+        <input id="confirm_name" name="confirm_name" type="text" autocomplete="off"
+               placeholder="{{ festival.name }}" required>
+        <button class="btn btn--small btn--danger">Delete this festival for everybody</button>
+      </form>
+    </details>
+  </div>
 </section>
 {% endblock %}

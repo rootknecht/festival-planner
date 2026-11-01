@@ -105,7 +105,7 @@
   {# A direct way into your own column, needed because you have no row in the
      table until you bring something. #}
   <details class="reveal">
-    <summary class="btn btn--small">{{ icon("plus") }} {{ _("Add what I bring") }}</summary>
+    <summary class="btn">{{ icon("plus") }} {{ _("Add what I bring") }}</summary>
     <form method="post" action="/festivals/{{ festival.id }}/bringlist/cells" class="stack">
       <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
       <input type="hidden" name="participant_id" value="{{ my_participant_id }}">
@@ -120,7 +120,7 @@
         <option value="">—</option>
         {% for unit in all_units %}<option value="{{ unit }}">{{ unit }}</option>{% endfor %}
       </select>
-      <button class="btn btn--small btn--primary">{{ _("Save") }}</button>
+      <button class="btn btn--primary">{{ _("Save") }}</button>
     </form>
   </details>
     {% endif %}
@@ -132,7 +132,7 @@
        nobody can ever act for them except an admin. The permission check
        lives in the route; this is only the way in. #}
     <details class="reveal">
-      <summary class="btn btn--small">{{ icon("plus") }} {{ _("Add for somebody") }}</summary>
+      <summary class="btn">{{ icon("plus") }} {{ _("Add for somebody") }}</summary>
       <form method="post" action="/festivals/{{ festival.id }}/bringlist/cells" class="stack">
         <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
         <label for="for-who">{{ _("Who brings it") }}</label>
@@ -153,7 +153,7 @@
           {% for unit in all_units %}<option value="{{ unit }}">{{ unit }}</option>{% endfor %}
         </select>
         <p class="hint">{{ _("They are told that you entered this for them.") }}</p>
-        <button class="btn btn--small btn--primary">{{ _("Save") }}</button>
+        <button class="btn btn--primary">{{ _("Save") }}</button>
       </form>
     </details>
     {% endif %}
@@ -162,7 +162,7 @@
     {# Columns are an admin concern: renaming an item or changing its units
        changes what everybody else is agreeing to. #}
     <details class="reveal">
-      <summary class="btn btn--small">{{ icon("pencil") }} {{ _("Edit items") }}</summary>
+      <summary class="btn">{{ icon("pencil") }} {{ _("Edit items") }}</summary>
       <div class="stack">
         {% for row in rows %}
         <form method="post" action="/festivals/{{ festival.id }}/bringlist/rows/{{ row.id }}/edit" class="row">
@@ -171,7 +171,7 @@
                  aria-label="{{ _('Item') }}">
           <input name="units" type="text" maxlength="200" value="{{ row.units | join(', ') }}"
                  placeholder="{{ _('L, cans, crates') }}" aria-label="{{ _('Units') }}">
-          <button class="btn btn--small">{{ _("Save") }}</button>
+          <button class="btn">{{ _("Save") }}</button>
           <button class="linkbtn" formaction="/festivals/{{ festival.id }}/bringlist/rows/{{ row.id }}/delete"
                   title="{{ _('Delete row') }}">{{ icon("close") }}</button>
         </form>
@@ -181,7 +181,7 @@
     {% endif %}
 
     <details class="reveal">
-      <summary class="btn btn--small">{{ icon("plus") }} {{ _("Add an item") }}</summary>
+      <summary class="btn">{{ icon("plus") }} {{ _("Add an item") }}</summary>
       <form method="post" action="/festivals/{{ festival.id }}/bringlist/rows" class="stack">
         <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
         <label for="label">{{ _("What has to come along?") }}</label>
@@ -189,7 +189,7 @@
         <label for="units">{{ _("Units (optional, comma separated)") }}</label>
         <input id="units" name="units" type="text" maxlength="200" placeholder="{{ _('L, cans, crates') }}">
         <p class="hint">{{ _("With units the total adds up per unit, for example “80 L + 120 cans”.") }}</p>
-        <button class="btn btn--small btn--primary">{{ _("Add item") }}</button>
+        <button class="btn btn--primary">{{ _("Add item") }}</button>
       </form>
     </details>
   </div>

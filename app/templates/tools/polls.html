@@ -40,7 +40,7 @@
       {# No "Close poll" here any more: closing lives in the admin's "Edit
          polls" panel, next to reopening and deleting, so one poll does not
          offer the same action in two places. #}
-      <button class="btn btn--small btn--primary">{{ _("Save my answer") }}</button>
+      <button class="btn btn--primary">{{ _("Save my answer") }}</button>
     </div>
     {% endif %}
   </form>
@@ -59,7 +59,7 @@
 <section class="card">
   <div class="row">
   <details class="reveal">
-    <summary class="btn btn--small btn--primary">{{ icon("plus") }} {{ _("New poll") }}</summary>
+    <summary class="btn btn--primary">{{ icon("plus") }} {{ _("New poll") }}</summary>
   <form method="post" action="/festivals/{{ festival.id }}/polls" class="stack">
     <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
     <label for="question">{{ _("Question") }}</label>
@@ -73,7 +73,7 @@
       <input class="optionfield" name="options" type="text" maxlength="200" required
              placeholder="{{ _('Second option') }}">
     </div>
-    <button type="button" class="btn btn--small" data-add-option="[data-option-list]">
+    <button type="button" class="btn" data-add-option="[data-option-list]">
       {{ _("Add option") }}
     </button>
     <label for="mode">{{ _("Answers") }}</label>
@@ -83,7 +83,7 @@
     </select>
     <label for="closes_on">{{ _("Closes on (optional)") }}</label>
     <input id="closes_on" name="closes_on" type="date">
-    <button class="btn btn--small btn--primary">{{ _("Ask everyone") }}</button>
+    <button class="btn btn--primary">{{ _("Ask everyone") }}</button>
   </form>
   </details>
 
@@ -91,7 +91,7 @@
   {# Reopen, close and delete behind one button beside "New poll" — the three
      things an admin does to an existing poll, in one place. #}
   <details class="reveal">
-    <summary class="btn btn--small">{{ icon("pencil") }} {{ _("Edit polls") }}</summary>
+    <summary class="btn">{{ icon("pencil") }} {{ _("Edit polls") }}</summary>
     <div class="stack">
       {% for entry in polls %}
       <div class="row row--between">
@@ -103,12 +103,12 @@
           {% if entry.closed %}
           <form method="post" action="/festivals/{{ festival.id }}/polls/{{ entry.poll.id }}/reopen" class="inline">
             <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
-            <button class="btn btn--small">{{ _("Reopen") }}</button>
+            <button class="btn">{{ _("Reopen") }}</button>
           </form>
           {% else %}
           <form method="post" action="/festivals/{{ festival.id }}/polls/{{ entry.poll.id }}/close" class="inline">
             <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
-            <button class="btn btn--small">{{ _("Close") }}</button>
+            <button class="btn">{{ _("Close") }}</button>
           </form>
           {% endif %}
           <form method="post" action="/festivals/{{ festival.id }}/polls/{{ entry.poll.id }}/delete" class="inline">

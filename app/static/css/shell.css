@@ -44,8 +44,11 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 2.25rem;
-  height: 2.25rem;
+  /* Same height as .btn, so the header does not mix a 36px icon button with
+     a 30px button on one line. Kept at least as wide as it is tall, so an
+     icon button stays square rather than becoming a slot. */
+  min-width: 1.875rem;
+  height: 1.875rem;
   padding: 0 0.5rem;
   border: 1px solid var(--fp-border);
   border-radius: var(--fp-radius-s);
@@ -260,7 +263,8 @@ textarea { min-height: 4rem; resize: vertical; }
 .reveal[open] > summary { margin-bottom: .6rem; }
 .reveal > form { border-left: 2px solid var(--fp-border); padding-left: .7rem; }
 .reveal--inline { display: inline-block; }
-.btn--small { padding: .25rem .55rem; font-size: .85rem; }
+/* .btn--small is gone: .btn carries that size now, for every page, so a
+   modifier meaning "the normal size" was only a way to forget it somewhere. */
 .reveal > summary .icon { width: 16px; height: 16px; }
 
 

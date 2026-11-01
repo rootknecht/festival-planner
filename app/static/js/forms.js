@@ -66,7 +66,7 @@
 
     var cancel = document.createElement("button");
     cancel.type = "button";
-    cancel.className = "btn btn--small";
+    cancel.className = "btn";
     cancel.textContent = labelForCancel();
     cancel.addEventListener("click", function () {
       form.reset();

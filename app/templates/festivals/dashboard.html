@@ -32,7 +32,7 @@
 <section class="card">
   <div class="row row--between">
     <h2>{{ _("Finance") }}</h2>
-    <a class="btn btn--small" href="/festivals/{{ festival.id }}/expenses">{{ _("Expenses") }}</a>
+    <a class="btn" href="/festivals/{{ festival.id }}/expenses">{{ _("Expenses") }}</a>
   </div>
   <ul class="balance__people">
     {% for line in balance.by_person %}
@@ -63,7 +63,7 @@
   <div class="row row--between">
     <h2>{{ _("Open for you") }}</h2>
     {% if membership.is_admin %}
-    <a class="btn btn--small" href="/festivals/{{ festival.id }}/settings">{{ _("Settings") }}</a>
+    <a class="btn" href="/festivals/{{ festival.id }}/settings">{{ _("Settings") }}</a>
     {% endif %}
   </div>
 

@@ -43,7 +43,7 @@
       {% if line.can_claim %}
       <form method="post" action="/festivals/{{ festival.id }}/expenses/settle/{{ line.participant_id }}/paid" class="inline">
         <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
-        <button class="btn btn--small">{{ _("I paid this") }}</button>
+        <button class="btn">{{ _("I paid this") }}</button>
       </form>
       {% endif %}
       {% if line.can_close_alone and not line.can_confirm %}
@@ -51,7 +51,7 @@
          would stay open forever. Closing it is the creditor's own call. #}
       <form method="post" action="/festivals/{{ festival.id }}/expenses/settle/{{ line.participant_id }}/received" class="inline">
         <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
-        <button class="btn btn--small">{{ _("Has been paid") }}</button>
+        <button class="btn">{{ _("Has been paid") }}</button>
       </form>
       {% endif %}
       {% if line.can_confirm %}
@@ -59,7 +59,7 @@
          own debt. #}
       <form method="post" action="/festivals/{{ festival.id }}/expenses/settle/{{ line.participant_id }}/received" class="inline">
         <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
-        <button class="btn btn--small btn--primary">{{ _("Received") }}</button>
+        <button class="btn btn--primary">{{ _("Received") }}</button>
       </form>
       {% endif %}
       {% endif %}
@@ -75,7 +75,7 @@
 {% if not festival.is_archived and my_participant_id %}
 <section class="card">
   <details class="reveal">
-    <summary class="btn btn--small btn--primary">{{ icon("plus") }} {{ _("Add a cost") }}</summary>
+    <summary class="btn btn--primary">{{ icon("plus") }} {{ _("Add a cost") }}</summary>
     <form method="post" action="/festivals/{{ festival.id }}/expenses" class="stack">
       <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
       {# Always your own name: one person must not be able to invent a debt for
@@ -99,8 +99,8 @@
 
       <div data-split-panel="selection" hidden>
         <div class="row">
-          <button type="button" class="btn btn--small" data-select-all="#split-selection">{{ _("Select all") }}</button>
-          <button type="button" class="btn btn--small" data-select-none="#split-selection">{{ _("Select none") }}</button>
+          <button type="button" class="btn" data-select-all="#split-selection">{{ _("Select all") }}</button>
+          <button type="button" class="btn" data-select-none="#split-selection">{{ _("Select none") }}</button>
         </div>
         <ul class="checks" id="split-selection">
           {% for participant in participants %}
@@ -128,7 +128,7 @@
 
       <label for="note">{{ _("Note (optional)") }}</label>
       <input id="note" name="note" type="text" maxlength="400">
-      <button class="btn btn--small btn--primary">{{ _("Save cost") }}</button>
+      <button class="btn btn--primary">{{ _("Save cost") }}</button>
     </form>
   </details>
 </section>
@@ -225,7 +225,7 @@
                 </ul>
               </fieldset>
               {% endif %}
-              <button class="btn btn--small btn--primary">{{ _("Save") }}</button>
+              <button class="btn btn--primary">{{ _("Save") }}</button>
             </form>
           </details>
           <form method="post" action="/festivals/{{ festival.id }}/expenses/{{ expense.id }}/delete" class="inline">

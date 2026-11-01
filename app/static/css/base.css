@@ -100,12 +100,21 @@ a:focus-visible {
      two lines and the button came out 51px tall next to a 30px Cancel — it
      read as a different size when it was only a different shape. */
   white-space: nowrap;
-  padding: 0.65rem 1.1rem;
+  /* ONE button height across the whole app. The app had drifted into two
+     sizes: the original 47px and the .btn--small 30px that newer rows used,
+     so pages mixed them and the settings page mixed them on one line. This
+     is the single source of that height — change it here, not per page. */
+  padding: 0.25rem 0.55rem;
+  font-size: 0.85rem;
+  /* Spelled out because .btn no longer says `font: inherit`, and that
+     shorthand had been carrying the inherited line-height. Dropping it
+     silently took 4px off every button in the app. */
+  line-height: 1.5;
   border: 1px solid var(--fp-border);
   border-radius: var(--fp-radius-s);
   background: var(--fp-surface-2);
   color: var(--fp-fg);
-  font: inherit;
+  font-family: inherit;
   font-weight: 600;
   cursor: pointer;
 }

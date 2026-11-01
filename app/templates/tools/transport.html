@@ -141,7 +141,7 @@
     {# The name list only appears once asked for; it was permanently open on
        every car and pushed the cars themselves off the screen. #}
     <details class="reveal">
-      <summary class="btn btn--small">{{ icon("plus") }} {{ _("Add passenger") }}</summary>
+      <summary class="btn">{{ icon("plus") }} {{ _("Add passenger") }}</summary>
       <form method="post" action="/festivals/{{ festival.id }}/transport/cars/{{ car.id }}/seats" class="row">
         <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
         <select name="participant_id" aria-label="{{ _('Add passenger') }}">
@@ -149,12 +149,12 @@
           <option value="{{ participant.id }}">{{ participant.display_name }}</option>
           {% endfor %}
         </select>
-        <button class="btn btn--small">{{ _("Add passenger") }}</button>
+        <button class="btn">{{ _("Add passenger") }}</button>
       </form>
     </details>
     {% endif %}
     <details class="reveal">
-      <summary class="btn btn--small">{{ icon("plus") }} {{ _("Pickup") }}</summary>
+      <summary class="btn">{{ icon("plus") }} {{ _("Pickup") }}</summary>
       <form method="post" action="/festivals/{{ festival.id }}/transport/cars/{{ car.id }}/stops" class="stack">
         <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
         <label for="stop-{{ car.id }}">{{ _("Address") }}</label>
@@ -166,7 +166,7 @@
           <option value="{{ seat.participant.id }}">{{ seat.participant.display_name }}</option>
           {% endfor %}
         </select>
-        <button class="btn btn--small">{{ _("Add stop") }}</button>
+        <button class="btn">{{ _("Add stop") }}</button>
       </form>
     </details>
 
@@ -174,7 +174,7 @@
        guesses and corrected later; without this you had to delete the car,
        which threw out its passengers. #}
     <details class="reveal">
-      <summary class="btn btn--small">{{ icon("pencil") }} {{ _("Edit car") }}</summary>
+      <summary class="btn">{{ icon("pencil") }} {{ _("Edit car") }}</summary>
       <form method="post" action="/festivals/{{ festival.id }}/transport/cars/{{ car.id }}/edit" class="stack">
         <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
         <label for="editcolor-{{ car.id }}">{{ _("Colour") }}</label>
@@ -202,13 +202,13 @@
         </label>
         {% endif %}
         <div class="row">
-          <button class="btn btn--small btn--primary">{{ _("Save changes") }}</button>
+          <button class="btn btn--primary">{{ _("Save changes") }}</button>
           {% if membership.is_admin or (car.driver and car.driver.user_id == user.id) %}
           {# Deleting lives inside the edit form, where the other deliberate
              changes are, and says "Delete" in words: a bare cross next to a
              passenger list is one mis-tap away from destroying everybody's
              seats. #}
-          <button class="btn btn--small btn--danger"
+          <button class="btn btn--danger"
                   formaction="/festivals/{{ festival.id }}/transport/cars/{{ car.id }}/delete">
             {{ _("Delete") }}
           </button>
@@ -285,7 +285,7 @@
     {% if unassigned %}
     {# No seat limit, so this never disappears the way a full car's does. #}
     <details class="reveal">
-      <summary class="btn btn--small">{{ icon("plus") }} {{ _("Add passenger") }}</summary>
+      <summary class="btn">{{ icon("plus") }} {{ _("Add passenger") }}</summary>
       <form method="post" action="/festivals/{{ festival.id }}/transport/trains/{{ train.id }}/riders" class="row">
         <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
         <select name="participant_id" aria-label="{{ _('Who') }}">
@@ -293,14 +293,14 @@
           <option value="{{ participant.id }}">{{ participant.display_name }}</option>
           {% endfor %}
         </select>
-        <button class="btn btn--small btn--primary">{{ _("Save") }}</button>
+        <button class="btn btn--primary">{{ _("Save") }}</button>
       </form>
     </details>
     {% endif %}
 
     {% if train.changes | length < max_train_changes %}
     <details class="reveal">
-      <summary class="btn btn--small">{{ icon("plus") }} {{ _("Add a change") }}</summary>
+      <summary class="btn">{{ icon("plus") }} {{ _("Add a change") }}</summary>
       <form method="post" action="/festivals/{{ festival.id }}/transport/trains/{{ train.id }}/changes" class="stack">
         <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
         <label for="cstation{{ train.id }}">{{ _("Change station") }}</label>
@@ -309,13 +309,13 @@
         <input id="ctime{{ train.id }}" name="change_time" type="time">
         <label for="connward{{ train.id }}">{{ _("Onward train (optional)") }}</label>
         <input id="connward{{ train.id }}" name="onward_number" type="text" maxlength="40" placeholder="{{ _('ICE 596') }}">
-        <button class="btn btn--small btn--primary">{{ _("Save") }}</button>
+        <button class="btn btn--primary">{{ _("Save") }}</button>
       </form>
     </details>
     {% endif %}
 
     <details class="reveal">
-      <summary class="btn btn--small">{{ icon("pencil") }} {{ _("Edit train") }}</summary>
+      <summary class="btn">{{ icon("pencil") }} {{ _("Edit train") }}</summary>
       <form method="post" action="/festivals/{{ festival.id }}/transport/trains/{{ train.id }}/edit" class="stack">
         <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
         <label for="tnum{{ train.id }}">{{ _("Train number") }}</label>
@@ -331,11 +331,11 @@
         <label for="tarr{{ train.id }}">{{ _("Arrival time (optional)") }}</label>
         <input id="tarr{{ train.id }}" name="arrival_time" type="time" value="{{ train.arrival_time.strftime('%H:%M') if train.arrival_time else '' }}">
         <div class="row">
-          <button class="btn btn--small btn--primary">{{ _("Save") }}</button>
+          <button class="btn btn--primary">{{ _("Save") }}</button>
           {% if membership.is_admin or train.created_by == user.id %}
           {# A train has no driver, so whoever entered the connection is its
              owner — same rule as a car, enforced in the route as well. #}
-          <button class="btn btn--small btn--danger"
+          <button class="btn btn--danger"
                   formaction="/festivals/{{ festival.id }}/transport/trains/{{ train.id }}/delete">
             {{ _("Delete") }}
           </button>
@@ -355,7 +355,7 @@
      point are the two things you come to this page to create. #}
   <div class="row">
   <details class="reveal">
-    <summary class="btn btn--small btn--primary">{{ icon("plus") }} {{ _("Add a car") }}</summary>
+    <summary class="btn btn--primary">{{ icon("plus") }} {{ _("Add a car") }}</summary>
     <form method="post" action="/festivals/{{ festival.id }}/transport/cars" class="stack">
       <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
       <label for="driver">{{ _("Who drives?") }}</label>
@@ -383,13 +383,13 @@
          wrong one is worse than none because people plan around it. Meeting
          points keep their time — that is the moment that must be exact. #}
       <input id="when" name="departure_date" type="date">
-      <button class="btn btn--small btn--primary">{{ _("Add car") }}</button>
+      <button class="btn btn--primary">{{ _("Add car") }}</button>
     </form>
   </details>
   <details class="reveal">
     {# Right next to "Add a car", because the question people arrive with is
        "how am I getting there", and the answer is one or the other. #}
-    <summary class="btn btn--small btn--primary">{{ icon("plus") }} {{ _("Add a train") }}</summary>
+    <summary class="btn btn--primary">{{ icon("plus") }} {{ _("Add a train") }}</summary>
     <form method="post" action="/festivals/{{ festival.id }}/transport/trains" class="stack">
       <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
       <label for="train_number">{{ _("Train number") }}</label>
@@ -408,7 +408,7 @@
       <label for="train_arr">{{ _("Arrival time (optional)") }}</label>
       <input id="train_arr" name="arrival_time" type="time">
       <p class="hint">{{ _("A train has room for everybody — no seat count to keep.") }}</p>
-      <button class="btn btn--small btn--primary">{{ _("Add train") }}</button>
+      <button class="btn btn--primary">{{ _("Add train") }}</button>
     </form>
   </details>
   {% if cars %}
@@ -416,7 +416,7 @@
      destroys other people's seats, so it belongs with the deliberate actions
      rather than one mis-tap away from the passenger list. #}
   <details class="reveal">
-    <summary class="btn btn--small">{{ icon("pencil") }} {{ _("Edit cars") }}</summary>
+    <summary class="btn">{{ icon("pencil") }} {{ _("Edit cars") }}</summary>
     <div class="stack">
       {% for car in cars %}
       <div class="row row--between">
@@ -430,7 +430,7 @@
         {% if membership.is_admin or (car.driver and car.driver.user_id == user.id) %}
         <form method="post" action="/festivals/{{ festival.id }}/transport/cars/{{ car.id }}/delete" class="inline">
           <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
-          <button class="btn btn--small btn--danger"
+          <button class="btn btn--danger"
                   title="{{ _('Remove this car and free its passengers') }}">{{ _("Delete") }}</button>
         </form>
         {% endif %}
@@ -442,7 +442,7 @@
 
   {% if membership.is_admin and not festival.is_archived and meeting_points | length < max_meeting_points %}
     <details class="reveal">
-      <summary class="btn btn--small">{{ icon("plus") }} {{ _("Add a meeting point") }}</summary>
+      <summary class="btn">{{ icon("plus") }} {{ _("Add a meeting point") }}</summary>
       <form method="post" action="/festivals/{{ festival.id }}/transport/meeting-points" class="stack">
         <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
         <label for="mp-name">{{ _("Name") }}</label>
@@ -457,8 +457,8 @@
         </div>
         {% if cars %}
         <div class="row">
-          <button type="button" class="btn btn--small" data-select-all="#cars-new">{{ _("Select all") }}</button>
-          <button type="button" class="btn btn--small" data-select-none="#cars-new">{{ _("Select none") }}</button>
+          <button type="button" class="btn" data-select-all="#cars-new">{{ _("Select all") }}</button>
+          <button type="button" class="btn" data-select-none="#cars-new">{{ _("Select none") }}</button>
         </div>
         <ul class="checks" id="cars-new">
           {% for car in cars %}
@@ -469,7 +469,7 @@
           {% endfor %}
         </ul>
         {% endif %}
-        <button class="btn btn--small btn--primary">{{ _("Add meeting point") }}</button>
+        <button class="btn btn--primary">{{ _("Add meeting point") }}</button>
       </form>
     </details>
   {% endif %}
@@ -511,12 +511,12 @@
     </p>
     {% if membership.is_admin and not festival.is_archived and cars %}
     <details class="reveal">
-      <summary class="btn btn--small">{{ icon("pencil") }} {{ _("Choose cars") }}</summary>
+      <summary class="btn">{{ icon("pencil") }} {{ _("Choose cars") }}</summary>
       <form method="post" action="/festivals/{{ festival.id }}/transport/meeting-points/{{ point.id }}/cars" class="stack">
         <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
         <div class="row">
-          <button type="button" class="btn btn--small" data-select-all="#cars-{{ point.id }}">{{ _("Select all") }}</button>
-          <button type="button" class="btn btn--small" data-select-none="#cars-{{ point.id }}">{{ _("Select none") }}</button>
+          <button type="button" class="btn" data-select-all="#cars-{{ point.id }}">{{ _("Select all") }}</button>
+          <button type="button" class="btn" data-select-none="#cars-{{ point.id }}">{{ _("Select none") }}</button>
         </div>
         <ul class="checks" id="cars-{{ point.id }}">
           {% for car in cars %}
@@ -528,7 +528,7 @@
           </label></li>
           {% endfor %}
         </ul>
-        <button class="btn btn--small btn--primary">{{ _("Save selection") }}</button>
+        <button class="btn btn--primary">{{ _("Save selection") }}</button>
       </form>
     </details>
     {% endif %}

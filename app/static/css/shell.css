@@ -299,18 +299,20 @@ textarea { min-height: 4rem; resize: vertical; }
 .cell > summary { cursor: pointer; list-style: none; }
 .cell > summary::-webkit-details-marker { display: none; }
 .cell > summary::marker { content: ""; }
-/* min-height is load-bearing. An empty cell renders an empty summary, and an
-   empty inline-block is 0px TALL however wide min-width makes it — so the
-   cell cannot be clicked. It LOOKS fine as long as some other cell in the
-   same table row has text, because that props the row up; measure a row whose
-   cells are ALL empty (everything cleared) and the boxes are 35x0. Keep any
-   change to this rule height-preserving. */
+/* min-height is a SECOND line of defence, not the fix. An empty summary has
+   no line box and is 0px tall however wide min-width makes it, so a blank cell
+   cannot be clicked. The template now carries a non-breaking space for exactly
+   that reason, because /static/ goes through the service worker and a
+   stylesheet can arrive late; this keeps the box honest once it does.
+   It LOOKS fine while a sibling cell in the same row has text, because that
+   props the row up — measure a row whose cells are ALL empty. */
 .cell__value { display: inline-block; min-width: 2.2rem; min-height: 1.5rem; }
-/* An empty cell shows nothing at all, so hover is the only hint that there is
-   something to click. Rest state stays blank on purpose — the dash that used
-   to sit here was requested gone. */
-.cell > summary:hover .cell__value,
-.cell > summary:focus-visible .cell__value {
+/* A blank cell shows nothing, so hover is the only hint that there is
+   something to click. The selector must target the summary ITSELF — it carries
+   .cell__value, so a descendant selector matches nothing, which is how the
+   first version of this rule shipped as dead code. */
+.cell > summary.cell__value:hover,
+.cell > summary.cell__value:focus-visible {
   background: var(--fp-border);
   border-radius: 3px;
 }

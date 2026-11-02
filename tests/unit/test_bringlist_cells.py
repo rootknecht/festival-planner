@@ -59,3 +59,38 @@ def test_the_empty_cell_keeps_a_clickable_height() -> None:
     block = match.group(1)
     assert "min-height" in block, ".cell__value must keep a min-height when empty"
     assert "min-width" in block, ".cell__value must keep a min-width when empty"
+
+
+def test_a_blank_cell_carries_its_click_target_in_the_html() -> None:
+    """The click target may not depend on a stylesheet.
+
+    /static/ goes through the service worker, so shell.css can arrive late or
+    not at all while the template is always fetched fresh. An empty summary
+    has no line box and cannot be clicked, so the blank cell renders a
+    non-breaking space instead of nothing.
+    """
+    template = (
+        Path(__file__).resolve().parents[2]
+        / "app" / "templates" / "tools" / "bringlist.html"
+    )
+    body = template.read_text(encoding="utf-8")
+    assert "{% if shown %}{{ shown }}{% else %}&nbsp;{% endif %}</summary>" in body
+
+
+def test_the_service_worker_does_not_serve_static_cache_first() -> None:
+    """Cache-first on /static/ made CSS and JS fixes unable to reach an install.
+
+    shell.css was answered from the precache for as long as that cache existed,
+    and a service worker answers a hard reload too, so there was no way out
+    from the browser side. Network-first with a cache fallback keeps offline
+    working without freezing the shell.
+    """
+    sw = (
+        Path(__file__).resolve().parents[2]
+        / "app" / "static" / "js" / "sw.js"
+    ).read_text(encoding="utf-8")
+    assert "hit || fetch(request)" not in sw, "static is cache-first again"
+    assert "caches.match(request)" in sw, "offline fallback is gone"
+    # The cache name must have moved on from v1, or existing installs keep
+    # their stale entries: activate() only deletes caches it does not know.
+    assert 'var CACHE = "festival-shell-v1"' not in sw

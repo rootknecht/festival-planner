@@ -40,6 +40,7 @@
           {% for row in rows %}
           {% set cell = row.cells.get(participant.id) %}
           {% set editable = participant.id == my_participant_id or membership.is_admin %}
+          {% set shown = cell.display if cell else "" %}
           <td>
             {% if festival.is_archived or not editable %}
             {# Only your own column is editable; an admin may edit anyone's.
@@ -50,14 +51,22 @@
                twenty people and ten items was mostly dashes, which read as
                data. An untouched cell and a cleared one look the same because
                they MEAN the same. #}
-            {{ cell.display if cell else "" }}
+            {% if shown %}{{ shown }}{% else %}&nbsp;{% endif %}
             {% else %}
             {# Click to edit: the number field and its stepper arrows appear
                only after a click. Permanently visible steppers made the table
                look like a spreadsheet and were easy to nudge by accident while
                scrolling on a phone. #}
             <details class="cell">
-              <summary class="cell__value" title="{{ _('Click to change') }}">{{ cell.display if cell else "" }}</summary>
+              {# THE NON-BREAKING SPACE IS THE CLICK TARGET, and it belongs in
+                 the HTML rather than in CSS. An empty summary has no line box
+                 and is 0px tall, so a blank cell cannot be clicked at all. CSS
+                 can fix that with min-height, but the service worker serves
+                 /static/ from its cache, so a stylesheet can arrive late or
+                 not at all while this template is always fetched fresh. The
+                 cell must not lose its click target because of a cached file.
+                 Invisible on screen, so the cell still reads as blank. #}
+              <summary class="cell__value" title="{{ _('Click to change') }}">{% if shown %}{{ shown }}{% else %}&nbsp;{% endif %}</summary>
               <form method="post" action="/festivals/{{ festival.id }}/bringlist/cells" class="cellform">
                 <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
                 <input type="hidden" name="row_id" value="{{ row.id }}">

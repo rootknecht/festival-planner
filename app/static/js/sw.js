@@ -4,7 +4,10 @@
    push notifications the server sends. Pages themselves are always fetched
    fresh: a festival's data must never be served stale from a cache. */
 
-var CACHE = "festival-shell-v1";
+/* BUMP THIS whenever the shell changes. "activate" deletes every cache whose
+   name is not this one, so a bump is what purges stale entries from installs
+   that are already out there. */
+var CACHE = "festival-shell-v2";
 var SHELL = [
   "/offline",
   "/static/css/base.css",
@@ -47,10 +50,32 @@ self.addEventListener("fetch", function (event) {
   if (url.origin !== location.origin) return;
 
   if (url.pathname.indexOf("/static/") === 0) {
+    /* NETWORK FIRST, cache as the fallback.
+
+       This was cache-first ("hit || fetch"), which meant a changed stylesheet
+       could never reach an installed app: shell.css was answered from
+       festival-shell-v1 for as long as that cache existed, and because a
+       service worker also answers a hard reload, Ctrl+Shift+R could not break
+       out of it either. A bring-list fix that lived in CSS therefore shipped
+       to the server and never arrived on the phone.
+
+       Offline still works — that is what the catch() is for — and a fresh copy
+       replaces the cached one on every successful fetch, so the offline shell
+       stays current instead of frozen at whatever was first installed. */
     event.respondWith(
-      caches.match(request).then(function (hit) {
-        return hit || fetch(request);
-      })
+      fetch(request)
+        .then(function (response) {
+          if (response && response.ok) {
+            var copy = response.clone();
+            caches.open(CACHE).then(function (cache) {
+              cache.put(request, copy);
+            });
+          }
+          return response;
+        })
+        .catch(function () {
+          return caches.match(request);
+        })
     );
     return;
   }

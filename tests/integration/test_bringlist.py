@@ -515,8 +515,9 @@ def test_clearing_an_amount_leaves_a_blank_but_still_clickable_cell(
     page = owner.get(f"/festivals/{festival_id}/bringlist").text
     table = page.split("<tbody>")[1].split("</tbody>")[0]
 
-    # The way back in still exists: an empty summary, not a missing one.
-    assert 'title="Click to change"></summary>' in table
+    # The way back in still exists, and it carries a non-breaking space so
+    # the summary has a line box even with no stylesheet applied.
+    assert 'title="Click to change">&nbsp;</summary>' in table
     # And it is blank, not a dash.
     assert ">—</summary>" not in table
     # The untouched item still shows its own value.
@@ -547,7 +548,7 @@ def test_clearing_your_only_entry_keeps_your_row_editable(festival, factory) -> 
     table = page.split("<tbody>")[1].split("</tbody>")[0]
     assert "Owner" in table
     # And the cell is still a way back into the field.
-    assert 'title="Click to change"></summary>' in table
+    assert 'title="Click to change">&nbsp;</summary>' in table
     assert 'name="amount"' in table
 
 

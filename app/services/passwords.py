@@ -14,7 +14,11 @@ from argon2.exceptions import InvalidHashError, VerificationError, VerifyMismatc
 #: making offline cracking of a leaked database expensive.
 _hasher = PasswordHasher(time_cost=3, memory_cost=65536, parallelism=4, hash_len=32, salt_len=16)
 
-MIN_PASSWORD_LENGTH = 10
+#: Deliberately modest: this plans festival trips, it guards no money and no
+#: identity, and a long minimum on a casual account buys notes on fridges
+#: rather than entropy. The real protection is argon2id above plus the login
+#: throttle, not a length rule. Lowered from 10 on request.
+MIN_PASSWORD_LENGTH = 8
 
 
 class PasswordTooShort(ValueError):

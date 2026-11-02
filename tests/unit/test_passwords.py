@@ -1,4 +1,28 @@
-from app.services.passwords import hash_password, needs_rehash, verify_password
+import pytest
+
+from app.services.passwords import (
+    MIN_PASSWORD_LENGTH,
+    PasswordTooShort,
+    hash_password,
+    needs_rehash,
+    validate_password,
+    verify_password,
+)
+
+
+def test_the_minimum_length_is_eight() -> None:
+    # Pinned on purpose: the policy is a product decision, not an accident of
+    # whatever the constant happens to say.
+    assert MIN_PASSWORD_LENGTH == 8
+
+
+def test_a_password_of_exactly_the_minimum_is_accepted() -> None:
+    validate_password("a" * MIN_PASSWORD_LENGTH)
+
+
+def test_one_character_short_is_refused() -> None:
+    with pytest.raises(PasswordTooShort):
+        validate_password("a" * (MIN_PASSWORD_LENGTH - 1))
 
 
 def test_hash_is_argon2id_and_not_the_password() -> None:

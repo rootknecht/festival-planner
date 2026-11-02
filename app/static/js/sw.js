@@ -74,7 +74,14 @@ self.addEventListener("fetch", function (event) {
           return response;
         })
         .catch(function () {
-          return caches.match(request);
+          /* A cache miss resolves to undefined, and respondWith(undefined)
+             fails the request outright rather than falling through to the
+             network. Since the cache now fills only on successful fetches, a
+             first visit on a flaky connection could hit exactly that. Answer
+             with a real Response instead. */
+          return caches.match(request).then(function (hit) {
+            return hit || new Response("", { status: 504, statusText: "offline" });
+          });
         })
     );
     return;

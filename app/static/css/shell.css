@@ -155,8 +155,24 @@ body:has(.toolbar) .content { margin-left: 5.5rem; }
 }
 .sticky-col .hint { display: block; font-weight: 400; }
 .cellform { display: flex; gap: 0.2rem; align-items: center; }
-.cellinput { width: 4.5rem; padding: 0.3rem; }
-.cellunit { width: auto; padding: 0.3rem; }
+/* THE !important IS SPECIFICITY ARITHMETIC, not laziness. base.css styles
+   inputs with `input:not([type="checkbox"]):not([type="radio"])...` — seven
+   :not() clauses, each worth an attribute selector, so that rule scores 0,7,1.
+   A single class scores 0,1,0, so `.cellinput { width: 4.5rem }` never
+   applied and the field silently inherited `width: 100%` with 0.7rem padding.
+   Inside this flex row in a narrow table cell that left a box 24px wide with
+   ZERO content width on a phone: the amount was in the field and invisible,
+   reported as "I cannot make changes at all".
+   flex: 0 0 auto is the other half — a flex item shrinks below its width by
+   default, which is what let a table cell squeeze it to nothing.
+   5.5rem is about four digits and a decimal point at 16px, and it sits just
+   under the width of the unit select beside it. */
+.cellinput {
+  width: 5.5rem !important;
+  flex: 0 0 5.5rem;
+  padding: 0.35rem 0.45rem !important;
+}
+.cellunit { width: auto; padding: 0.3rem; flex: 0 1 auto; }
 .cellsave {
   border: 1px solid var(--fp-border);
   background: var(--fp-surface-2);

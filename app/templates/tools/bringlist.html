@@ -198,16 +198,8 @@
 
 
 
-{% if changes %}
-<section class="card">
-  <h2>{{ _("Recent changes") }}</h2>
-  <ul class="log">
-    {% for entry in changes %}
-    <li><strong>{{ entry.actor_name }}</strong> {{ entry.summary }}</li>
-    {% endfor %}
-  </ul>
-</section>
-{% endif %}
+{# The change log lives on the DASHBOARD, under "Who is coming": it reports on
+   the whole festival, not only on this table. #}
 {% endblock %}
 
 {% block scripts %}

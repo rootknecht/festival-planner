@@ -354,7 +354,14 @@ def test_every_change_is_logged_with_its_author(festival, factory) -> None:
     assert entries[-1].actor_name == "Friend"
 
     page = owner.get(f"/festivals/{festival_id}/bringlist").text
-    assert "Recent changes" in page
+    assert "Recent changes" not in page
+
+    # The log lives on the dashboard now, under "Who is coming".
+    dashboard = owner.get(f"/festivals/{festival_id}")
+    assert dashboard.status_code == 200
+    body = dashboard.text
+    assert "Recent changes" in body
+    assert body.index("Who is coming") < body.index("Recent changes")
 
 
 def test_a_bad_amount_is_refused_without_touching_the_cell(festival, factory) -> None:

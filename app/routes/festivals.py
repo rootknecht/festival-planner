@@ -178,6 +178,7 @@ def _dashboard(
         describe(item, translate, festival_id)
         for item in notifications.open_for(db, user.id, festival_id)
     ]
+    from app.services import bringlist as bringlist_service
     from app.services import expenses as expense_service
     from app.services import transport as transport_service
 
@@ -202,6 +203,8 @@ def _dashboard(
             "active_tool": "dashboard",
             "balance": balance,
             "summary": summary,
+            # The change log sits under "Who is coming" on this page.
+            "changes": bringlist_service.recent_changes(db, festival_id),
             **extra,
         },
     )

@@ -115,4 +115,17 @@
   </ul>
   <p class="hint">{{ _("Dashed names have no account yet.") }}</p>
 </section>
+
+{# Moved here from the bring list on request: the log is the festival's
+   activity, so it belongs under the people it is about. #}
+{% if changes %}
+<section class="card">
+  <h2>{{ _("Recent changes") }}</h2>
+  <ul class="log">
+    {% for entry in changes %}
+    <li><strong>{{ entry.actor_name }}</strong> {{ entry.summary }}</li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
 {% endblock %}

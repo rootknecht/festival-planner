@@ -46,7 +46,6 @@ def _page(request: Request, db: DbSession, user: User, festival_id: int, **extra
             "my_participant_id": mine.id if mine else None,
             "rows": rows,
             "all_units": sorted({unit for row in rows for unit in row.units}),
-            "changes": bringlist.recent_changes(db, festival_id),
             **extra,
         },
     )

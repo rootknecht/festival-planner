@@ -34,11 +34,25 @@ class Cell:
         return self.amount == 0
 
     @property
-    def display(self) -> str:
+    def number(self) -> str:
+        """The amount alone, as a form value. Blank when the cell is empty.
+
+        Zero is not a quantity anybody brings, so it reads as "nothing" and
+        shows as nothing — in the table AND in the input, which previously
+        offered a literal 0 to delete again. An integer loses its ".0" so the
+        number field does not show "2.0" for two crates.
+        """
         if self.is_empty:
             return ""
         amount = int(self.amount) if float(self.amount).is_integer() else self.amount
-        return f"{amount} {self.unit}".strip() if self.unit else str(amount)
+        return str(amount)
+
+    @property
+    def display(self) -> str:
+        """What the table shows: the number with its unit, or nothing."""
+        if self.is_empty:
+            return ""
+        return f"{self.number} {self.unit}".strip() if self.unit else self.number
 
 
 @dataclass

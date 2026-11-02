@@ -299,7 +299,21 @@ textarea { min-height: 4rem; resize: vertical; }
 .cell > summary { cursor: pointer; list-style: none; }
 .cell > summary::-webkit-details-marker { display: none; }
 .cell > summary::marker { content: ""; }
-.cell__value { display: inline-block; min-width: 2.2rem; }
+/* min-height is load-bearing. An empty cell renders an empty summary, and an
+   empty inline-block is 0px TALL however wide min-width makes it — so the
+   cell cannot be clicked. It LOOKS fine as long as some other cell in the
+   same table row has text, because that props the row up; measure a row whose
+   cells are ALL empty (everything cleared) and the boxes are 35x0. Keep any
+   change to this rule height-preserving. */
+.cell__value { display: inline-block; min-width: 2.2rem; min-height: 1.5rem; }
+/* An empty cell shows nothing at all, so hover is the only hint that there is
+   something to click. Rest state stays blank on purpose — the dash that used
+   to sit here was requested gone. */
+.cell > summary:hover .cell__value,
+.cell > summary:focus-visible .cell__value {
+  background: var(--fp-border);
+  border-radius: 3px;
+}
 .cell[open] > summary { color: var(--fp-accent); }
 .grid--matrix tfoot th, .grid--matrix tfoot td {
   border-top: 2px solid var(--fp-border); font-weight: 600;

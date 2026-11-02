@@ -44,21 +44,29 @@
             {% if festival.is_archived or not editable %}
             {# Only your own column is editable; an admin may edit anyone's.
                Somebody else quietly deciding what you bring is exactly the
-               surprise this rule exists to prevent. #}
-            {{ cell.display if cell else "—" }}
+               surprise this rule exists to prevent.
+
+               Nothing brought shows as nothing, not as a dash: a table of
+               twenty people and ten items was mostly dashes, which read as
+               data. An untouched cell and a cleared one look the same because
+               they MEAN the same. #}
+            {{ cell.display if cell else "" }}
             {% else %}
             {# Click to edit: the number field and its stepper arrows appear
                only after a click. Permanently visible steppers made the table
                look like a spreadsheet and were easy to nudge by accident while
                scrolling on a phone. #}
             <details class="cell">
-              <summary class="cell__value" title="{{ _('Click to change') }}">{{ cell.display if cell else "—" }}</summary>
+              <summary class="cell__value" title="{{ _('Click to change') }}">{{ cell.display if cell else "" }}</summary>
               <form method="post" action="/festivals/{{ festival.id }}/bringlist/cells" class="cellform">
                 <input type="hidden" name="{{ csrf_field_name }}" value="{{ csrf_token }}">
                 <input type="hidden" name="row_id" value="{{ row.id }}">
                 <input type="hidden" name="participant_id" value="{{ participant.id }}">
+                {# An empty cell offers an empty field, not a 0 to delete first.
+                   Cell.number does the formatting, so this stays one lookup
+                   instead of the arithmetic that used to live in the template. #}
                 <input class="cellinput" name="amount" type="number" min="0" step="any" inputmode="decimal"
-                       value="{{ cell.amount | round(2) | int if cell and cell.amount == cell.amount | round(0) else (cell.amount if cell else '') }}"
+                       value="{{ cell.number if cell else '' }}"
                        aria-label="{{ row.label }} — {{ participant.display_name }}">
                 {% if row.units %}
                 <select class="cellunit" name="unit" aria-label="{{ _('Unit') }}">

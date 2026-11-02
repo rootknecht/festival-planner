@@ -488,3 +488,99 @@ def test_the_table_no_longer_shows_who_last_touched_a_cell(festival, factory) ->
     page = owner.get(f"/festivals/{festival_id}/bringlist").text
     table = page.split("<tbody>")[1].split("</tbody>")[0]
     assert "hint--tiny" not in table
+
+
+def test_clearing_an_amount_leaves_a_blank_but_still_clickable_cell(
+    festival, factory
+) -> None:
+    """The production defect: deleting an amount made the field unreachable.
+
+    The cleared cell must still render its <summary>, so there is a way back
+    into the number field, and it must render it EMPTY — no dash, no leftover
+    zero. A second item keeps the person's row in the table while one of their
+    cells is empty.
+    """
+    festival_id, owner, _ = festival
+    add_row(owner, festival_id, "Beer", "L,cans")
+    add_row(owner, festival_id, "Pavilion")
+    rows, people = ids(factory, festival_id)
+    beer = next(r for r in rows if r.label == "Beer")
+    pavilion = next(r for r in rows if r.label == "Pavilion")
+    owner_p = next(p for p in people if p.display_name == "Owner")
+
+    set_cell(owner, festival_id, beer.id, owner_p.id, "80", "L")
+    set_cell(owner, festival_id, pavilion.id, owner_p.id, "1")
+    assert set_cell(owner, festival_id, beer.id, owner_p.id, "", "L").status_code == 303
+
+    page = owner.get(f"/festivals/{festival_id}/bringlist").text
+    table = page.split("<tbody>")[1].split("</tbody>")[0]
+
+    # The way back in still exists: an empty summary, not a missing one.
+    assert 'title="Click to change"></summary>' in table
+    # And it is blank, not a dash.
+    assert ">—</summary>" not in table
+    # The untouched item still shows its own value.
+    assert 'title="Click to change">1</summary>' in table
+    # The number field is offered empty, not pre-filled with a 0 to delete.
+    assert 'value=""' in table
+    assert 'value="0"' not in table
+
+
+def test_clearing_your_only_entry_keeps_your_row_editable(festival, factory) -> None:
+    """THE defect: clearing an amount used to remove you from the table.
+
+    The row vanished together with the only cell you were allowed to edit, so
+    there was nothing left to click and the entry could only be recreated
+    through "Add what I bring". Your own row must survive bringing nothing.
+    """
+    festival_id, owner, _ = festival
+    add_row(owner, festival_id, "Beer", "L,cans")
+    rows, people = ids(factory, festival_id)
+    owner_p = next(p for p in people if p.display_name == "Owner")
+
+    set_cell(owner, festival_id, rows[0].id, owner_p.id, "80", "L")
+    assert set_cell(owner, festival_id, rows[0].id, owner_p.id, "").status_code == 303
+
+    page = owner.get(f"/festivals/{festival_id}/bringlist").text
+    # The table is still there, with the owner's row in it.
+    assert "Nobody has entered anything yet" not in page
+    table = page.split("<tbody>")[1].split("</tbody>")[0]
+    assert "Owner" in table
+    # And the cell is still a way back into the field.
+    assert 'title="Click to change"></summary>' in table
+    assert 'name="amount"' in table
+
+
+def test_you_are_not_listed_as_not_bringing_while_you_have_a_row(
+    festival, factory
+) -> None:
+    """Your blank row already says you bring nothing; saying it twice reads
+    as a contradiction."""
+    festival_id, owner, _ = festival
+    add_row(owner, festival_id, "Beer")
+    rows, people = ids(factory, festival_id)
+    owner_p = next(p for p in people if p.display_name == "Owner")
+    set_cell(owner, festival_id, rows[0].id, owner_p.id, "0")
+
+    page = owner.get(f"/festivals/{festival_id}/bringlist").text
+    assert "Not bringing anything yet:" in page
+    # Scope to that paragraph only: the admin "Add for somebody" select lists
+    # every participant further down the page and would match anything.
+    not_bringing = page.split("Not bringing anything yet:")[1].split("</p>")[0]
+    assert "Owner" not in not_bringing
+    # Somebody else who brings nothing and has no row is still named.
+    assert "Friend" in not_bringing
+
+
+def test_an_untouched_cell_is_blank_too_not_a_dash(festival, factory) -> None:
+    """An untouched cell and a cleared one mean the same, so they look the same."""
+    festival_id, owner, _ = festival
+    add_row(owner, festival_id, "Firewood")
+    rows, people = ids(factory, festival_id)
+    owner_p = next(p for p in people if p.display_name == "Owner")
+    set_cell(owner, festival_id, rows[0].id, owner_p.id, "3")
+
+    page = owner.get(f"/festivals/{festival_id}/bringlist").text
+    table = page.split("<tbody>")[1].split("</tbody>")[0]
+    assert ">—</summary>" not in table
+    assert ">—<" not in table.replace('aria-label="Firewood — Owner"', "")

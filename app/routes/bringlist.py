@@ -28,8 +28,17 @@ def _page(request: Request, db: DbSession, user: User, festival_id: int, **extra
         for participant_id, cell in row.cells.items()
         if cell and cell.amount
     }
-    bringers = [p for p in participants if p.id in bringing_ids]
     mine = next((p for p in participants if p.user_id == user.id), None)
+    # YOUR OWN ROW IS ALWAYS THERE, even when you bring nothing. Dropping it
+    # made clearing an amount a one-way door: the row vanished with the only
+    # cell you were allowed to edit, so there was nothing left to click and the
+    # entry could only be recreated through "Add what I bring". Everybody
+    # else still has to bring something to earn a row, which is what keeps the
+    # table short with twenty people.
+    shown_ids = set(bringing_ids)
+    if mine is not None and not membership.festival.is_archived:
+        shown_ids.add(mine.id)
+    bringers = [p for p in participants if p.id in shown_ids]
     return render(
         request,
         "tools/bringlist.html",
@@ -39,10 +48,13 @@ def _page(request: Request, db: DbSession, user: User, festival_id: int, **extra
             "badges": notifications.badges(db, user.id, festival_id),
             "active_tool": "bringlist",
             "participants": participants,
-            # Only people who actually bring something appear as rows; the
-            # rest are named once underneath so nobody is forgotten.
+            # Only people who actually bring something appear as rows — plus
+            # yourself, so you can always change your mind.
             "bringers": bringers,
-            "not_bringing": [p for p in participants if p.id not in bringing_ids],
+            # "Not bringing anything yet" names the people who bring nothing
+            # AND have no row — your own blank row already says it about you,
+            # and being in both places at once just reads as a contradiction.
+            "not_bringing": [p for p in participants if p.id not in shown_ids],
             "my_participant_id": mine.id if mine else None,
             "rows": rows,
             "all_units": sorted({unit for row in rows for unit in row.units}),
